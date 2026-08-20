@@ -21,7 +21,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     setMessage(null);
 
     if (!isSupabaseConfigured) {
-      setError("Supabase is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+      setError("Supabase is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
       return;
     }
 
@@ -57,7 +57,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   async function continueWithGoogle() {
     setError(null);
     if (!isSupabaseConfigured) {
-      setError("Supabase is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+      setError("Supabase is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
       return;
     }
     const client = requireSupabase();
