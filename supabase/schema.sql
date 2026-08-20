@@ -3,6 +3,8 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),
   auth_user_id uuid not null unique references auth.users(id) on delete cascade,
+  first_name text,
+  last_name text,
   display_name text,
   selected_role text,
   sql_level text,
@@ -10,6 +12,12 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles
+  add column if not exists first_name text;
+
+alter table public.profiles
+  add column if not exists last_name text;
 
 create table if not exists public.user_progress (
   id uuid primary key default gen_random_uuid(),

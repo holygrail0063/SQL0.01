@@ -9,6 +9,8 @@ import { isSupabaseConfigured, requireSupabase } from "@/lib/supabase";
 type Mode = "login" | "signup" | "forgot";
 
 export function AuthForm({ mode }: { mode: Mode }) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -29,10 +31,19 @@ export function AuthForm({ mode }: { mode: Mode }) {
     try {
       const client = requireSupabase();
       if (mode === "signup") {
+        const cleanFirstName = firstName.trim();
+        const cleanLastName = lastName.trim();
         const { error: signUpError } = await client.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/onboarding` },
+          options: {
+            emailRedirectTo: `${window.location.origin}/onboarding`,
+            data: {
+              first_name: cleanFirstName,
+              last_name: cleanLastName,
+              display_name: `${cleanFirstName} ${cleanLastName}`.trim(),
+            },
+          },
         });
         if (signUpError) throw signUpError;
         window.location.href = "/onboarding";
@@ -96,6 +107,31 @@ export function AuthForm({ mode }: { mode: Mode }) {
         )}
 
         <form className="space-y-4" onSubmit={submit}>
+          {mode === "signup" && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm text-slate-300">
+                First Name
+                <input
+                  className="mt-2 h-11 w-full rounded border border-line bg-[#090f1a] px-3 text-white outline-none focus:border-brand"
+                  onChange={(event) => setFirstName(event.target.value)}
+                  required
+                  type="text"
+                  value={firstName}
+                />
+              </label>
+              <label className="block text-sm text-slate-300">
+                Last Name
+                <input
+                  className="mt-2 h-11 w-full rounded border border-line bg-[#090f1a] px-3 text-white outline-none focus:border-brand"
+                  onChange={(event) => setLastName(event.target.value)}
+                  required
+                  type="text"
+                  value={lastName}
+                />
+              </label>
+            </div>
+          )}
+
           <label className="block text-sm text-slate-300">
             Email
             <input

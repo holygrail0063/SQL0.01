@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { api, Challenge } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { nextUnfinishedChallenge, skillForChallenge } from "@/lib/curriculum";
-import { getProfile, getProgress, type Profile, type ProgressRow } from "@/lib/progress";
+import { getProfile, getProgress, profileDisplayName, type Profile, type ProgressRow } from "@/lib/progress";
 
 function readableError(caught: unknown) {
   if (caught instanceof Error) return caught.message;
@@ -59,6 +59,7 @@ function DashboardContent() {
   const completedIds = useMemo(() => new Set(progress.filter((row) => row.status === "completed").map((row) => row.challenge_id)), [progress]);
   const nextChallenge = nextUnfinishedChallenge(challenges, completedIds);
   const completedCount = completedIds.size;
+  const learnerName = profileDisplayName(profile, user);
 
   if (loading) return <main className="p-8 text-slate-400">Loading dashboard...</main>;
   if (error) return <main className="p-8 text-red-200">{error}</main>;
@@ -70,7 +71,7 @@ function DashboardContent() {
           Welcome to QueryRight. Your SQL workspace is ready.
         </div>
       )}
-      <h1 className="text-3xl font-semibold text-white">Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}.</h1>
+      <h1 className="text-3xl font-semibold text-white">Welcome back{learnerName ? `, ${learnerName}` : ""}.</h1>
 
       <section className="mt-8 grid gap-5 lg:grid-cols-[1fr_360px]">
         <div className="rounded border border-line bg-panel p-6">
