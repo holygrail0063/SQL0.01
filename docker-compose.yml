@@ -1,0 +1,47 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlbank-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: ${MSSQL_PID:-Developer}
+      SA_PASSWORD: ${SA_PASSWORD:-ChangeThis_AdminPassword123}
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${SA_PASSWORD}\" -C -Q \"SELECT 1\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    volumes:
+      - sqlbank-data:/var/opt/mssql
+
+  db-init:
+    image: python:3.12-slim
+    container_name: sqlbank-db-init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      SQL_SERVER_HOST: sqlserver
+      SQL_SERVER_PORT: 1433
+      SQL_SERVER_DATABASE: SQLBankTraining
+      SQL_SERVER_USER: sa
+      SQL_SERVER_PASSWORD: ${SA_PASSWORD:-ChangeThis_AdminPassword123}
+      SQLBANK_LEARNER_PASSWORD: ${SQL_SERVER_PASSWORD:-ChangeThis_StrongPassword123}
+    volumes:
+      - ./database:/database:ro
+    working_dir: /database
+    command: >
+      sh -c "apt-get update &&
+      apt-get install -y curl gnupg unixodbc &&
+      curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg &&
+      echo 'deb [signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/12/prod bookworm main' > /etc/apt/sources.list.d/mssql-release.list &&
+      apt-get update &&
+      ACCEPT_EULA=Y apt-get install -y msodbcsql18 &&
+      pip install pyodbc &&
+      python seed_database.py"
+
+volumes:
+  sqlbank-data:
