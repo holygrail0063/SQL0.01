@@ -54,6 +54,7 @@ Create `frontend/.env.local`:
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+NEXT_PUBLIC_HCAPTCHA_SITE_KEY=
 ```
 
 Server-only Supabase keys belong in backend/server environments only. Do not expose service-role keys in the frontend.
@@ -74,6 +75,9 @@ Configure Supabase Auth:
 - Enable Email + Password.
 - Configure Google OAuth if you want `Continue with Google`.
 - Add `http://localhost:3000/onboarding` as an allowed redirect/callback URL for local development.
+- Keep email confirmation enabled for public signups.
+- Configure Auth rate limits and password strength rules in Supabase.
+- To add bot protection, configure hCaptcha in Supabase Auth and set `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` in the frontend environment.
 
 ## SQLBankTraining
 
@@ -148,6 +152,7 @@ Set frontend variables:
 NEXT_PUBLIC_API_BASE_URL=https://your-backend-service.up.railway.app
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+NEXT_PUBLIC_HCAPTCHA_SITE_KEY=
 ```
 
 ### Backend service
