@@ -36,7 +36,7 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
         const selected = challengeData.find((candidate) => candidate.id === challengeId) ?? challengeData[0];
         setQuery(selected?.starter_sql ?? "");
       })
-      .catch(() => setAppError("QueryRight could not reach the SQLBank API."))
+      .catch((caught) => setAppError(readableError(caught, "QueryRight could not reach the SQLBank API.")))
       .finally(() => setLoading(false));
   }, [challengeId]);
 
@@ -66,9 +66,9 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
           setProgressMessage("Your query ran, but progress could not be saved.");
         }
       }
-    } catch {
+    } catch (caught) {
       setResult(null);
-      setAppError("The query request failed. Check that FastAPI and SQL Server are running.");
+      setAppError(readableError(caught, "The query request failed. Check that FastAPI is running."));
     } finally {
       setRunning(false);
     }
@@ -81,7 +81,11 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
   }
 
   if (!challenge) {
-    return <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-ink text-red-200">This SQLBank challenge was not found.</main>;
+    return (
+      <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-ink px-5 text-center text-red-200">
+        {appError ?? "This SQLBank challenge was not found."}
+      </main>
+    );
   }
 
   return (
@@ -142,4 +146,8 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
       </div>
     </main>
   );
+}
+
+function readableError(caught: unknown, fallback: string): string {
+  return caught instanceof Error ? caught.message : fallback;
 }

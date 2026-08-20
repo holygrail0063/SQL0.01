@@ -29,7 +29,7 @@ export type QueryResult = {
   message?: string;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   let response: Response;
@@ -41,12 +41,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
         ...options?.headers,
       },
     });
-  } catch (caught) {
+  } catch {
     throw new Error(`Could not reach FastAPI at ${API_BASE}. Make sure the backend server is running.`);
   }
 
   if (!response.ok) {
-    throw new Error("QueryRight API request failed.");
+    throw new Error(`QueryRight API request failed at ${API_BASE}${path} with HTTP ${response.status}.`);
   }
 
   return response.json() as Promise<T>;
