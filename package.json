@@ -1,0 +1,12 @@
+{
+  "name": "queryright",
+  "version": "0.2.0",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm --workspace frontend run build",
+    "start": "npm --workspace frontend run start"
+  }
+}

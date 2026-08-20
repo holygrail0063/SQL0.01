@@ -128,6 +128,51 @@ Routes:
 
 Protected routes redirect unauthenticated users to `/login`.
 
+## Railway Deployment
+
+This repository is a monorepo. Deploy it as two Railway services:
+
+### Frontend service
+
+Use either of these approaches:
+
+- Point Railway at the repository root. The root `package.json` builds and starts the `frontend` workspace.
+- Or set the Railway service root directory to `frontend`.
+
+Set frontend variables:
+
+```text
+NEXT_PUBLIC_API_BASE_URL=https://your-backend-service.up.railway.app
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+```
+
+### Backend service
+
+Create a second Railway service from the same GitHub repo and set its root directory to:
+
+```text
+backend
+```
+
+The backend Dockerfile installs the Microsoft SQL Server ODBC driver and starts FastAPI on Railway's `$PORT`.
+
+Set backend variables:
+
+```text
+SQL_SERVER_HOST=
+SQL_SERVER_PORT=1433
+SQL_SERVER_DATABASE=SQLBankTraining
+SQL_SERVER_USER=sqlbank_learner
+SQL_SERVER_PASSWORD=
+FRONTEND_ORIGIN=https://your-frontend-service.up.railway.app
+QUERY_TIMEOUT_SECONDS=5
+MAX_RESULT_ROWS=200
+MAX_QUERY_LENGTH=5000
+```
+
+SQL Server is still required. You can run SQL Server in a separate Docker-capable host, Azure SQL, or another reachable SQL Server instance. Railway is straightforward for the Next.js and FastAPI services, but the SQL Server training database should be planned as its own database service.
+
 ## Test The V0.2 Flow
 
 1. Open the QueryRight landing page.
