@@ -5,7 +5,7 @@ import Script from "next/script";
 import { Chrome } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
-import { isSupabaseConfigured, requireSupabase } from "@/lib/supabase";
+import { authRedirectUrl, isSupabaseConfigured, requireSupabase } from "@/lib/supabase";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -72,7 +72,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/onboarding`,
+            emailRedirectTo: authRedirectUrl("/onboarding"),
             captchaToken: captchaToken || undefined,
             data: {
               first_name: cleanFirstName,
@@ -93,7 +93,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         window.location.href = "/dashboard";
       } else {
         const { error: resetError } = await client.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/login`,
+          redirectTo: authRedirectUrl("/login"),
           captchaToken: captchaToken || undefined,
         });
         if (resetError) throw resetError;
@@ -115,7 +115,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     const client = requireSupabase();
     await client.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/onboarding` },
+      options: { redirectTo: authRedirectUrl("/onboarding") },
     });
   }
 

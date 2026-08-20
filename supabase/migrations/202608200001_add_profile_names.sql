@@ -11,3 +11,5 @@ set
   updated_at = now()
 where display_name is not null
   and (first_name is null or last_name is null);
+
+notify pgrst, 'reload schema';

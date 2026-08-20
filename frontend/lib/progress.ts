@@ -54,6 +54,19 @@ export async function saveProfile(user: User, values: Partial<Profile>): Promise
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await client.from("profiles").upsert(profile, { onConflict: "auth_user_id" }).select("*").single();
+  if (error && isMissingProfileNameColumnError(error)) {
+    const fallbackProfile = {
+      auth_user_id: user.id,
+      display_name: displayName,
+      selected_role: profile.selected_role,
+      sql_level: profile.sql_level,
+      onboarding_completed: profile.onboarding_completed,
+      updated_at: profile.updated_at,
+    };
+    const { data: fallbackData, error: fallbackError } = await client.from("profiles").upsert(fallbackProfile, { onConflict: "auth_user_id" }).select("*").single();
+    if (fallbackError) throw fallbackError;
+    return { ...fallbackData, first_name: firstName, last_name: lastName };
+  }
   if (error) throw error;
   return data;
 }
@@ -79,6 +92,12 @@ function namesFromMetadata(user: User) {
   const lastName = cleanName(metadata.last_name) ?? cleanName(metadata.family_name);
   const displayName = [firstName, lastName].filter(Boolean).join(" ") || cleanName(metadata.display_name) || cleanName(metadata.full_name) || cleanName(metadata.name);
   return { firstName, lastName, displayName };
+}
+
+function isMissingProfileNameColumnError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const maybeError = error as { code?: unknown; message?: unknown };
+  return maybeError.code === "PGRST204" && typeof maybeError.message === "string" && /first_name|last_name/.test(maybeError.message);
 }
 
 export async function getProgress(user: User): Promise<ProgressRow[]> {
