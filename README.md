@@ -11,8 +11,8 @@ SQLBank is completely fictional and exists only for QueryRight training.
 ```text
 QueryRight
 |
-├── frontend/        Next.js, TypeScript, Tailwind CSS, Monaco Editor
-├── backend/         FastAPI, read-only SQL validation/execution, answer checking
+├── frontend/        Next.js, TypeScript, Tailwind CSS, Monaco Editor, SQLBank API routes
+├── backend/         Optional FastAPI backend for future split-service deployments
 ├── supabase/        QueryRight app database schema and RLS policies
 └── SQLBankTraining  Seeded fictional training database
 ```
@@ -37,7 +37,7 @@ Do not store QueryRight accounts or progress inside `SQLBankTraining`.
 
 ## Prerequisites
 
-Install Git, Docker, Node.js, Python 3.12, and create a Supabase project or local Supabase setup.
+Install Git, Node.js, and create a Supabase project or local Supabase setup. Docker and Python are only needed if you use the optional FastAPI backend.
 
 ## Environment
 
@@ -51,12 +51,14 @@ cp .env.example backend/.env
 Create `frontend/.env.local`:
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+NEXT_PUBLIC_API_BASE_URL=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 NEXT_PUBLIC_HCAPTCHA_SITE_KEY=
 ```
+
+Leave `NEXT_PUBLIC_API_BASE_URL` empty for the default one-service Next.js deployment. Set it only if you intentionally run a separate backend API.
 
 Server-only Supabase keys belong in backend/server environments only. Do not expose service-role keys in the frontend.
 
@@ -84,7 +86,7 @@ Configure Supabase Auth:
 
 ## SQLBankTraining
 
-By default, the backend uses `QUERY_ENGINE=sqlite`. It seeds the fictional SQLBank database automatically on first query, so local development and Railway demos do not require SQL Server.
+By default, the Next.js app serves the SQLBank API from `/api/challenges`, `/api/schema`, and `/api/query/run`. It seeds fictional SQLBank data in memory, so local development and Railway demos do not require SQL Server or a separate backend service.
 
 If you want to run the SQL Server version instead, set `QUERY_ENGINE=sqlserver`, start SQL Server, and seed fictional SQLBank data:
 
@@ -94,7 +96,7 @@ docker compose --env-file .env up sqlserver db-init
 
 Both engines use 500 customers, 20 branches, 1,500 applications, 700 loans, and 5,000 payments. The SQL Server initializer also creates `sqlbank_learner`, a read-only SQL Server login with `SELECT` access only to the five training tables.
 
-## Backend
+## Optional FastAPI Backend
 
 ```bash
 cd backend
@@ -111,7 +113,7 @@ curl http://localhost:8000/health
 curl http://localhost:8000/api/challenges
 ```
 
-The API never returns hidden `reference_sql`.
+The optional FastAPI API never returns hidden `reference_sql`.
 
 ## Frontend
 
@@ -140,66 +142,40 @@ Protected routes redirect unauthenticated users to `/login`.
 
 ## Railway Deployment
 
-This repository is a monorepo. Deploy it as two Railway services:
+This repository is a monorepo, but the MVP can deploy as one Railway service.
 
-### Frontend service
+### One-service deployment
 
 Use either of these approaches:
 
 - Point Railway at the repository root. The root `package.json` builds and starts the `frontend` workspace.
 - Or set the Railway service root directory to `frontend`.
 
-Set frontend variables:
+Set Railway variables:
 
 ```text
-NEXT_PUBLIC_API_BASE_URL=https://your-backend-service.up.railway.app
-NEXT_PUBLIC_APP_URL=https://your-frontend-service.up.railway.app
+NEXT_PUBLIC_API_BASE_URL=
+NEXT_PUBLIC_APP_URL=https://sql001-production.up.railway.app
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 NEXT_PUBLIC_HCAPTCHA_SITE_KEY=
 ```
 
-### Backend service
+Do not add `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, SQL Server variables, or backend-only variables to the frontend service.
 
-Create a second Railway service from the same GitHub repo and set its root directory to:
+### Split backend deployment
 
-```text
-backend
-```
-
-The backend Dockerfile starts FastAPI on Railway's `$PORT`. The default SQLite training engine needs no separate database service.
-
-Set backend variables:
+To use FastAPI or SQL Server later, create a second Railway service from the same repo with root directory `backend`, then set:
 
 ```text
 QUERY_ENGINE=sqlite
-SQLITE_DATABASE_PATH=
 FRONTEND_ORIGIN=https://your-frontend-service.up.railway.app
 QUERY_TIMEOUT_SECONDS=5
 MAX_RESULT_ROWS=200
 MAX_QUERY_LENGTH=5000
 ```
 
-After the backend deploys, copy its Railway URL into the frontend service:
-
-```text
-NEXT_PUBLIC_API_BASE_URL=https://your-backend-service.up.railway.app
-```
-
-To use SQL Server later, change the backend variables to:
-
-```text
-QUERY_ENGINE=sqlserver
-SQL_SERVER_HOST=
-SQL_SERVER_PORT=1433
-SQL_SERVER_DATABASE=SQLBankTraining
-SQL_SERVER_USER=sqlbank_learner
-SQL_SERVER_PASSWORD=
-FRONTEND_ORIGIN=https://your-frontend-service.up.railway.app
-QUERY_TIMEOUT_SECONDS=5
-MAX_RESULT_ROWS=200
-MAX_QUERY_LENGTH=5000
-```
+Then set the frontend `NEXT_PUBLIC_API_BASE_URL` to that backend service URL.
 
 You can run SQL Server in a separate Docker-capable host, Azure SQL, or another reachable SQL Server instance.
 SQL Server mode also needs the Microsoft ODBC driver and the optional Python dependencies in `backend/requirements-sqlserver.txt`.
@@ -283,6 +259,8 @@ SQL Server not ready: wait for the health check, then rerun `docker compose --en
 Docker missing: install Docker Desktop and make sure `docker` is available on your PATH.
 
 `pyodbc` install fails: use the default SQLite engine, or install `requirements-sqlserver.txt` in a Python version with a compatible `pyodbc` wheel.
+
+QueryRight API request failed: leave `NEXT_PUBLIC_API_BASE_URL` empty for one-service Railway, or point it to a real separate backend URL.
 
 Query returns backend error in SQLite mode: restart FastAPI and confirm `QUERY_ENGINE=sqlite`.
 
