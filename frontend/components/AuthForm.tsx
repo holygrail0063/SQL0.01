@@ -72,7 +72,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           email,
           password,
           options: {
-            emailRedirectTo: authRedirectUrl("/onboarding"),
+            emailRedirectTo: authRedirectUrl("/auth/callback"),
             captchaToken: captchaToken || undefined,
             data: {
               first_name: cleanFirstName,
@@ -115,7 +115,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     const client = requireSupabase();
     await client.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: authRedirectUrl("/onboarding") },
+      options: { redirectTo: authRedirectUrl("/auth/callback") },
     });
   }
 

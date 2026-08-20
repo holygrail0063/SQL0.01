@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, BarChart3, Database, Play, ShieldCheck, TerminalSquare } from "lucide-react";
+import { AuthHashRedirect } from "@/components/AuthHashRedirect";
 import { PublicHeader } from "@/components/PublicHeader";
 
 const roleCards = [
@@ -12,6 +13,7 @@ const roleCards = [
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-ink text-slate-100">
+      <AuthHashRedirect />
       <PublicHeader />
 
       <section className="mx-auto grid max-w-7xl gap-10 px-5 pb-20 pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">

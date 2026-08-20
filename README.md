@@ -77,9 +77,10 @@ Configure Supabase Auth:
 
 - Enable Email + Password.
 - Configure Google OAuth if you want `Continue with Google`.
-- Add `http://localhost:3000/onboarding` as an allowed redirect/callback URL for local development.
-- For production, set the Supabase Auth site URL to `https://your-frontend-service.up.railway.app`.
-- Add `https://your-frontend-service.up.railway.app/onboarding` and `https://your-frontend-service.up.railway.app/login` as allowed redirect URLs.
+- Add `http://localhost:3000/auth/callback`, `http://localhost:3000/onboarding`, and `http://localhost:3000/login` as allowed redirect/callback URLs for local development.
+- For production, set the Supabase Auth site URL to `https://sql001-production.up.railway.app`.
+- Add `https://sql001-production.up.railway.app/auth/callback`, `https://sql001-production.up.railway.app/onboarding`, and `https://sql001-production.up.railway.app/login` as allowed redirect URLs.
+- If a confirmation email already points to localhost, that email was generated before the production URL was configured. Fix the Supabase Auth URL settings, redeploy Railway with `NEXT_PUBLIC_APP_URL`, then request a new confirmation email.
 - Keep email confirmation enabled for public signups.
 - Configure Auth rate limits and password strength rules in Supabase.
 - To add bot protection, configure hCaptcha in Supabase Auth and set `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` in the frontend environment.
