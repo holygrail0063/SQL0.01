@@ -5,6 +5,11 @@ export type Challenge = {
   difficulty: string;
   topic: string;
   starter_sql: string;
+  concept: string;
+  lesson: string;
+  example_sql: string;
+  success_criteria: string[];
+  guidance: Record<string, string>;
 };
 
 export type SchemaColumn = {

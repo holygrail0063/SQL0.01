@@ -11,7 +11,7 @@ import { SchemaExplorer } from "@/components/SchemaExplorer";
 import { SqlEditor } from "@/components/SqlEditor";
 import { useAuth } from "@/lib/auth";
 import { api, Challenge, QueryResult, SchemaTable } from "@/lib/api";
-import { recordAttempt } from "@/lib/progress";
+import { getProfile, recordAttempt } from "@/lib/progress";
 
 export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
   const router = useRouter();
@@ -24,6 +24,7 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
   const [running, setRunning] = useState(false);
   const [appError, setAppError] = useState<string | null>(null);
   const [progressMessage, setProgressMessage] = useState<string | null>(null);
+  const [sqlLevel, setSqlLevel] = useState<string | null>(null);
 
   const currentIndex = Math.max(0, challenges.findIndex((candidate) => candidate.id === challengeId));
   const challenge = challenges[currentIndex];
@@ -33,16 +34,22 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
       .then(([challengeData, schemaData]) => {
         setChallenges(challengeData);
         setSchema(schemaData);
-        const selected = challengeData.find((candidate) => candidate.id === challengeId) ?? challengeData[0];
-        setQuery(selected?.starter_sql ?? "");
+        setQuery("");
       })
       .catch((caught) => setAppError(readableError(caught, "QueryRight could not reach the SQLBank API.")))
       .finally(() => setLoading(false));
   }, [challengeId]);
 
   useEffect(() => {
+    if (!user) return;
+    getProfile(user)
+      .then((profile) => setSqlLevel(profile?.sql_level ?? null))
+      .catch(() => setSqlLevel(null));
+  }, [user]);
+
+  useEffect(() => {
     if (challenge) {
-      setQuery(challenge.starter_sql);
+      setQuery("");
       setResult(null);
       setProgressMessage(null);
     }
@@ -106,7 +113,7 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
           />
         </header>
 
-        <ChallengePanel challenge={challenge} current={currentIndex + 1} total={challenges.length} />
+        <ChallengePanel challenge={challenge} current={currentIndex + 1} total={challenges.length} sqlLevel={sqlLevel} />
 
         {appError && <div className="border-b border-red-900/60 bg-red-950/40 px-6 py-3 text-sm text-red-100">{appError}</div>}
         {progressMessage && <div className="border-b border-cyan/30 bg-cyan/10 px-6 py-3 text-sm text-cyan">{progressMessage}</div>}

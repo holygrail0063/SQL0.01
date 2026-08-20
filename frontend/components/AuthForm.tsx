@@ -100,7 +100,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         setMessage("If an account exists for that email, password reset instructions have been sent.");
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Authentication failed. Please try again.");
+      setError(readableAuthError(caught));
     } finally {
       setLoading(false);
     }
@@ -296,6 +296,14 @@ function getPasswordChecks(value: string) {
     { label: "Number", valid: /\d/.test(value) },
     { label: "Symbol", valid: /[^A-Za-z0-9]/.test(value) },
   ];
+}
+
+function readableAuthError(caught: unknown) {
+  const message = caught instanceof Error ? caught.message : "Authentication failed. Please try again.";
+  if (/email.*limit|rate.*limit|over_email_send_rate_limit/i.test(message)) {
+    return "Supabase has temporarily rate-limited confirmation emails for this project. Try again later, use another email for now, or configure custom SMTP in Supabase Auth to raise the email sending limit.";
+  }
+  return message;
 }
 
 declare global {

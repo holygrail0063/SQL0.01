@@ -67,6 +67,7 @@ function LearnContent() {
                       <div>
                         <p className="font-medium text-white">{id}. {challenge.title}</p>
                         <p className="mt-1 text-sm text-slate-500">{challenge.difficulty} • {challenge.topic}</p>
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{challenge.concept}</p>
                       </div>
                     </div>
                     <span className={completed ? "text-success" : "text-slate-500"}>{completed ? "Completed" : "Open"}</span>
