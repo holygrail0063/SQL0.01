@@ -3,6 +3,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    query_engine: str = "sqlite"
+    sqlite_database_path: str = ""
     sql_server_host: str = "localhost"
     sql_server_port: int = 1433
     sql_server_database: str = "SQLBankTraining"

@@ -2,7 +2,7 @@
 
 Practice SQL like it's your job.
 
-QueryRight is a web-based SQL learning product. Users create an account, choose a learning goal, and practice SQL inside realistic fictional training environments. V0.2 includes the first environment, SQLBank, backed by the `SQLBankTraining` Microsoft SQL Server database.
+QueryRight is a web-based SQL learning product. Users create an account, choose a learning goal, and practice SQL inside realistic fictional training environments. V0.2 includes the first environment, SQLBank, backed by a seeded training database.
 
 SQLBank is completely fictional and exists only for QueryRight training.
 
@@ -14,7 +14,7 @@ QueryRight
 ├── frontend/        Next.js, TypeScript, Tailwind CSS, Monaco Editor
 ├── backend/         FastAPI, read-only SQL validation/execution, answer checking
 ├── supabase/        QueryRight app database schema and RLS policies
-└── SQLBankTraining  Microsoft SQL Server training database
+└── SQLBankTraining  Seeded fictional training database
 ```
 
 Supabase stores product data:
@@ -25,7 +25,7 @@ Supabase stores product data:
 - challenge progress
 - challenge attempts
 
-SQL Server stores only fictional SQLBank training data:
+The training database stores only fictional SQLBank data:
 
 - Customers
 - Branches
@@ -74,15 +74,17 @@ Configure Supabase Auth:
 - Configure Google OAuth if you want `Continue with Google`.
 - Add `http://localhost:3000/onboarding` as an allowed redirect/callback URL for local development.
 
-## SQL Server And SQLBankTraining
+## SQLBankTraining
 
-Start SQL Server and seed fictional SQLBank data:
+By default, the backend uses `QUERY_ENGINE=sqlite`. It seeds the fictional SQLBank database automatically on first query, so local development and Railway demos do not require SQL Server.
+
+If you want to run the SQL Server version instead, set `QUERY_ENGINE=sqlserver`, start SQL Server, and seed fictional SQLBank data:
 
 ```bash
 docker compose --env-file .env up sqlserver db-init
 ```
 
-The initializer creates 500 customers, 20 branches, 1,500 applications, 700 loans, and 5,000 payments. It also creates `sqlbank_learner`, a read-only SQL Server login with `SELECT` access only to the five training tables.
+Both engines use 500 customers, 20 branches, 1,500 applications, 700 loans, and 5,000 payments. The SQL Server initializer also creates `sqlbank_learner`, a read-only SQL Server login with `SELECT` access only to the five training tables.
 
 ## Backend
 
@@ -155,11 +157,29 @@ Create a second Railway service from the same GitHub repo and set its root direc
 backend
 ```
 
-The backend Dockerfile installs the Microsoft SQL Server ODBC driver and starts FastAPI on Railway's `$PORT`.
+The backend Dockerfile starts FastAPI on Railway's `$PORT`. The default SQLite training engine needs no separate database service.
 
 Set backend variables:
 
 ```text
+QUERY_ENGINE=sqlite
+SQLITE_DATABASE_PATH=
+FRONTEND_ORIGIN=https://your-frontend-service.up.railway.app
+QUERY_TIMEOUT_SECONDS=5
+MAX_RESULT_ROWS=200
+MAX_QUERY_LENGTH=5000
+```
+
+After the backend deploys, copy its Railway URL into the frontend service:
+
+```text
+NEXT_PUBLIC_API_BASE_URL=https://your-backend-service.up.railway.app
+```
+
+To use SQL Server later, change the backend variables to:
+
+```text
+QUERY_ENGINE=sqlserver
 SQL_SERVER_HOST=
 SQL_SERVER_PORT=1433
 SQL_SERVER_DATABASE=SQLBankTraining
@@ -171,7 +191,8 @@ MAX_RESULT_ROWS=200
 MAX_QUERY_LENGTH=5000
 ```
 
-SQL Server is still required. You can run SQL Server in a separate Docker-capable host, Azure SQL, or another reachable SQL Server instance. Railway is straightforward for the Next.js and FastAPI services, but the SQL Server training database should be planned as its own database service.
+You can run SQL Server in a separate Docker-capable host, Azure SQL, or another reachable SQL Server instance.
+SQL Server mode also needs the Microsoft ODBC driver and the optional Python dependencies in `backend/requirements-sqlserver.txt`.
 
 ## Test The V0.2 Flow
 
@@ -251,9 +272,11 @@ SQL Server not ready: wait for the health check, then rerun `docker compose --en
 
 Docker missing: install Docker Desktop and make sure `docker` is available on your PATH.
 
-`pyodbc` install fails: use Python 3.12. Python 3.14 may not have a compatible `pyodbc` wheel.
+`pyodbc` install fails: use the default SQLite engine, or install `requirements-sqlserver.txt` in a Python version with a compatible `pyodbc` wheel.
 
-Query returns backend error: confirm SQL Server is listening on port `1433`, the database was seeded, and the backend has `pyodbc` installed.
+Query returns backend error in SQLite mode: restart FastAPI and confirm `QUERY_ENGINE=sqlite`.
+
+Query returns backend error in SQL Server mode: confirm SQL Server is listening on port `1433`, the database was seeded, and the backend has `pyodbc` installed.
 
 Supabase auth unavailable: confirm `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` exist in `frontend/.env.local`.
 
