@@ -65,4 +65,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ challengeId, query }),
     }),
+  runFreeQuery: (query: string) =>
+    request<QueryResult>("/api/query/free", {
+      method: "POST",
+      body: JSON.stringify({ query }),
+    }),
 };

@@ -461,6 +461,49 @@ export function runSqlBankQuery(challengeId: number, query: string) {
   }
 }
 
+export function runFreeSqlBankQuery(query: string) {
+  let validated: string;
+  try {
+    validated = validateReadOnlyQuery(query);
+  } catch (error) {
+    return {
+      status: 200,
+      body: { success: false, correct: false, errorType: "validation_error", message: error instanceof Error ? error.message : "Invalid SQL query." },
+    };
+  }
+
+  try {
+    const startedAt = performance.now();
+    ensureDatabase();
+    const userResult = execute(validated);
+    const displayRows = userResult.rows.slice(0, MAX_RESULT_ROWS);
+
+    return {
+      status: 200,
+      body: {
+        success: true,
+        correct: true,
+        columns: userResult.columns,
+        rows: displayRows,
+        executionTimeMs: Math.max(0, Math.round(performance.now() - startedAt)),
+        truncated: userResult.rows.length > MAX_RESULT_ROWS,
+        rowCount: displayRows.length,
+        message: null,
+      },
+    };
+  } catch (error) {
+    return {
+      status: 200,
+      body: {
+        success: false,
+        correct: false,
+        errorType: "sql_error",
+        message: error instanceof Error ? sanitizeSqlError(error.message) : "The query could not be completed.",
+      },
+    };
+  }
+}
+
 function execute(sql: string) {
   const rows = alasql(normalizeSql(sql)) as Row[];
   const resultRows = Array.isArray(rows) ? rows : [];

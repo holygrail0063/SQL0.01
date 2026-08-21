@@ -71,7 +71,10 @@ supabase/schema.sql
 ```
 
 This creates `profiles`, `user_progress`, and `challenge_attempts`, with Row Level Security policies so users can only access their own records.
-For an existing Supabase project, also run `supabase/migrations/202608200001_add_profile_names.sql` to add `first_name` and `last_name` to existing `profiles`.
+For an existing Supabase project, also run:
+
+- `supabase/migrations/202608200001_add_profile_names.sql`
+- `supabase/migrations/202608210001_add_daily_commitment.sql`
 
 Configure Supabase Auth:
 
@@ -135,6 +138,9 @@ Routes:
 - `/onboarding`
 - `/dashboard`
 - `/learn`
+- `/learn/lesson/[id]`
+- `/sqlbank`
+- `/sqlbank/sandbox`
 - `/challenge/1`
 - `/profile`
 - `/settings`

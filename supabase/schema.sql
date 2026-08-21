@@ -8,6 +8,7 @@ create table if not exists public.profiles (
   display_name text,
   selected_role text,
   sql_level text,
+  daily_commitment_minutes integer not null default 30,
   onboarding_completed boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -18,6 +19,9 @@ alter table public.profiles
 
 alter table public.profiles
   add column if not exists last_name text;
+
+alter table public.profiles
+  add column if not exists daily_commitment_minutes integer not null default 30;
 
 create table if not exists public.user_progress (
   id uuid primary key default gen_random_uuid(),

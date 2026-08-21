@@ -9,7 +9,7 @@ import { requireSupabase } from "@/lib/supabase";
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/learn", label: "Learn" },
-  { href: "/challenge/1", label: "SQLBank" },
+  { href: "/sqlbank", label: "SQLBank" },
   { href: "/profile", label: "Profile" },
   { href: "/settings", label: "Settings" },
 ];
@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <nav className="hidden items-center gap-2 md:flex">
             {navItems.map((item) => (
               <Link
-                className={pathname === item.href || (item.href.startsWith("/challenge") && pathname.startsWith("/challenge")) ? "rounded bg-brand/15 px-3 py-2 text-sm text-white" : "rounded px-3 py-2 text-sm text-slate-400 hover:bg-panel hover:text-white"}
+                className={pathname === item.href || (item.href === "/sqlbank" && (pathname.startsWith("/sqlbank") || pathname.startsWith("/challenge"))) ? "rounded bg-brand/15 px-3 py-2 text-sm text-white" : "rounded px-3 py-2 text-sm text-slate-400 hover:bg-panel hover:text-white"}
                 href={item.href}
                 key={item.href}
               >

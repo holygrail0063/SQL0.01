@@ -1,6 +1,6 @@
 "use client";
 
-import { Play } from "lucide-react";
+import { Play, RotateCcw, Wand2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ChallengeNavigation } from "@/components/ChallengeNavigation";
@@ -124,6 +124,22 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
             <div className="flex items-center gap-4">
               <QueryStatus result={result} />
               <button
+                className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-300 hover:border-cyan/70"
+                onClick={() => setQuery(formatSql(query))}
+                type="button"
+              >
+                <Wand2 size={15} />
+                Format
+              </button>
+              <button
+                className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-300 hover:border-cyan/70"
+                onClick={() => setQuery("")}
+                type="button"
+              >
+                <RotateCcw size={15} />
+                Reset
+              </button>
+              <button
                 className="inline-flex h-9 items-center gap-2 rounded bg-brand px-4 text-sm font-semibold text-white disabled:cursor-wait disabled:bg-slate-700 disabled:text-slate-400"
                 disabled={running}
                 onClick={runQuery}
@@ -157,4 +173,11 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
 
 function readableError(caught: unknown, fallback: string): string {
   return caught instanceof Error ? caught.message : fallback;
+}
+
+function formatSql(value: string) {
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/\b(select|from|where|and|or|join|inner join|left join|group by|order by|having)\b/gi, (match) => `\n${match.toUpperCase()}`)
+    .trim();
 }

@@ -10,6 +10,7 @@ export type Profile = {
   display_name: string | null;
   selected_role: string | null;
   sql_level: string | null;
+  daily_commitment_minutes: number | null;
   onboarding_completed: boolean;
   created_at?: string;
   updated_at?: string;
@@ -50,11 +51,12 @@ export async function saveProfile(user: User, values: Partial<Profile>): Promise
     display_name: displayName,
     selected_role: values.selected_role ?? existing?.selected_role ?? null,
     sql_level: values.sql_level ?? existing?.sql_level ?? null,
+    daily_commitment_minutes: values.daily_commitment_minutes ?? existing?.daily_commitment_minutes ?? 30,
     onboarding_completed: values.onboarding_completed ?? existing?.onboarding_completed ?? false,
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await client.from("profiles").upsert(profile, { onConflict: "auth_user_id" }).select("*").single();
-  if (error && isMissingProfileNameColumnError(error)) {
+  if (error && isMissingProfileColumnError(error)) {
     const fallbackProfile = {
       auth_user_id: user.id,
       display_name: displayName,
@@ -95,9 +97,13 @@ function namesFromMetadata(user: User) {
 }
 
 function isMissingProfileNameColumnError(error: unknown): boolean {
+  return isMissingProfileColumnError(error);
+}
+
+function isMissingProfileColumnError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const maybeError = error as { code?: unknown; message?: unknown };
-  return maybeError.code === "PGRST204" && typeof maybeError.message === "string" && /first_name|last_name/.test(maybeError.message);
+  return maybeError.code === "PGRST204" && typeof maybeError.message === "string" && /first_name|last_name|daily_commitment_minutes/.test(maybeError.message);
 }
 
 export async function getProgress(user: User): Promise<ProgressRow[]> {
