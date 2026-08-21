@@ -180,21 +180,41 @@ const challenges: Challenge[] = [
   {
     id: 2,
     title: "Choose Specific Columns",
-    description: "Your manager wants a lighter customer extract for a slide deck. Return only CustomerID, FirstName, LastName, and Province from Customers.",
+    description: "Your manager wants a customer contact extract for a slide deck. Return only CustomerID, FirstName, LastName, Province, and City from Customers.",
     difficulty: "Beginner",
     topic: "Columns",
     starter_sql: "",
     concept: "Instead of SELECT *, you can list exact columns. This makes reports easier to read and avoids moving unnecessary data.",
     lesson: "Column order matters in a result set. When a stakeholder asks for specific fields, put those fields after SELECT in the same order they requested.",
     example_sql: "SELECT ColumnA, ColumnB\nFROM TableName;",
-    success_criteria: ["Return CustomerID, FirstName, LastName, and Province.", "Do not return extra columns.", "Read from Customers."],
+    success_criteria: ["Return CustomerID, FirstName, LastName, Province, and City.", "Do not return extra columns.", "Read from Customers."],
     guidance: {
       "Completely New": "Replace the star with a comma-separated column list.",
       "Know the Basics": "Focus on exact column names and order.",
       "Comfortable With SQL": "Treat this as a projection task: fewer columns, same rows.",
       "Interview Preparation": "Be ready to explain why SELECT * can be risky in production reports.",
     },
-    reference_sql: "SELECT CustomerID, FirstName, LastName, Province FROM Customers;",
+    reference_sql: "SELECT CustomerID, FirstName, LastName, Province, City FROM Customers;",
+    comparison_mode: "unordered",
+  },
+  {
+    id: 26,
+    title: "Select Identity and Location",
+    description: "Return only CustomerID, Province, and City from Customers.",
+    difficulty: "Beginner",
+    topic: "Columns",
+    starter_sql: "SELECT \nFROM Customers;",
+    concept: "This guided exercise checks one narrow skill: choosing only the columns requested for the active stage.",
+    lesson: "The active stage asks for three fields. Selecting extra fields, even useful ones, does not match the stage request.",
+    example_sql: "SELECT ColumnA, ColumnB\nFROM TableName;",
+    success_criteria: ["Return CustomerID, Province, and City.", "Do not return FirstName, LastName, or extra columns.", "Read from Customers."],
+    guidance: {
+      "Completely New": "Put CustomerID, Province, and City after SELECT, separated by commas.",
+      "Know the Basics": "This stage is strict about columns because the request says return only those fields.",
+      "Comfortable With SQL": "Preserve customer grain and avoid SELECT *.",
+      "Interview Preparation": "Explain that selecting only requested columns keeps outputs focused and safe to share.",
+    },
+    reference_sql: "SELECT CustomerID, Province, City FROM Customers;",
     comparison_mode: "unordered",
   },
   {
@@ -709,7 +729,8 @@ export function runSqlBankQuery(challengeId: number, query: string) {
     ensureDatabase();
     const userResult = execute(validated);
     const referenceResult = execute(challenge.reference_sql);
-    const correct = compareRows(userResult.rows, referenceResult.rows, challenge.comparison_mode);
+    const evaluation = evaluateQueryResult(userResult, referenceResult, challenge.comparison_mode);
+    const correct = evaluation.correct;
     const displayRows = userResult.rows.slice(0, MAX_RESULT_ROWS);
 
     return {
@@ -722,7 +743,7 @@ export function runSqlBankQuery(challengeId: number, query: string) {
         executionTimeMs: Math.max(0, Math.round(performance.now() - startedAt)),
         truncated: userResult.rows.length > MAX_RESULT_ROWS,
         rowCount: displayRows.length,
-        message: correct ? null : "Not quite. Your query ran successfully, but the result does not match the expected result.",
+        message: correct ? null : evaluation.message,
       },
     };
   } catch (error) {
@@ -1040,12 +1061,83 @@ function normalizeSql(sql: string) {
   return sql.replace(/\bCAST\s*\(([\S\s]*?)\s+AS\s+DECIMAL\s*\(\s*\d+\s*,\s*\d+\s*\)\s*\)/gi, "ROUND($1, 2)");
 }
 
+function evaluateQueryResult(
+  userResult: { columns: string[]; rows: unknown[][] },
+  referenceResult: { columns: string[]; rows: unknown[][] },
+  mode: Challenge["comparison_mode"],
+) {
+  const userColumns = userResult.columns.map((column) => column.toLowerCase());
+  const referenceColumns = referenceResult.columns.map((column) => column.toLowerCase());
+  const missingColumns = referenceResult.columns.filter((column) => !userColumns.includes(column.toLowerCase()));
+  const extraColumns = userResult.columns.filter((column) => !referenceColumns.includes(column.toLowerCase()));
+
+  if (missingColumns.length) {
+    return {
+      correct: false,
+      message: `Almost there. Your query ran successfully, but ${formatColumnList(missingColumns)} ${missingColumns.length === 1 ? "is" : "are"} missing from the requested output.`,
+    };
+  }
+
+  if (extraColumns.length) {
+    return {
+      correct: false,
+      message: `Your query returned the right kind of records, but this task asks for only ${formatPlainColumnList(referenceResult.columns)}.`,
+    };
+  }
+
+  const userRows = userResult.rows.map(normalizeRow);
+  const referenceRows = referenceResult.rows.map(normalizeRow);
+
+  if (mode === "single_value") {
+    return normalizeValue(userResult.rows[0]?.[0]) === normalizeValue(referenceResult.rows[0]?.[0])
+      ? { correct: true, message: null }
+      : { correct: false, message: "Your query ran, but the calculated value does not match the requested metric yet." };
+  }
+
+  const rowsMatch = mode === "ordered"
+    ? JSON.stringify(userRows) === JSON.stringify(referenceRows)
+    : JSON.stringify([...userRows].sort()) === JSON.stringify([...referenceRows].sort());
+
+  if (rowsMatch) return { correct: true, message: null };
+
+  if (mode === "ordered" && JSON.stringify([...userRows].sort()) === JSON.stringify([...referenceRows].sort())) {
+    return {
+      correct: false,
+      message: "Your rows are correct, but the requested order is not. Check the ORDER BY requirement for this exercise.",
+    };
+  }
+
+  if (userRows.length !== referenceRows.length) {
+    return {
+      correct: false,
+      message: userRows.length > referenceRows.length
+        ? "Your selected columns look right, but the result contains too many rows. Check the filtering, grouping, or TOP requirement."
+        : "Your selected columns look right, but the result is missing rows. Check the filtering, grouping, or join condition.",
+    };
+  }
+
+  return {
+    correct: false,
+    message: "Your query ran successfully, but the values do not match the current exercise yet. Check the filters, joins, grouping, and calculations.",
+  };
+}
+
 function compareRows(userRows: unknown[][], referenceRows: unknown[][], mode: Challenge["comparison_mode"]) {
   if (mode === "single_value") return normalizeValue(userRows[0]?.[0]) === normalizeValue(referenceRows[0]?.[0]);
   const user = userRows.map(normalizeRow);
   const reference = referenceRows.map(normalizeRow);
   if (mode === "ordered") return JSON.stringify(user) === JSON.stringify(reference);
   return JSON.stringify(user.sort()) === JSON.stringify(reference.sort());
+}
+
+function formatColumnList(columns: string[]) {
+  return columns.map((column) => `\`${column}\``).join(columns.length === 2 ? " and " : ", ");
+}
+
+function formatPlainColumnList(columns: string[]) {
+  if (columns.length <= 1) return columns.join("");
+  if (columns.length === 2) return `${columns[0]} and ${columns[1]}`;
+  return `${columns.slice(0, -1).join(", ")}, and ${columns[columns.length - 1]}`;
 }
 
 function normalizeRow(row: unknown[]) {

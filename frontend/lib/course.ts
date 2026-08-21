@@ -7,6 +7,7 @@ export type DailyCommitment = (typeof dailyCommitmentOptions)[number];
 export type ExperienceLevel = "Completely New" | "Know the Basics" | "Comfortable With SQL" | "Interview Preparation";
 export type LessonType = "concept" | "exercise" | "assignment" | "review" | "interview" | "project";
 export type LearningGoal = "Business Analyst" | "Data Analyst";
+export type LessonStageType = "concept" | "guided_exercise" | "independent_exercise" | "business_task" | "interpretation" | "review";
 
 export type CourseDefinition = {
   id: string;
@@ -51,6 +52,21 @@ export type LessonDefinition = {
   independentPrompt: string;
   interpretationPrompt: string;
   hints: string[];
+  stages?: LessonStageDefinition[];
+};
+
+export type LessonStageDefinition = {
+  id: string;
+  lessonId: string;
+  sequence: number;
+  type: LessonStageType;
+  title: string;
+  instructions: string;
+  estimatedMinutes: number;
+  challengeId?: number;
+  starterSql?: string;
+  hints: string[];
+  carryForwardQuery?: boolean;
 };
 
 export type SkillMastery = {
@@ -141,7 +157,11 @@ const dataAnalystSkills = [
 
 const baseLessons: LessonDefinition[] = [
   lesson("ba-new-m0", 1, "Understanding Business Tables", "concept", 8, "Beginner", ["Database Fundamentals", "SELECT"], "Your team lead asks for a complete customer extract so you can understand what columns SQLBank stores.", "A table is a structured list of records. SELECT chooses what to show, and FROM names the table you are reading from.", "Start with a full table extract so you can inspect the shape of the customer data.", "Your manager needs every customer record available for a data inventory.", "What do the rows represent, and why might a BA inspect all columns before narrowing the query?", ["Start with SELECT.", "Use the Customers table.", "A full extract uses SELECT * FROM Customers."]),
-  lesson("ba-new-m0", 2, "Choosing Business Columns", "exercise", 8, "Beginner", ["SELECT", "Aliases", "Operational Reporting"], "A stakeholder only needs customer names and locations, not every column in the customer table.", "Business reports should usually select only useful columns. This makes the output easier to read and safer to share.", "Return only the customer identity and location fields.", "Create a customer contact extract with customer ID, first name, last name, province, and city.", "Which columns would you exclude before sending this to a business user?", ["Name the columns after SELECT.", "Separate columns with commas.", "Use FROM Customers after the column list."]),
+  lesson("ba-new-m0", 2, "Choosing Business Columns", "exercise", 8, "Beginner", ["SELECT", "Aliases", "Operational Reporting"], "A stakeholder only needs customer names and locations, not every column in the customer table.", "Business reports should usually select only useful columns. This makes the output easier to read and safer to share.", "Return only the customer identity and location fields.", "Create a customer contact extract with customer ID, first name, last name, province, and city.", "Which columns would you exclude before sending this to a business user?", ["Name the columns after SELECT.", "Separate columns with commas.", "Use FROM Customers after the column list."], [
+    stage("ba-new-m0-lesson-2", "concept", 1, "Choose Specific Columns", "Business reports should usually select only useful columns. This makes the output easier to read and safer to share.\n\nExample:\nSELECT FirstName, Province\nFROM Customers;\n\nSELECT determines which columns appear. FROM determines which table is queried. Commas separate selected columns.", 3, undefined, undefined, []),
+    stage("ba-new-m0-lesson-2", "guided_exercise", 2, "Select Identity and Location", "Return only:\n- CustomerID\n- Province\n- City", 8, 26, "SELECT \nFROM Customers;", ["Identify the three requested columns.", "The columns are CustomerID, Province, and City.", "Use SELECT CustomerID, Province, City FROM Customers."]),
+    stage("ba-new-m0-lesson-2", "business_task", 3, "Customer Contact Extract", "Create a customer contact extract containing:\n- CustomerID\n- FirstName\n- LastName\n- Province\n- City", 10, 2, undefined, ["The stakeholder wants five columns from Customers.", "Include CustomerID with the customer's name and location.", "Add FirstName and LastName to the guided exercise query."], true),
+  ]),
   lesson("ba-new-m1", 3, "Filtering to One Province", "exercise", 9, "Beginner", ["Filtering", "WHERE", "Stakeholder Request Interpretation"], "Branch operations only wants Ontario customers for a local campaign check.", "WHERE keeps only the rows that match a condition. It is the first tool for turning a broad table into a business answer.", "Use WHERE to keep only Ontario records.", "Return every customer who lives in Ontario.", "What business question does the Province filter answer?", ["You need to reduce rows.", "Look at the Province column.", "Use WHERE Province = 'Ontario'."]),
   lesson("ba-new-m1", 4, "Combining Conditions", "exercise", 10, "Beginner", ["Filtering", "AND / OR", "Requirement Validation"], "A requirements analyst needs Toronto customers in Ontario to validate a city-specific rule.", "AND requires both conditions to be true. This is how a BA turns multiple requirements into one query.", "Filter by province and city.", "Return customers where Province is Ontario and City is Toronto.", "If the result is smaller than the Ontario-only list, what does that tell you?", ["Use two conditions.", "Both conditions must be true.", "Use WHERE Province = 'Ontario' AND City = 'Toronto'."]),
   lesson("ba-new-m1", 5, "Sorting Business Output", "exercise", 8, "Beginner", ["ORDER BY", "Operational Reporting"], "Customer service wants recent customers first while reviewing onboarding activity.", "ORDER BY changes result order without changing which rows are returned.", "Sort by the date the customer joined.", "Return customers ordered by CustomerSince with newest customers first.", "Why is sorting important when a human is reviewing the result?", ["You need ordering, not filtering.", "Use CustomerSince.", "Newest first means DESC."]),
@@ -236,12 +256,12 @@ export function getLessonById(lessonId: string) {
 }
 
 export function findLessonForChallenge(courseDefinition: CourseDefinition, challengeId: number) {
-  return courseDefinition.modules.flatMap((module) => module.lessons).find((lesson) => lesson.challengeId === challengeId);
+  return courseDefinition.modules.flatMap((module) => module.lessons).find((lesson) => lessonChallengeIds(lesson).includes(challengeId));
 }
 
 export function nextLesson(courseDefinition: CourseDefinition, progressRows: ProgressRow[]) {
   const completed = completedChallengeIds(progressRows);
-  return courseDefinition.modules.flatMap((module) => module.lessons).find((lesson) => !completed.has(lesson.challengeId)) ?? courseDefinition.modules[0]?.lessons[0] ?? null;
+  return courseDefinition.modules.flatMap((module) => module.lessons).find((lesson) => !isLessonCompleted(lesson, completed)) ?? courseDefinition.modules[0]?.lessons[0] ?? null;
 }
 
 export function buildModuleProgress(courseDefinition: CourseDefinition, progressRows: ProgressRow[]): ModuleProgress[] {
@@ -249,7 +269,7 @@ export function buildModuleProgress(courseDefinition: CourseDefinition, progress
   let previousComplete = true;
 
   return courseDefinition.modules.map((module, index) => {
-    const completedLessons = module.lessons.filter((lesson) => completed.has(lesson.challengeId)).length;
+    const completedLessons = module.lessons.filter((lesson) => isLessonCompleted(lesson, completed)).length;
     const totalLessons = module.lessons.length;
     const percent = totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0;
     const status: ModuleProgress["status"] =
@@ -265,10 +285,13 @@ export function deriveSkillMastery(courseDefinition: CourseDefinition, progressR
 
   for (const module of courseDefinition.modules) {
     for (const lessonDefinition of module.lessons) {
-      const progress = byChallenge.get(lessonDefinition.challengeId);
-      const base = progress?.status === "completed" ? 78 : progress?.status === "in_progress" ? 32 : 0;
-      const attemptPenalty = Math.max(0, (progress?.attempt_count ?? 0) - 1) * 5;
-      const score = Math.max(0, Math.min(100, base - attemptPenalty + (lessonDefinition.type === "project" && progress?.status === "completed" ? 8 : 0)));
+      const stageProgress = lessonChallengeIds(lessonDefinition).map((challengeId) => byChallenge.get(challengeId)).filter(Boolean) as ProgressRow[];
+      const completed = isLessonCompleted(lessonDefinition, completedChallengeIds(progressRows));
+      const inProgress = stageProgress.some((progress) => progress.status === "in_progress" || progress.status === "completed");
+      const attempts = stageProgress.reduce((sum, progress) => sum + (progress.attempt_count ?? 0), 0);
+      const base = completed ? 78 : inProgress ? 32 : 0;
+      const attemptPenalty = Math.max(0, attempts - (completed ? 1 : 0)) * 5;
+      const score = Math.max(0, Math.min(100, base - attemptPenalty + (lessonDefinition.type === "project" && completed ? 8 : 0)));
       for (const skill of lessonDefinition.skills) {
         const scores = lessonScores.get(skill) ?? [];
         scores.push(score);
@@ -288,7 +311,7 @@ export function courseCompletionPercent(courseDefinition: CourseDefinition, prog
   const lessons = courseDefinition.modules.flatMap((module) => module.lessons);
   if (!lessons.length) return 0;
   const completed = completedChallengeIds(progressRows);
-  return Math.round((lessons.filter((lesson) => completed.has(lesson.challengeId)).length / lessons.length) * 100);
+  return Math.round((lessons.filter((lesson) => isLessonCompleted(lesson, completed)).length / lessons.length) * 100);
 }
 
 export function readinessScore(courseDefinition: CourseDefinition, progressRows: ProgressRow[]) {
@@ -331,6 +354,23 @@ export function lessonUrl(lesson: LessonDefinition) {
 
 export function challengeForLesson(lesson: LessonDefinition, challenges: Challenge[]) {
   return challenges.find((challenge) => challenge.id === lesson.challengeId);
+}
+
+export function getLessonStages(lesson: LessonDefinition): LessonStageDefinition[] {
+  if (lesson.stages?.length) return lesson.stages;
+  return [
+    {
+      id: `${lesson.id}-exercise`,
+      lessonId: lesson.id,
+      sequence: 1,
+      type: lesson.type === "review" ? "review" : "business_task",
+      title: lesson.title,
+      instructions: lesson.independentPrompt,
+      estimatedMinutes: lesson.estimatedMinutes,
+      challengeId: lesson.challengeId,
+      hints: lesson.hints,
+    },
+  ];
 }
 
 function course(
@@ -407,6 +447,7 @@ function lesson(
   independentPrompt: string,
   interpretationPrompt: string,
   hints: string[],
+  stages?: LessonStageDefinition[],
 ): LessonDefinition {
   return {
     id: `${moduleId}-lesson-${challengeId}`,
@@ -424,11 +465,52 @@ function lesson(
     independentPrompt,
     interpretationPrompt,
     hints,
+    stages,
   };
 }
 
 function completedChallengeIds(progressRows: ProgressRow[]) {
   return new Set(progressRows.filter((row) => row.status === "completed").map((row) => row.challenge_id));
+}
+
+function stage(
+  lessonId: string,
+  type: LessonStageType,
+  sequence: number,
+  title: string,
+  instructions: string,
+  estimatedMinutes: number,
+  challengeId?: number,
+  starterSql?: string,
+  hints: string[] = [],
+  carryForwardQuery = false,
+): LessonStageDefinition {
+  return {
+    id: `${lessonId}-stage-${sequence}`,
+    lessonId,
+    sequence,
+    type,
+    title,
+    instructions,
+    estimatedMinutes,
+    challengeId,
+    starterSql,
+    hints,
+    carryForwardQuery,
+  };
+}
+
+function lessonChallengeIds(lesson: LessonDefinition) {
+  const stageIds = getLessonStages(lesson)
+    .map((stage) => stage.challengeId)
+    .filter((challengeId): challengeId is number => typeof challengeId === "number");
+  return stageIds.length ? stageIds : [lesson.challengeId];
+}
+
+function isLessonCompleted(lesson: LessonDefinition, completed: Set<number>) {
+  if (completed.has(lesson.challengeId)) return true;
+  const requiredChallengeIds = lessonChallengeIds(lesson);
+  return requiredChallengeIds.length > 0 && requiredChallengeIds.every((challengeId) => completed.has(challengeId));
 }
 
 function average(values: number[]) {
