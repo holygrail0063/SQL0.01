@@ -233,6 +233,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
           )}
           {mode === "signup" && <>Already have an account? <Link className="text-cyan hover:text-white" href="/login">Log in</Link></>}
           {mode === "forgot" && <Link className="text-cyan hover:text-white" href="/login">Back to login</Link>}
+          <div className="mt-4">
+            <Link className="text-slate-500 hover:text-white" href="/">Back to home page</Link>
+          </div>
         </div>
       </section>
     </main>
