@@ -68,6 +68,9 @@ function DashboardContent() {
   const reviews = course ? reviewDue(course, progress) : [];
   const completedCount = completedIds.size;
   const learnerName = profileDisplayName(profile, user);
+  const roleName = course?.learningGoal ?? profile?.selected_role ?? "SQL";
+  const roleAssignmentLabel = roleName === "Data Analyst" ? "SQLBank analysis" : "SQLBank assignment";
+  const roleAssignmentPlural = roleName === "Data Analyst" ? "SQLBank analyses" : "SQLBank assignments";
 
   if (loading) return <main className="p-8 text-slate-400">Loading dashboard...</main>;
   if (error) return <main className="p-8 text-red-200">{error}</main>;
@@ -85,14 +88,14 @@ function DashboardContent() {
         <section className="mt-8 rounded border border-line bg-panel p-6">
           <p className="font-mono text-sm text-cyan">Coming Soon</p>
           <h2 className="mt-3 text-2xl font-semibold text-white">{profile?.selected_role} pathway is being built.</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Business Analyst is the active curriculum today. Your selected goal is saved, and this page will activate when that pathway is available.</p>
-          <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-white" href="/settings">Choose Business Analyst</Link>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Business Analyst and Data Analyst are active today. Your selected goal is saved, and this page will activate when that pathway is available.</p>
+          <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-white" href="/settings">Choose A Working Path</Link>
         </section>
       ) : (
         <>
           <section className="mt-8 grid gap-5 lg:grid-cols-[1fr_360px]">
             <div className="rounded border border-line bg-panel p-6">
-              <p className="text-sm uppercase tracking-wider text-slate-500">{course.experienceLevel === "Interview Preparation" ? "SQL Interview Preparation" : "Continue Your Business Analyst Path"}</p>
+              <p className="text-sm uppercase tracking-wider text-slate-500">{course.experienceLevel === "Interview Preparation" ? `${course.learningGoal} Interview Preparation` : `Continue Your ${course.learningGoal} Path`}</p>
               {currentLesson && currentChallenge ? (
                 <>
                   <h2 className="mt-4 text-2xl font-semibold text-white">
@@ -104,7 +107,7 @@ function DashboardContent() {
                     <ul className="mt-3 space-y-2 text-sm text-slate-300">
                       <li>3 min - Concept</li>
                       <li>5 min - Guided practice</li>
-                      <li>{Math.max(6, dailyCommitment - 15)} min - SQLBank assignment</li>
+                      <li>{Math.max(6, dailyCommitment - 15)} min - {roleAssignmentLabel}</li>
                       <li>5 min - Review checkpoint</li>
                       <li>2 min - Business interpretation</li>
                     </ul>
@@ -118,8 +121,8 @@ function DashboardContent() {
                 </>
               ) : (
                 <>
-                  <h2 className="mt-4 text-2xl font-semibold text-white">Business Analyst SQL Path Complete</h2>
-                  <p className="mt-3 text-sm text-slate-300">Review weak areas or revisit SQLBank assignments to keep skills fresh.</p>
+                  <h2 className="mt-4 text-2xl font-semibold text-white">{course.learningGoal} SQL Path Complete</h2>
+                  <p className="mt-3 text-sm text-slate-300">Review weak areas or revisit {roleAssignmentPlural} to keep skills fresh.</p>
                   <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-white" href="/sqlbank">Open SQLBank</Link>
                 </>
               )}
@@ -128,7 +131,7 @@ function DashboardContent() {
             <div className="rounded border border-line bg-panel p-6">
               <p className="text-sm uppercase tracking-wider text-slate-500">Current SQL Readiness</p>
               <div className="mt-4 text-5xl font-semibold text-white">{readiness}%</div>
-              <p className="mt-3 text-sm leading-6 text-slate-400">Building toward workplace-ready Business Analyst SQL.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-400">Building toward workplace-ready {course.learningGoal} SQL.</p>
               <div className="mt-6 h-3 rounded bg-[#0a101b]">
                 <div className="h-3 rounded bg-brand" style={{ width: `${readiness}%` }} />
               </div>
@@ -156,7 +159,7 @@ function DashboardContent() {
                 <div className="flex justify-between"><span>Exercises solved</span><span>{weekly.exercisesSolved}</span></div>
                 <div className="flex justify-between"><span>Minutes practiced</span><span>{weekly.minutesPracticed}</span></div>
                 <div className="flex justify-between"><span>Current streak</span><span>{weekly.currentStreak} days</span></div>
-                <div className="flex justify-between"><span>SQLBank assignments</span><span>{weekly.assignments}</span></div>
+                <div className="flex justify-between"><span>{roleAssignmentPlural}</span><span>{weekly.assignments}</span></div>
               </div>
             </div>
             <div className="rounded border border-line bg-panel p-6">

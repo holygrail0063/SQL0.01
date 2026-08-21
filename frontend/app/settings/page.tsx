@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/auth";
-import { dailyCommitmentOptions, getBusinessAnalystCourse, getDailyCommitment } from "@/lib/course";
+import { dailyCommitmentOptions, getCourseForSelection, getDailyCommitment } from "@/lib/course";
 import { roleOptions, sqlLevelOptions } from "@/lib/curriculum";
 import { getProfile, saveProfile, type Profile } from "@/lib/progress";
 import { requireSupabase } from "@/lib/supabase";
@@ -42,7 +42,7 @@ function SettingsContent() {
     });
   }, [user]);
 
-  const selectedCourse = role === "Business Analyst" ? getBusinessAnalystCourse(level) : null;
+  const selectedCourse = getCourseForSelection(role, level);
   const hasExistingPath = Boolean(profile?.onboarding_completed && profile.selected_role && profile.sql_level);
   const pathChanged = hasExistingPath && (profile?.selected_role !== role || profile?.sql_level !== level);
 
@@ -118,7 +118,7 @@ function SettingsContent() {
           <div className="rounded border border-line bg-[#0a1322] p-5">
             <p className="font-mono text-xs uppercase tracking-wider text-cyan">Coming Soon</p>
             <h2 className="mt-2 text-xl font-semibold text-white">{role}</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-300">That career pathway is being built. You can keep this goal selected, and QueryRight will show the Business Analyst curriculum when you choose Business Analyst.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-300">That career pathway is being built. You can keep this goal selected, or choose Business Analyst or Data Analyst to start a working curriculum today.</p>
           </div>
         )}
         {message && <p className="text-sm text-success">{message}</p>}

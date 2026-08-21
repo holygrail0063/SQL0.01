@@ -16,7 +16,7 @@ export type Challenge = {
   comparison_mode: "ordered" | "unordered" | "single_value";
 };
 
-type Row = Record<string, string | number>;
+type Row = Record<string, string | number | null>;
 
 const MAX_RESULT_ROWS = Number(process.env.MAX_RESULT_ROWS ?? 200);
 const MAX_QUERY_LENGTH = Number(process.env.MAX_QUERY_LENGTH ?? 5000);
@@ -32,6 +32,9 @@ const schema = [
       { name: "City", type: "nvarchar(80)" },
       { name: "DateOfBirth", type: "date" },
       { name: "CustomerSince", type: "date" },
+      { name: "CustomerStatus", type: "nvarchar(20)" },
+      { name: "CustomerSegment", type: "nvarchar(40)" },
+      { name: "AcquisitionChannel", type: "nvarchar(40)" },
     ],
   },
   {
@@ -49,6 +52,7 @@ const schema = [
       { name: "ApplicationID", type: "int" },
       { name: "CustomerID", type: "int" },
       { name: "BranchID", type: "int" },
+      { name: "ProductID", type: "int" },
       { name: "ApplicationDate", type: "date" },
       { name: "RequestedAmount", type: "decimal(12,2)" },
       { name: "Status", type: "nvarchar(20)" },
@@ -75,6 +79,79 @@ const schema = [
       { name: "PaymentDate", type: "date" },
       { name: "Amount", type: "decimal(12,2)" },
       { name: "PaymentStatus", type: "nvarchar(20)" },
+    ],
+  },
+  {
+    table: "Products",
+    columns: [
+      { name: "ProductID", type: "int" },
+      { name: "ProductName", type: "nvarchar(80)" },
+      { name: "ProductCategory", type: "nvarchar(50)" },
+      { name: "InterestRate", type: "decimal(5,2)" },
+      { name: "LaunchDate", type: "date" },
+      { name: "ProductStatus", type: "nvarchar(20)" },
+    ],
+  },
+  {
+    table: "Accounts",
+    columns: [
+      { name: "AccountID", type: "int" },
+      { name: "CustomerID", type: "int" },
+      { name: "ProductID", type: "int" },
+      { name: "AccountType", type: "nvarchar(40)" },
+      { name: "OpenedDate", type: "date" },
+      { name: "ClosedDate", type: "date" },
+      { name: "Balance", type: "decimal(12,2)" },
+      { name: "AccountStatus", type: "nvarchar(20)" },
+    ],
+  },
+  {
+    table: "Transactions",
+    columns: [
+      { name: "TransactionID", type: "int" },
+      { name: "AccountID", type: "int" },
+      { name: "TransactionDate", type: "date" },
+      { name: "TransactionType", type: "nvarchar(30)" },
+      { name: "Amount", type: "decimal(12,2)" },
+      { name: "MerchantCategory", type: "nvarchar(60)" },
+      { name: "Channel", type: "nvarchar(30)" },
+      { name: "TransactionStatus", type: "nvarchar(20)" },
+    ],
+  },
+  {
+    table: "Campaigns",
+    columns: [
+      { name: "CampaignID", type: "int" },
+      { name: "CampaignName", type: "nvarchar(100)" },
+      { name: "CampaignType", type: "nvarchar(40)" },
+      { name: "StartDate", type: "date" },
+      { name: "EndDate", type: "date" },
+      { name: "Channel", type: "nvarchar(30)" },
+      { name: "CampaignCost", type: "decimal(12,2)" },
+    ],
+  },
+  {
+    table: "CustomerEvents",
+    columns: [
+      { name: "EventID", type: "int" },
+      { name: "CustomerID", type: "int" },
+      { name: "SessionID", type: "nvarchar(40)" },
+      { name: "EventName", type: "nvarchar(60)" },
+      { name: "EventTimestamp", type: "date" },
+      { name: "ProductID", type: "int" },
+      { name: "Channel", type: "nvarchar(30)" },
+      { name: "DeviceType", type: "nvarchar(30)" },
+    ],
+  },
+  {
+    table: "MonthlyTargets",
+    columns: [
+      { name: "Month", type: "nvarchar(7)" },
+      { name: "BranchID", type: "int" },
+      { name: "ApplicationsTarget", type: "int" },
+      { name: "ApprovalsTarget", type: "int" },
+      { name: "RevenueTarget", type: "decimal(12,2)" },
+      { name: "CustomerGrowthTarget", type: "int" },
     ],
   },
 ];
@@ -380,6 +457,206 @@ const challenges: Challenge[] = [
     reference_sql: "SELECT TOP 5 b.BranchName, ROUND(SUM(CASE WHEN a.Status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS ApprovalRate FROM Branches b INNER JOIN Applications a ON b.BranchID = a.BranchID GROUP BY b.BranchName ORDER BY ApprovalRate DESC, b.BranchName ASC;",
     comparison_mode: "ordered",
   },
+  {
+    id: 16,
+    title: "Customer Directory For Analysis",
+    description: "Your analytics manager needs a clean customer directory before exploring behavior. Return CustomerID, FirstName, LastName, Province, City, and CustomerSince from Customers.",
+    difficulty: "Beginner",
+    topic: "SELECT",
+    starter_sql: "",
+    concept: "Data analysts often begin by selecting the fields that define the grain of a dataset. Here, the grain is one row per customer.",
+    lesson: "SELECT names the columns you want. Avoid SELECT * when you are preparing an analytical dataset for another person or tool.",
+    example_sql: "SELECT ColumnA, ColumnB\nFROM TableName;",
+    success_criteria: ["Return only the requested customer columns.", "Keep one row per customer.", "Do not filter the customer list."],
+    guidance: {
+      "Completely New": "List each requested column after SELECT, separated by commas.",
+      "Know the Basics": "This is a projection task: choose columns, keep all rows.",
+      "Comfortable With SQL": "Preserve customer grain by reading only from Customers.",
+      "Interview Preparation": "Be ready to explain why the output has one row per customer.",
+    },
+    reference_sql: "SELECT CustomerID, FirstName, LastName, Province, City, CustomerSince FROM Customers;",
+    comparison_mode: "unordered",
+  },
+  {
+    id: 17,
+    title: "Account Type Distribution",
+    description: "The product analytics lead wants to know which account types customers are actively using. Return AccountType and AccountCount for active accounts.",
+    difficulty: "Beginner",
+    topic: "GROUP BY",
+    starter_sql: "",
+    concept: "GROUP BY turns account-level rows into a summary by category. The denominator matters: this task only counts active accounts.",
+    lesson: "Use WHERE before GROUP BY when the metric should only include a subset, such as active accounts.",
+    example_sql: "SELECT CategoryColumn, COUNT(*) AS CountName\nFROM TableName\nWHERE StatusColumn = 'Active'\nGROUP BY CategoryColumn;",
+    success_criteria: ["Use Accounts.", "Filter AccountStatus to Active.", "Return AccountType and AccountCount."],
+    guidance: {
+      "Completely New": "Filter first with WHERE AccountStatus = 'Active', then group by AccountType.",
+      "Know the Basics": "COUNT(*) should count active account rows within each type.",
+      "Comfortable With SQL": "This checks metric definition and category grain.",
+      "Interview Preparation": "Explain why inactive or closed accounts are excluded from the denominator.",
+    },
+    reference_sql: "SELECT AccountType, COUNT(*) AS AccountCount FROM Accounts WHERE AccountStatus = 'Active' GROUP BY AccountType ORDER BY AccountCount DESC, AccountType ASC;",
+    comparison_mode: "ordered",
+  },
+  {
+    id: 18,
+    title: "High-Value Transaction Review",
+    description: "Customer Analytics is reviewing large successful transactions. Return the 25 largest successful Transactions over 1000 with TransactionID, AccountID, TransactionDate, Amount, and Channel.",
+    difficulty: "Beginner",
+    topic: "Filtering",
+    starter_sql: "",
+    concept: "Analytical filters often combine status, amount, and date rules. Here the business question is about completed high-value activity.",
+    lesson: "Use WHERE to define which rows count as high-value successful transactions, then ORDER BY to review the biggest values first.",
+    example_sql: "SELECT TOP 25 ColumnA, ColumnB\nFROM TableName\nWHERE StatusColumn = 'Successful' AND AmountColumn > 1000\nORDER BY AmountColumn DESC;",
+    success_criteria: ["Read from Transactions.", "Keep successful transactions over 1000.", "Return the largest 25 rows by Amount."],
+    guidance: {
+      "Completely New": "Use AND because both conditions must be true.",
+      "Know the Basics": "TOP belongs after SELECT and ORDER BY defines which 25 rows are top.",
+      "Comfortable With SQL": "This is a ranked exception review.",
+      "Interview Preparation": "Mention that high-value must be defined before interpreting the result.",
+    },
+    reference_sql: "SELECT TOP 25 TransactionID, AccountID, TransactionDate, Amount, Channel FROM Transactions WHERE TransactionStatus = 'Successful' AND Amount > 1000 ORDER BY Amount DESC, TransactionID ASC;",
+    comparison_mode: "ordered",
+  },
+  {
+    id: 19,
+    title: "Monthly Transaction Trend",
+    description: "Your team lead asks whether activity is rising or falling. Return Month, TransactionCount, TransactionValue, and AverageTransactionValue for successful transactions.",
+    difficulty: "Intermediate",
+    topic: "Trend Analysis",
+    starter_sql: "",
+    concept: "Trend analysis groups events into time periods. Analysts separate volume, total value, and average value because each can tell a different story.",
+    lesson: "Create the month with SUBSTRING(TransactionDate, 1, 7), then group by the same expression.",
+    example_sql: "SELECT SUBSTRING(DateColumn, 1, 7) AS Month, COUNT(*) AS Events\nFROM TableName\nGROUP BY SUBSTRING(DateColumn, 1, 7)\nORDER BY Month;",
+    success_criteria: ["Group successful transactions by month.", "Calculate count, total value, and average value.", "Sort months chronologically."],
+    guidance: {
+      "Completely New": "The month is the first seven characters of the date, like 2025-03.",
+      "Know the Basics": "Every non-aggregated expression in SELECT should also appear in GROUP BY.",
+      "Comfortable With SQL": "Compare volume and average value; they can move in different directions.",
+      "Interview Preparation": "Be ready to describe what each metric reveals and what it hides.",
+    },
+    reference_sql: "SELECT SUBSTRING(TransactionDate, 1, 7) AS Month, COUNT(*) AS TransactionCount, ROUND(SUM(Amount), 2) AS TransactionValue, ROUND(AVG(Amount), 2) AS AverageTransactionValue FROM Transactions WHERE TransactionStatus = 'Successful' GROUP BY SUBSTRING(TransactionDate, 1, 7) ORDER BY Month ASC;",
+    comparison_mode: "ordered",
+  },
+  {
+    id: 20,
+    title: "Customer Segment Balances",
+    description: "The customer strategy team wants to compare balances by customer segment. Return CustomerSegment, ActiveCustomers, TotalBalance, and AverageBalance.",
+    difficulty: "Intermediate",
+    topic: "JOIN + Aggregation",
+    starter_sql: "",
+    concept: "Joining customer and account data changes the grain. Count distinct customers so people with multiple accounts are not over-counted.",
+    lesson: "Customers has segment details; Accounts has balances. Join them, filter active accounts, then aggregate by segment.",
+    example_sql: "SELECT c.Segment, COUNT(DISTINCT c.CustomerID), SUM(a.Balance)\nFROM Customers c\nJOIN Accounts a ON c.CustomerID = a.CustomerID\nGROUP BY c.Segment;",
+    success_criteria: ["Join Customers to Accounts.", "Filter active accounts.", "Use COUNT(DISTINCT CustomerID) for customers."],
+    guidance: {
+      "Completely New": "The same customer can have more than one account, so use DISTINCT when counting customers.",
+      "Know the Basics": "Group by the customer segment column.",
+      "Comfortable With SQL": "This is a grain-awareness task.",
+      "Interview Preparation": "Call out the double-counting risk after the join.",
+    },
+    reference_sql: "SELECT c.CustomerSegment, COUNT(DISTINCT c.CustomerID) AS ActiveCustomers, ROUND(SUM(a.Balance), 2) AS TotalBalance, ROUND(AVG(a.Balance), 2) AS AverageBalance FROM Customers c INNER JOIN Accounts a ON c.CustomerID = a.CustomerID WHERE a.AccountStatus = 'Active' GROUP BY c.CustomerSegment ORDER BY TotalBalance DESC, c.CustomerSegment ASC;",
+    comparison_mode: "ordered",
+  },
+  {
+    id: 21,
+    title: "Application KPI Scorecard",
+    description: "Lending Analytics needs a monthly scorecard for 2025. Return Month, Applications, Approvals, ApprovalRate, and AverageRequestedAmount.",
+    difficulty: "Intermediate",
+    topic: "KPI Analysis",
+    starter_sql: "",
+    concept: "A KPI needs a numerator, a denominator, and the correct grain. Approval rate is approvals divided by all applications in the month.",
+    lesson: "Conditional aggregation with CASE lets you count approved applications inside each month.",
+    example_sql: "SELECT GroupName,\n  SUM(CASE WHEN Status = 'Approved' THEN 1 ELSE 0 END) AS Approved\nFROM TableName\nGROUP BY GroupName;",
+    success_criteria: ["Filter to 2025 application dates.", "Group by application month.", "Calculate approval rate using all applications as denominator."],
+    guidance: {
+      "Completely New": "Build the monthly count first, then add the approved count.",
+      "Know the Basics": "Use CASE inside SUM for the numerator.",
+      "Comfortable With SQL": "Make the denominator COUNT(*) so pending and declined applications remain included.",
+      "Interview Preparation": "Metric questions are often denominator questions.",
+    },
+    reference_sql: "SELECT SUBSTRING(ApplicationDate, 1, 7) AS Month, COUNT(*) AS Applications, SUM(CASE WHEN Status = 'Approved' THEN 1 ELSE 0 END) AS Approvals, ROUND(SUM(CASE WHEN Status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS ApprovalRate, ROUND(AVG(RequestedAmount), 2) AS AverageRequestedAmount FROM Applications WHERE ApplicationDate >= '2025-01-01' AND ApplicationDate <= '2025-12-31' GROUP BY SUBSTRING(ApplicationDate, 1, 7) ORDER BY Month ASC;",
+    comparison_mode: "ordered",
+  },
+  {
+    id: 22,
+    title: "Campaign Conversion Funnel",
+    description: "Growth wants to know which acquisition channels move customers through signup. Return Channel, SignupStarted, SignupCompleted, AccountOpened, and CompletionRate from CustomerEvents.",
+    difficulty: "Advanced",
+    topic: "Funnel Analysis",
+    starter_sql: "",
+    concept: "Funnel analysis counts how many users reach each step. The drop-off between steps is often more important than the total count.",
+    lesson: "Use conditional COUNT DISTINCT logic so one customer is counted once per funnel stage, even if they have multiple events.",
+    example_sql: "SELECT Channel,\n  COUNT(DISTINCT CASE WHEN EventName = 'step_one' THEN CustomerID END) AS StepOne\nFROM Events\nGROUP BY Channel;",
+    success_criteria: ["Group by Channel.", "Count distinct customers at each funnel step.", "Calculate completion rate from completed divided by started."],
+    guidance: {
+      "Completely New": "Each CASE returns CustomerID only for one funnel step.",
+      "Know the Basics": "COUNT DISTINCT prevents duplicate event rows from inflating the funnel.",
+      "Comfortable With SQL": "Compare stage counts by channel to find drop-off.",
+      "Interview Preparation": "Explain why funnel metrics are user-level, not event-level.",
+    },
+    reference_sql: "SELECT Channel, COUNT(DISTINCT CASE WHEN EventName = 'signup_started' THEN CustomerID END) AS SignupStarted, COUNT(DISTINCT CASE WHEN EventName = 'signup_completed' THEN CustomerID END) AS SignupCompleted, COUNT(DISTINCT CASE WHEN EventName = 'account_opened' THEN CustomerID END) AS AccountOpened, ROUND(COUNT(DISTINCT CASE WHEN EventName = 'signup_completed' THEN CustomerID END) * 100.0 / COUNT(DISTINCT CASE WHEN EventName = 'signup_started' THEN CustomerID END), 2) AS CompletionRate FROM CustomerEvents GROUP BY Channel ORDER BY CompletionRate ASC, Channel ASC;",
+    comparison_mode: "ordered",
+  },
+  {
+    id: 23,
+    title: "Product Adoption",
+    description: "Product Strategy wants active account adoption by product. Return ProductName, ProductCategory, ActiveAccounts, and TotalBalance.",
+    difficulty: "Intermediate",
+    topic: "Product Analysis",
+    starter_sql: "",
+    concept: "Product adoption is about usage, not just availability. Here active accounts represent adoption.",
+    lesson: "Products describes the offering; Accounts shows whether customers opened and still hold the product.",
+    example_sql: "SELECT p.ProductName, COUNT(*) AS ActiveAccounts\nFROM Products p\nJOIN Accounts a ON p.ProductID = a.ProductID\nWHERE a.AccountStatus = 'Active'\nGROUP BY p.ProductName;",
+    success_criteria: ["Join Products to Accounts.", "Filter active accounts.", "Return active account count and balance by product."],
+    guidance: {
+      "Completely New": "Start with Products joined to Accounts on ProductID.",
+      "Know the Basics": "Use WHERE AccountStatus = 'Active'.",
+      "Comfortable With SQL": "Sort adoption from highest to lowest.",
+      "Interview Preparation": "Be clear that this measures active accounts, not unique customers.",
+    },
+    reference_sql: "SELECT p.ProductName, p.ProductCategory, COUNT(*) AS ActiveAccounts, ROUND(SUM(a.Balance), 2) AS TotalBalance FROM Products p INNER JOIN Accounts a ON p.ProductID = a.ProductID WHERE a.AccountStatus = 'Active' GROUP BY p.ProductName, p.ProductCategory ORDER BY ActiveAccounts DESC, p.ProductName ASC;",
+    comparison_mode: "ordered",
+  },
+  {
+    id: 24,
+    title: "Branch Target Achievement",
+    description: "Operations asks which branches are beating application targets in 2025. Return BranchName, Month, Applications, ApplicationsTarget, and TargetAchievementRate.",
+    difficulty: "Advanced",
+    topic: "Target Analysis",
+    starter_sql: "",
+    concept: "Target analysis compares actuals to plan at the same grain. Here the grain is branch-month.",
+    lesson: "Aggregate applications by branch and month, then join to MonthlyTargets using both BranchID and Month.",
+    example_sql: "WITH actuals AS (\n  SELECT BranchID, SUBSTRING(DateColumn, 1, 7) AS Month, COUNT(*) AS Applications\n  FROM TableName\n  GROUP BY BranchID, SUBSTRING(DateColumn, 1, 7)\n)\nSELECT ...",
+    success_criteria: ["Build actual applications at branch-month grain.", "Join to MonthlyTargets.", "Sort best achievement rates first."],
+    guidance: {
+      "Completely New": "This is a multi-step query; use a CTE to keep it readable.",
+      "Know the Basics": "The join needs BranchID and Month so actuals match the right target row.",
+      "Comfortable With SQL": "Validate grain before calculating the rate.",
+      "Interview Preparation": "Explain how mismatched grain can create duplicate or incorrect target comparisons.",
+    },
+    reference_sql: "WITH Actuals AS (SELECT BranchID, SUBSTRING(ApplicationDate, 1, 7) AS Month, COUNT(*) AS Applications FROM Applications WHERE ApplicationDate >= '2025-01-01' AND ApplicationDate <= '2025-12-31' GROUP BY BranchID, SUBSTRING(ApplicationDate, 1, 7)) SELECT TOP 10 b.BranchName, a.Month, a.Applications, t.ApplicationsTarget, ROUND(a.Applications * 100.0 / t.ApplicationsTarget, 2) AS TargetAchievementRate FROM Actuals a INNER JOIN MonthlyTargets t ON a.BranchID = t.BranchID AND a.Month = t.Month INNER JOIN Branches b ON a.BranchID = b.BranchID ORDER BY TargetAchievementRate DESC, b.BranchName ASC;",
+    comparison_mode: "ordered",
+  },
+  {
+    id: 25,
+    title: "Customer Engagement Investigation",
+    description: "Senior leadership believes engagement weakened recently. Compare monthly active customers from successful transactions and return Month, ActiveCustomers, TransactionCount, and TransactionValue.",
+    difficulty: "Advanced",
+    topic: "Analytical Investigation",
+    starter_sql: "",
+    concept: "An analytical investigation begins by choosing a metric. Active customers measures reach; transaction count measures frequency; value measures money moved.",
+    lesson: "Join Transactions to Accounts so each transaction can be connected to a customer, then count distinct customers by month.",
+    example_sql: "SELECT Month, COUNT(DISTINCT CustomerID) AS ActiveCustomers\nFROM ...\nGROUP BY Month;",
+    success_criteria: ["Connect transactions to customers through Accounts.", "Group successful transactions by month.", "Return active customers, transaction count, and value."],
+    guidance: {
+      "Completely New": "Transactions do not directly store CustomerID, so use Accounts as the bridge.",
+      "Know the Basics": "COUNT DISTINCT CustomerID prevents a frequent customer from being counted many times.",
+      "Comfortable With SQL": "Compare active customers, count, and value before making a conclusion.",
+      "Interview Preparation": "Frame the result as evidence for a follow-up investigation, not a final business verdict.",
+    },
+    reference_sql: "SELECT SUBSTRING(t.TransactionDate, 1, 7) AS Month, COUNT(DISTINCT a.CustomerID) AS ActiveCustomers, COUNT(*) AS TransactionCount, ROUND(SUM(t.Amount), 2) AS TransactionValue FROM Transactions t INNER JOIN Accounts a ON t.AccountID = a.AccountID WHERE t.TransactionStatus = 'Successful' GROUP BY SUBSTRING(t.TransactionDate, 1, 7) ORDER BY Month ASC;",
+    comparison_mode: "ordered",
+  },
 ];
 
 const prohibitedKeywords = new Set([
@@ -522,7 +799,7 @@ function ensureDatabase() {
   }
   const data = createTrainingData();
   for (const [table, rows] of Object.entries(data)) {
-    alasql.tables[table].data = rows;
+    alasql.tables[table].data = rows as Record<string, string | number>[];
   }
   databaseReady = true;
 }
@@ -541,6 +818,17 @@ function createTrainingData() {
   const firstNames = ["Maya", "Daniel", "Sofia", "Ethan", "Priya", "Noah", "Ava", "Liam", "Olivia", "Lucas", "Nora", "Arjun"];
   const lastNames = ["Chen", "Singh", "Martin", "Patel", "Brown", "Wilson", "Roy", "Nguyen", "Taylor", "Anderson", "Campbell", "Kaur"];
   const provinceNames = Object.keys(provinces);
+  const segments = ["Everyday Banking", "Digital First", "High Value", "New Borrower", "Dormant"];
+  const acquisitionChannels = ["Organic", "Paid Search", "Referral", "Branch", "Partner Campaign"];
+
+  const Products: Row[] = [
+    { ProductID: 1, ProductName: "Everyday Chequing", ProductCategory: "Deposit", InterestRate: 0.05, LaunchDate: "2018-01-15", ProductStatus: "Active" },
+    { ProductID: 2, ProductName: "High Interest Savings", ProductCategory: "Deposit", InterestRate: 3.25, LaunchDate: "2020-06-01", ProductStatus: "Active" },
+    { ProductID: 3, ProductName: "Student Banking", ProductCategory: "Deposit", InterestRate: 0.1, LaunchDate: "2019-08-15", ProductStatus: "Active" },
+    { ProductID: 4, ProductName: "Rewards Credit Card", ProductCategory: "Credit", InterestRate: 19.99, LaunchDate: "2021-03-10", ProductStatus: "Active" },
+    { ProductID: 5, ProductName: "Personal Loan", ProductCategory: "Loan", InterestRate: 8.75, LaunchDate: "2017-09-01", ProductStatus: "Active" },
+    { ProductID: 6, ProductName: "Digital Saver", ProductCategory: "Deposit", InterestRate: 4.05, LaunchDate: "2025-02-01", ProductStatus: "Active" },
+  ];
 
   const Branches: Row[] = [];
   let branchId = 1;
@@ -570,7 +858,34 @@ function createTrainingData() {
       City: city,
       DateOfBirth: randomDate(rng, 1973, 2007),
       CustomerSince: randomDate(rng, 2014, 2023),
+      CustomerStatus: weightedPick(rng, ["Active", "Inactive", "Closed"], [78, 17, 5]),
+      CustomerSegment: weightedPick(rng, segments, province === "Ontario" ? [28, 32, 18, 12, 10] : [34, 23, 14, 16, 13]),
+      AcquisitionChannel: weightedPick(rng, acquisitionChannels, province === "British Columbia" ? [24, 30, 12, 22, 12] : [32, 18, 20, 22, 8]),
     });
+  }
+
+  const Accounts: Row[] = [];
+  let accountId = 7001;
+  for (const customer of Customers) {
+    const customerSegment = String(customer.CustomerSegment);
+    const accountCount = customerSegment === "High Value" ? 2 : rng() > 0.72 ? 2 : 1;
+    for (let index = 0; index < accountCount; index += 1) {
+      const product = index === 0 ? Products[Math.floor(rng() * 3)] : Products[Math.floor(rng() * Products.length)];
+      const activeBias = customer.CustomerStatus === "Active" ? [84, 9, 7] : [25, 38, 37];
+      const accountStatus = weightedPick(rng, ["Active", "Inactive", "Closed"], activeBias);
+      const highValueMultiplier = customerSegment === "High Value" ? 2.8 : customerSegment === "Dormant" ? 0.35 : 1;
+      Accounts.push({
+        AccountID: accountId,
+        CustomerID: customer.CustomerID,
+        ProductID: product.ProductID,
+        AccountType: product.ProductCategory === "Credit" ? "Credit Card" : product.ProductName,
+        OpenedDate: randomDate(rng, 2018, 2025),
+        ClosedDate: accountStatus === "Closed" ? randomDate(rng, 2023, 2026) : null,
+        Balance: money((rng() * 8200 + 250) * highValueMultiplier),
+        AccountStatus: accountStatus,
+      });
+      accountId += 1;
+    }
   }
 
   const Applications: Row[] = [];
@@ -579,12 +894,14 @@ function createTrainingData() {
   for (let applicationId = 2001; applicationId <= 3500; applicationId += 1) {
     const customer = pick(rng, Customers);
     const branch = pick(rng, Branches);
+    const product = pick(rng, Products.filter((candidate) => candidate.ProductCategory === "Loan" || candidate.ProductCategory === "Credit"));
     const status = weightedPick(rng, ["Approved", "Declined", "Pending"], [56, 32, 12]);
     const requestedAmount = money(rng() * 43500 + 1500);
     Applications.push({
       ApplicationID: applicationId,
       CustomerID: customer.CustomerID,
       BranchID: branch.BranchID,
+      ProductID: product.ProductID,
       ApplicationDate: randomDate(rng, 2021, 2025),
       RequestedAmount: requestedAmount,
       Status: status,
@@ -631,7 +948,75 @@ function createTrainingData() {
     });
   }
 
-  return { Customers, Branches, Applications, Loans, Payments };
+  const Transactions: Row[] = [];
+  const merchantCategories = ["Groceries", "Fuel", "Travel", "Dining", "Payroll", "Utilities", "Transfer", "Subscription"];
+  const channels = ["Mobile", "Web", "Branch", "ATM", "Call Centre"];
+  for (let transactionId = 15001; transactionId <= 19500; transactionId += 1) {
+    const account = pick(rng, Accounts);
+    const customer = Customers.find((candidate) => candidate.CustomerID === account.CustomerID);
+    const isDigital = customer?.CustomerSegment === "Digital First";
+    const amountTrend = transactionId > 18000 ? 0.78 : 1;
+    const channel = weightedPick(rng, channels, isDigital ? [56, 27, 4, 8, 5] : [31, 22, 19, 18, 10]);
+    Transactions.push({
+      TransactionID: transactionId,
+      AccountID: account.AccountID,
+      TransactionDate: randomDate(rng, 2024, 2026),
+      TransactionType: weightedPick(rng, ["Debit", "Credit", "Transfer", "Fee"], [54, 26, 17, 3]),
+      Amount: money((rng() * 1750 + 12) * amountTrend),
+      MerchantCategory: pick(rng, merchantCategories),
+      Channel: channel,
+      TransactionStatus: weightedPick(rng, ["Successful", "Failed", "Reversed"], [91, 7, 2]),
+    });
+  }
+
+  const Campaigns: Row[] = [
+    { CampaignID: 1, CampaignName: "Spring Digital Saver Launch", CampaignType: "Product Launch", StartDate: "2025-02-01", EndDate: "2025-03-31", Channel: "Paid Search", CampaignCost: 84000 },
+    { CampaignID: 2, CampaignName: "Ontario Everyday Banking Push", CampaignType: "Acquisition", StartDate: "2025-04-01", EndDate: "2025-05-15", Channel: "Organic", CampaignCost: 36000 },
+    { CampaignID: 3, CampaignName: "Referral Rewards", CampaignType: "Referral", StartDate: "2025-06-01", EndDate: "2025-07-15", Channel: "Referral", CampaignCost: 42000 },
+    { CampaignID: 4, CampaignName: "Branch Welcome Series", CampaignType: "Retention", StartDate: "2025-08-01", EndDate: "2025-09-15", Channel: "Branch", CampaignCost: 28000 },
+  ];
+
+  const CustomerEvents: Row[] = [];
+  let eventId = 30001;
+  for (const customer of Customers.slice(0, 420)) {
+    const channel = String(customer.AcquisitionChannel);
+    const deviceType = weightedPick(rng, ["Mobile", "Desktop", "Tablet"], channel === "Paid Search" ? [72, 22, 6] : [54, 36, 10]);
+    const baseDate = randomDate(rng, 2025, 2025);
+    const sessionId = `S-${customer.CustomerID}`;
+    const completedProbability = channel === "Paid Search" ? 0.61 : channel === "Referral" ? 0.82 : 0.74;
+    const openedProbability = channel === "Paid Search" ? 0.42 : channel === "Referral" ? 0.68 : 0.57;
+    CustomerEvents.push({ EventID: eventId, CustomerID: customer.CustomerID, SessionID: sessionId, EventName: "signup_started", EventTimestamp: baseDate, ProductID: null, Channel: channel, DeviceType: deviceType });
+    eventId += 1;
+    if (rng() < completedProbability) {
+      CustomerEvents.push({ EventID: eventId, CustomerID: customer.CustomerID, SessionID: sessionId, EventName: "signup_completed", EventTimestamp: baseDate, ProductID: null, Channel: channel, DeviceType: deviceType });
+      eventId += 1;
+    }
+    if (rng() < openedProbability) {
+      CustomerEvents.push({ EventID: eventId, CustomerID: customer.CustomerID, SessionID: sessionId, EventName: "account_opened", EventTimestamp: baseDate, ProductID: pick(rng, Products).ProductID, Channel: channel, DeviceType: deviceType });
+      eventId += 1;
+    }
+    if (rng() < 0.46) {
+      CustomerEvents.push({ EventID: eventId, CustomerID: customer.CustomerID, SessionID: sessionId, EventName: "first_transaction", EventTimestamp: baseDate, ProductID: null, Channel: channel, DeviceType: deviceType });
+      eventId += 1;
+    }
+  }
+
+  const MonthlyTargets: Row[] = [];
+  for (const branch of Branches) {
+    for (let month = 1; month <= 12; month += 1) {
+      const monthLabel = `2025-${String(month).padStart(2, "0")}`;
+      MonthlyTargets.push({
+        Month: monthLabel,
+        BranchID: branch.BranchID,
+        ApplicationsTarget: 5 + Math.floor(rng() * 9),
+        ApprovalsTarget: 3 + Math.floor(rng() * 7),
+        RevenueTarget: money(90000 + rng() * 180000),
+        CustomerGrowthTarget: 4 + Math.floor(rng() * 12),
+      });
+    }
+  }
+
+  return { Customers, Branches, Applications, Loans, Payments, Products, Accounts, Transactions, Campaigns, CustomerEvents, MonthlyTargets };
 }
 
 function validateReadOnlyQuery(query: string) {

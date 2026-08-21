@@ -48,7 +48,7 @@ function LearnContent() {
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
-      <p className="font-mono text-sm text-cyan">Business Analyst SQL Path</p>
+      <p className="font-mono text-sm text-cyan">{course ? `${course.learningGoal} SQL Path` : "Career SQL Path"}</p>
       <h1 className="mt-3 text-3xl font-semibold text-white">{course ? course.title : "Career pathway coming soon"}</h1>
       {course && <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{course.description}</p>}
       {error && (
@@ -60,7 +60,7 @@ function LearnContent() {
         <section className="mt-8 rounded border border-line bg-panel p-6">
           <p className="font-mono text-xs uppercase tracking-wider text-cyan">Coming Soon</p>
           <h2 className="mt-3 text-xl font-semibold text-white">{profile?.selected_role ?? "This pathway"} is being built.</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-300">Business Analyst is the first working curriculum. Other learning goals remain selectable so future paths can plug into the same course engine.</p>
+          <p className="mt-3 text-sm leading-6 text-slate-300">Business Analyst and Data Analyst are available now. Other learning goals remain selectable so future paths can plug into the same course engine.</p>
           <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-white" href="/settings">Update Learning Path</Link>
         </section>
       )}

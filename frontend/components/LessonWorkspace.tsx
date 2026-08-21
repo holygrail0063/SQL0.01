@@ -79,7 +79,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     <main className="min-h-[calc(100vh-4rem)] bg-ink text-slate-100">
       <header className="border-b border-line bg-panel px-5 py-5">
         <div className="mx-auto max-w-7xl">
-          <p className="font-mono text-xs uppercase tracking-wider text-cyan">Business Analyst Path / Module {module.sequence} / Lesson {lesson.sequence}</p>
+          <p className="font-mono text-xs uppercase tracking-wider text-cyan">{course.learningGoal} Path / Module {module.sequence} / Lesson {lesson.sequence}</p>
           <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl font-semibold text-white">{lesson.title}</h1>
@@ -113,7 +113,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               </button>
               {showTutor && (
                 <p className="mt-3 text-sm leading-6 text-slate-300">
-                  I can help you build the query without giving away the answer. Start by naming the business grain: one row per customer, application, branch, or summary group?
+                  I can help you build the query without giving away the answer. Start by naming the grain: one row per customer, account, transaction, application, branch, or summary group?
                 </p>
               )}
             </section>

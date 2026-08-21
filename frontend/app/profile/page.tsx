@@ -65,24 +65,27 @@ function ProfileContent() {
   const weekly = weeklyProgress(progress);
   const readiness = course ? readinessScore(course, progress) : 0;
   const completion = course ? courseCompletionPercent(course, progress) : 0;
+  const profilePathLabel = course ? `${course.learningGoal} SQL` : `${profile?.selected_role ?? "SQL"} Path`;
+  const analysisLabel = course?.learningGoal === "Data Analyst" ? "SQLBank Analyses" : "SQLBank Assignments";
+  const capstoneId = course?.learningGoal === "Data Analyst" ? 25 : 15;
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
       <h1 className="text-3xl font-semibold text-white">Profile</h1>
       {currentName && <p className="mt-2 text-sm text-slate-400">{currentName}</p>}
       <section className="mt-8 rounded border border-line bg-panel p-6">
-        <p className="font-mono text-sm text-cyan">Business Analyst SQL</p>
+        <p className="font-mono text-sm text-cyan">{profilePathLabel}</p>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             ["Current Level", profile?.sql_level ?? "Not set"],
             ["Readiness", `${readiness}%`],
             ["Course Progress", `${completion}%`],
             ["Lessons Completed", String(weekly.lessonsCompleted)],
-            ["SQLBank Assignments", String(weekly.assignments)],
+            [analysisLabel, String(weekly.assignments)],
             ["Queries Executed", String(progress.reduce((sum, row) => sum + row.attempt_count, 0))],
             ["Current Streak", `${weekly.currentStreak} days`],
             ["Daily Commitment", `${getDailyCommitment(profile)} minutes`],
-            ["Projects Completed", `${progress.some((row) => row.challenge_id === 15 && row.status === "completed") ? 1 : 0} / 1`],
+            ["Projects Completed", `${progress.some((row) => row.challenge_id === capstoneId && row.status === "completed") ? 1 : 0} / 1`],
           ].map(([label, value]) => (
             <div className="rounded border border-line bg-[#090f1a] p-4" key={label}>
               <p className="text-xs uppercase tracking-wider text-slate-500">{label}</p>

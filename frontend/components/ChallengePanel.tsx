@@ -18,7 +18,7 @@ export function ChallengePanel({ challenge, current, total, sqlLevel }: { challe
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-cyan">Manager Request</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-cyan">Work Request</p>
             <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-300">{challenge.description}</p>
           </div>
           <div>
