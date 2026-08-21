@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { Chrome } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { authRedirectUrl, isSupabaseConfigured, requireSupabase } from "@/lib/supabase";
@@ -106,19 +105,6 @@ export function AuthForm({ mode }: { mode: Mode }) {
     }
   }
 
-  async function continueWithGoogle() {
-    setError(null);
-    if (!isSupabaseConfigured) {
-      setError("Supabase is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
-      return;
-    }
-    const client = requireSupabase();
-    await client.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: authRedirectUrl("/auth/callback") },
-    });
-  }
-
   const title = mode === "signup" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Welcome back";
   const passwordChecks = getPasswordChecks(password);
 
@@ -132,24 +118,6 @@ export function AuthForm({ mode }: { mode: Mode }) {
           <BrandMark />
           <h1 className="mt-7 text-2xl font-semibold text-white">{title}</h1>
         </div>
-
-        {mode !== "forgot" && (
-          <>
-            <button
-              className="mb-6 flex h-11 w-full items-center justify-center gap-2 rounded border border-line bg-[#0c1422] text-sm font-medium text-white hover:border-cyan/70"
-              onClick={continueWithGoogle}
-              type="button"
-            >
-              <Chrome size={17} />
-              Continue with Google
-            </button>
-            <div className="mb-6 flex items-center gap-3 text-xs text-slate-500">
-              <span className="h-px flex-1 bg-line" />
-              <span>or</span>
-              <span className="h-px flex-1 bg-line" />
-            </div>
-          </>
-        )}
 
         <form className="space-y-4" onSubmit={submit}>
           <input

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -64,6 +66,10 @@ function SettingsContent() {
         {message && <p className="text-sm text-success">{message}</p>}
         <div className="flex flex-wrap gap-3">
           <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-white" onClick={save} type="button">Save Settings</button>
+          <Link className="inline-flex items-center gap-2 rounded border border-line px-4 py-2 text-sm font-semibold text-slate-200 hover:border-cyan/70" href="/learn">
+            <BookOpen size={16} />
+            Back to Learning
+          </Link>
           <button className="rounded border border-line px-4 py-2 text-sm text-slate-300 hover:border-cyan/70" onClick={logout} type="button">Log out</button>
         </div>
       </section>
