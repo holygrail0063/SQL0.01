@@ -18,6 +18,9 @@ export function PublicHeader() {
         </nav>
         <div className="flex items-center gap-3">
           <Link href="/login" className="hidden text-sm text-slate-300 hover:text-white sm:block">Log in</Link>
+          <Link href="/signup" className="hidden rounded border border-line px-4 py-2 text-sm font-semibold text-slate-200 hover:border-cyan/70 hover:text-white sm:inline-flex">
+            Sign Up
+          </Link>
           <Link href="/signup" className="rounded bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand/90">
             Start Learning
           </Link>
