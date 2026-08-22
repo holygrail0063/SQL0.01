@@ -158,7 +158,7 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
           )}
           {result?.success && !result.correct && result.message && (
             <div className="border-b border-amber/30 bg-amber/10 px-6 py-3 text-sm text-amber">
-              Your query ran successfully, but the result doesn&apos;t match the requested output yet.
+              {result.message}
             </div>
           )}
           <div className="min-h-[320px] bg-[#091321]">

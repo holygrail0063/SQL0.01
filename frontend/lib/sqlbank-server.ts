@@ -14,9 +14,54 @@ export type Challenge = {
   guidance: Record<string, string>;
   reference_sql: string;
   comparison_mode: "ordered" | "unordered" | "single_value";
+  validation?: ExerciseValidation;
 };
 
 type Row = Record<string, string | number | null>;
+
+export type ResultColumn = {
+  name: string;
+  normalizedName: string;
+  dataType?: string;
+};
+
+export type NormalizedQueryResult = {
+  columns: string[];
+  columnDetails: ResultColumn[];
+  rows: unknown[][];
+  rowCount: number;
+};
+
+export type EvaluationType =
+  | "correct"
+  | "missing_columns"
+  | "extra_columns"
+  | "wrong_rows"
+  | "empty_result"
+  | "wrong_order"
+  | "wrong_row_count"
+  | "wrong_alias"
+  | "aggregation_mismatch"
+  | "logic_error";
+
+export type ExerciseValidation = {
+  columnPolicy: "exact" | "required_allow_extra" | "all_source_columns" | "single_value" | "custom";
+  rowPolicy: "exact_multiset" | "exact_set" | "subset" | "single_value" | "custom";
+  orderPolicy: "ignore" | "required";
+  aliasPolicy: "ignore" | "required";
+  numericTolerance?: number;
+  expectedNonEmpty?: boolean;
+  requiredConcepts?: string[];
+  strictColumns?: boolean;
+  requireColumnOrder?: boolean;
+};
+
+export type ExerciseEvaluation = {
+  correct: boolean;
+  type: EvaluationType;
+  message: string | null;
+  details?: Record<string, unknown>;
+};
 
 const MAX_RESULT_ROWS = Number(process.env.MAX_RESULT_ROWS ?? 200);
 const MAX_QUERY_LENGTH = Number(process.env.MAX_QUERY_LENGTH ?? 5000);
@@ -700,6 +745,16 @@ const prohibitedKeywords = new Set([
 
 let databaseReady = false;
 
+class QueryValidationError extends Error {
+  errorType: "safety_error" | "dialect_error";
+
+  constructor(errorType: "safety_error" | "dialect_error", message: string) {
+    super(message);
+    this.name = "QueryValidationError";
+    this.errorType = errorType;
+  }
+}
+
 export function listChallenges() {
   return challenges.map(({ reference_sql, comparison_mode, ...challenge }) => challenge);
 }
@@ -720,7 +775,7 @@ export function runSqlBankQuery(challengeId: number, query: string) {
   } catch (error) {
     return {
       status: 200,
-      body: { success: false, correct: false, errorType: "validation_error", message: error instanceof Error ? error.message : "Invalid SQL query." },
+      body: { success: false, correct: false, errorType: error instanceof QueryValidationError ? error.errorType : "safety_error", message: error instanceof Error ? error.message : "Invalid SQL query." },
     };
   }
 
@@ -729,7 +784,7 @@ export function runSqlBankQuery(challengeId: number, query: string) {
     ensureDatabase();
     const userResult = execute(validated);
     const referenceResult = execute(challenge.reference_sql);
-    const evaluation = evaluateQueryResult(userResult, referenceResult, challenge.comparison_mode);
+    const evaluation = evaluateQueryResult(userResult, referenceResult, getValidationContract(challenge));
     const correct = evaluation.correct;
     const displayRows = userResult.rows.slice(0, MAX_RESULT_ROWS);
 
@@ -741,9 +796,11 @@ export function runSqlBankQuery(challengeId: number, query: string) {
         columns: userResult.columns,
         rows: displayRows,
         executionTimeMs: Math.max(0, Math.round(performance.now() - startedAt)),
-        truncated: userResult.rows.length > MAX_RESULT_ROWS,
-        rowCount: displayRows.length,
+        truncated: userResult.rowCount > MAX_RESULT_ROWS,
+        rowCount: userResult.rowCount,
+        displayedRowCount: displayRows.length,
         message: correct ? null : evaluation.message,
+        evaluation,
       },
     };
   } catch (error) {
@@ -766,7 +823,7 @@ export function runFreeSqlBankQuery(query: string) {
   } catch (error) {
     return {
       status: 200,
-      body: { success: false, correct: false, errorType: "validation_error", message: error instanceof Error ? error.message : "Invalid SQL query." },
+      body: { success: false, correct: false, errorType: error instanceof QueryValidationError ? error.errorType : "safety_error", message: error instanceof Error ? error.message : "Invalid SQL query." },
     };
   }
 
@@ -784,8 +841,9 @@ export function runFreeSqlBankQuery(query: string) {
         columns: userResult.columns,
         rows: displayRows,
         executionTimeMs: Math.max(0, Math.round(performance.now() - startedAt)),
-        truncated: userResult.rows.length > MAX_RESULT_ROWS,
-        rowCount: displayRows.length,
+        truncated: userResult.rowCount > MAX_RESULT_ROWS,
+        rowCount: userResult.rowCount,
+        displayedRowCount: displayRows.length,
         message: null,
       },
     };
@@ -802,13 +860,47 @@ export function runFreeSqlBankQuery(query: string) {
   }
 }
 
-function execute(sql: string) {
+export function executeSqlBankQueryForTest(sql: string) {
+  const validated = validateReadOnlyQuery(sql);
+  ensureDatabase();
+  return execute(validated);
+}
+
+export function evaluateSqlBankResultForTest(challengeId: number, query: string) {
+  const challenge = challenges.find((candidate) => candidate.id === challengeId);
+  if (!challenge) throw new Error(`Challenge ${challengeId} was not found.`);
+  const userResult = executeSqlBankQueryForTest(query);
+  const referenceResult = executeSqlBankQueryForTest(challenge.reference_sql);
+  return evaluateQueryResult(userResult, referenceResult, getValidationContract(challenge));
+}
+
+export function auditSqlBankCurriculum() {
+  ensureDatabase();
+  return challenges.map((challenge) => {
+    const referenceResult = execute(challenge.reference_sql);
+    const evaluation = evaluateQueryResult(referenceResult, referenceResult, getValidationContract(challenge));
+    return {
+      id: challenge.id,
+      title: challenge.title,
+      referenceExecutes: true,
+      referencePasses: evaluation.correct,
+      rowCount: referenceResult.rowCount,
+      columns: referenceResult.columns,
+      validation: getValidationContract(challenge),
+    };
+  });
+}
+
+function execute(sql: string): NormalizedQueryResult {
   const rows = alasql(normalizeSql(sql)) as Row[];
   const resultRows = Array.isArray(rows) ? rows : [];
-  const columns = resultRows[0] ? Object.keys(resultRows[0]) : [];
+  const columns = resultRows[0] ? Object.keys(resultRows[0]) : resolveResultColumns(sql);
+  const columnDetails = columns.map((name) => ({ name, normalizedName: normalizeIdentifier(name), dataType: dataTypeForColumn(name) }));
   return {
+    columnDetails,
     columns,
     rows: resultRows.map((row) => columns.map((column) => row[column] ?? null)),
+    rowCount: resultRows.length,
   };
 }
 
@@ -1042,17 +1134,20 @@ function createTrainingData() {
 
 function validateReadOnlyQuery(query: string) {
   const stripped = query.trim();
-  if (!stripped) throw new Error("Enter a SQL query before running it.");
-  if (stripped.length > MAX_QUERY_LENGTH) throw new Error(`Query is too long. Keep it under ${MAX_QUERY_LENGTH} characters.`);
+  if (!stripped) throw new QueryValidationError("safety_error", "Enter a SQL query before running it.");
+  if (stripped.length > MAX_QUERY_LENGTH) throw new QueryValidationError("safety_error", `Query is too long. Keep it under ${MAX_QUERY_LENGTH} characters.`);
 
   const withoutComments = stripComments(stripped);
-  if (hasMultipleStatements(withoutComments)) throw new Error("Only one read-only SQL statement can be executed at a time.");
+  if (hasDoubleQuotedLiteral(withoutComments)) {
+    throw new QueryValidationError("dialect_error", "SQLBank uses SQL Server-style SQL. Text values should use single quotes. Try 'Ontario' rather than \"Ontario\".");
+  }
+  if (hasMultipleStatements(withoutComments)) throw new QueryValidationError("safety_error", "Only one read-only SQL statement can be executed at a time.");
   const firstKeyword = withoutComments.match(/\b[A-Za-z_][A-Za-z0-9_]*\b/)?.[0]?.toUpperCase();
-  if (!["SELECT", "WITH"].includes(firstKeyword ?? "")) throw new Error("Only SELECT queries and read-only CTE queries are allowed.");
+  if (!["SELECT", "WITH"].includes(firstKeyword ?? "")) throw new QueryValidationError("safety_error", "Only SELECT queries and read-only CTE queries are allowed.");
 
   const tokens = new Set(stripStringLiterals(withoutComments).toUpperCase().match(/\b[A-Za-z_][A-Za-z0-9_]*\b/g) ?? []);
   for (const keyword of prohibitedKeywords) {
-    if (tokens.has(keyword)) throw new Error(`Prohibited SQL keyword detected: ${keyword}.`);
+    if (tokens.has(keyword)) throw new QueryValidationError("safety_error", `Prohibited SQL keyword detected: ${keyword}.`);
   }
   return stripped.replace(/;+\s*$/, "");
 }
@@ -1062,72 +1157,252 @@ function normalizeSql(sql: string) {
 }
 
 function evaluateQueryResult(
-  userResult: { columns: string[]; rows: unknown[][] },
-  referenceResult: { columns: string[]; rows: unknown[][] },
-  mode: Challenge["comparison_mode"],
-) {
-  const userColumns = userResult.columns.map((column) => column.toLowerCase());
-  const referenceColumns = referenceResult.columns.map((column) => column.toLowerCase());
-  const missingColumns = referenceResult.columns.filter((column) => !userColumns.includes(column.toLowerCase()));
-  const extraColumns = userResult.columns.filter((column) => !referenceColumns.includes(column.toLowerCase()));
+  userResult: NormalizedQueryResult,
+  referenceResult: NormalizedQueryResult,
+  validation: ExerciseValidation,
+): ExerciseEvaluation {
+  const userColumns = userResult.columns.map(normalizeIdentifier);
+  const referenceColumns = referenceResult.columns.map(normalizeIdentifier);
+  const missingColumns = referenceResult.columns.filter((column) => !userColumns.includes(normalizeIdentifier(column)));
+  const extraColumns = userResult.columns.filter((column) => !referenceColumns.includes(normalizeIdentifier(column)));
 
-  if (missingColumns.length) {
+  if (validation.columnPolicy !== "single_value" && missingColumns.length) {
     return {
       correct: false,
+      type: validation.aliasPolicy === "required" ? "wrong_alias" : "missing_columns",
       message: `Almost there. Your query ran successfully, but ${formatColumnList(missingColumns)} ${missingColumns.length === 1 ? "is" : "are"} missing from the requested output.`,
+      details: { missingColumns },
     };
   }
 
-  if (extraColumns.length) {
+  if (validation.strictColumns !== false && validation.columnPolicy !== "required_allow_extra" && validation.columnPolicy !== "single_value" && extraColumns.length) {
     return {
       correct: false,
+      type: "extra_columns",
       message: `Your query returned the right kind of records, but this task asks for only ${formatPlainColumnList(referenceResult.columns)}.`,
+      details: { extraColumns },
     };
   }
 
-  const userRows = userResult.rows.map(normalizeRow);
-  const referenceRows = referenceResult.rows.map(normalizeRow);
-
-  if (mode === "single_value") {
-    return normalizeValue(userResult.rows[0]?.[0]) === normalizeValue(referenceResult.rows[0]?.[0])
-      ? { correct: true, message: null }
-      : { correct: false, message: "Your query ran, but the calculated value does not match the requested metric yet." };
+  if (validation.columnPolicy === "single_value" || validation.rowPolicy === "single_value") {
+    return valuesEqual(userResult.rows[0]?.[0], referenceResult.rows[0]?.[0], validation.numericTolerance)
+      ? { correct: true, type: "correct", message: null }
+      : { correct: false, type: "aggregation_mismatch", message: "Your query ran, but the calculated value does not match the requested metric yet." };
   }
 
-  const rowsMatch = mode === "ordered"
-    ? JSON.stringify(userRows) === JSON.stringify(referenceRows)
-    : JSON.stringify([...userRows].sort()) === JSON.stringify([...referenceRows].sort());
+  const alignedUserRows = alignRowsToReferenceColumns(userResult, referenceResult.columns);
+  const rowsMatch = validation.orderPolicy === "required"
+    ? compareOrderedRows(alignedUserRows, referenceResult.rows, validation.numericTolerance)
+    : compareUnorderedRows(alignedUserRows, referenceResult.rows, validation.numericTolerance);
 
-  if (rowsMatch) return { correct: true, message: null };
+  if (rowsMatch) return { correct: true, type: "correct", message: null };
 
-  if (mode === "ordered" && JSON.stringify([...userRows].sort()) === JSON.stringify([...referenceRows].sort())) {
+  if (validation.orderPolicy === "required" && compareUnorderedRows(alignedUserRows, referenceResult.rows, validation.numericTolerance)) {
     return {
       correct: false,
+      type: "wrong_order",
       message: "Your rows are correct, but the requested order is not. Check the ORDER BY requirement for this exercise.",
     };
   }
 
-  if (userRows.length !== referenceRows.length) {
+  if (userResult.rowCount === 0 && referenceResult.rowCount > 0) {
     return {
       correct: false,
-      message: userRows.length > referenceRows.length
+      type: "empty_result",
+      message: "Your SQL is valid, but it returned no rows. The current task expects matching records, so check the filter value or inspect the values available in the filtered column.",
+      details: { actualRowCount: userResult.rowCount, expectedRowCount: referenceResult.rowCount },
+    };
+  }
+
+  if (userResult.rowCount !== referenceResult.rowCount) {
+    return {
+      correct: false,
+      type: "wrong_row_count",
+      message: userResult.rowCount > referenceResult.rowCount
         ? "Your selected columns look right, but the result contains too many rows. Check the filtering, grouping, or TOP requirement."
         : "Your selected columns look right, but the result is missing rows. Check the filtering, grouping, or join condition.",
+      details: { actualRowCount: userResult.rowCount, expectedRowCount: referenceResult.rowCount },
     };
   }
 
   return {
     correct: false,
+    type: "wrong_rows",
     message: "Your query ran successfully, but the values do not match the current exercise yet. Check the filters, joins, grouping, and calculations.",
   };
 }
 
-function compareRows(userRows: unknown[][], referenceRows: unknown[][], mode: Challenge["comparison_mode"]) {
-  if (mode === "single_value") return normalizeValue(userRows[0]?.[0]) === normalizeValue(referenceRows[0]?.[0]);
-  const user = userRows.map(normalizeRow);
-  const reference = referenceRows.map(normalizeRow);
-  if (mode === "ordered") return JSON.stringify(user) === JSON.stringify(reference);
-  return JSON.stringify(user.sort()) === JSON.stringify(reference.sort());
+export function compareRowsForTest(userRows: unknown[][], referenceRows: unknown[][], mode: Challenge["comparison_mode"], numericTolerance = 0.01) {
+  if (mode === "single_value") return valuesEqual(userRows[0]?.[0], referenceRows[0]?.[0], numericTolerance);
+  if (mode === "ordered") return compareOrderedRows(userRows, referenceRows, numericTolerance);
+  return compareUnorderedRows(userRows, referenceRows, numericTolerance);
+}
+
+function compareOrderedRows(userRows: unknown[][], referenceRows: unknown[][], numericTolerance = 0.01) {
+  if (userRows.length !== referenceRows.length) return false;
+  return referenceRows.every((referenceRow, index) => rowsEqual(userRows[index], referenceRow, numericTolerance));
+}
+
+function compareUnorderedRows(userRows: unknown[][], referenceRows: unknown[][], numericTolerance = 0.01) {
+  if (userRows.length !== referenceRows.length) return false;
+  const used = new Set<number>();
+  return referenceRows.every((referenceRow) => {
+    const matchIndex = userRows.findIndex((userRow, index) => !used.has(index) && rowsEqual(userRow, referenceRow, numericTolerance));
+    if (matchIndex < 0) return false;
+    used.add(matchIndex);
+    return true;
+  });
+}
+
+function rowsEqual(userRow: unknown[], referenceRow: unknown[], numericTolerance = 0.01) {
+  if (userRow.length !== referenceRow.length) return false;
+  return referenceRow.every((referenceValue, index) => valuesEqual(userRow[index], referenceValue, numericTolerance));
+}
+
+function valuesEqual(userValue: unknown, referenceValue: unknown, numericTolerance = 0.01) {
+  const user = normalizeValue(userValue);
+  const reference = normalizeValue(referenceValue);
+  if (user === null || reference === null) return user === reference;
+  if (typeof user === "number" && typeof reference === "number") return Math.abs(user - reference) <= numericTolerance;
+  return user === reference;
+}
+
+function getValidationContract(challenge: Challenge): ExerciseValidation {
+  if (challenge.validation) return challenge.validation;
+  return {
+    columnPolicy: challenge.comparison_mode === "single_value" ? "single_value" : referenceUsesSelectStar(challenge.reference_sql) ? "all_source_columns" : "exact",
+    rowPolicy: challenge.comparison_mode === "single_value" ? "single_value" : "exact_multiset",
+    orderPolicy: challenge.comparison_mode === "ordered" ? "required" : "ignore",
+    aliasPolicy: "required",
+    numericTolerance: 0.01,
+    strictColumns: true,
+    requireColumnOrder: false,
+  };
+}
+
+function referenceUsesSelectStar(sql: string) {
+  const columns = resolveSelectStatement(sql)?.columns;
+  return Array.isArray(columns) ? columns.some((column: Record<string, unknown>) => column.columnid === "*") : false;
+}
+
+function alignRowsToReferenceColumns(userResult: NormalizedQueryResult, referenceColumns: string[]) {
+  const indexByColumn = new Map(userResult.columns.map((column, index) => [normalizeIdentifier(column), index]));
+  return userResult.rows.map((row) => referenceColumns.map((referenceColumn) => row[indexByColumn.get(normalizeIdentifier(referenceColumn)) ?? -1] ?? null));
+}
+
+function resolveResultColumns(sql: string) {
+  const resolved = resolveSelectColumns(sql);
+  return resolved.length ? resolved : [];
+}
+
+function resolveSelectColumns(sql: string, knownSources = new Map<string, ResultColumn[]>(), depth = 0): string[] {
+  if (depth > 4) return [];
+  const select = resolveSelectStatement(sql);
+  if (!select?.columns) return [];
+
+  const sources = buildSourceColumnMap(select, knownSources, depth);
+  const output: string[] = [];
+
+  for (const column of select.columns as Record<string, unknown>[]) {
+    const columnId = typeof column.columnid === "string" ? column.columnid : null;
+    const tableId = typeof column.tableid === "string" ? column.tableid : null;
+    if (columnId === "*") {
+      const sourceColumns = tableId ? sources.get(normalizeIdentifier(tableId)) ?? [] : Array.from(sources.values()).flat();
+      for (const sourceColumn of sourceColumns) output.push(sourceColumn.name);
+      continue;
+    }
+    output.push(resolveOutputColumnName(column));
+  }
+
+  return deDuplicateColumns(output);
+}
+
+function buildSourceColumnMap(select: Record<string, unknown>, knownSources: Map<string, ResultColumn[]>, depth: number) {
+  const sources = new Map<string, ResultColumn[]>(knownSources);
+  const withs = Array.isArray(select.withs) ? select.withs : [];
+  for (const withDefinition of withs as Record<string, unknown>[]) {
+    if (typeof withDefinition.name !== "string" || !withDefinition.select) continue;
+    const columns = resolveSelectColumnsFromStatement(withDefinition.select as Record<string, unknown>, sources, depth + 1).map((name) => ({ name, normalizedName: normalizeIdentifier(name), dataType: dataTypeForColumn(name) }));
+    sources.set(normalizeIdentifier(withDefinition.name), columns);
+  }
+
+  const fromSources = [...(Array.isArray(select.from) ? select.from : []), ...(Array.isArray(select.joins) ? select.joins.map((join: Record<string, unknown>) => ({ ...(join.table as Record<string, unknown>), as: join.as })) : [])] as Record<string, unknown>[];
+  for (const source of fromSources) {
+    if (typeof source.tableid !== "string") continue;
+    const columns = columnsForSource(source.tableid, sources);
+    if (!columns.length) continue;
+    sources.set(normalizeIdentifier(source.tableid), columns);
+    if (typeof source.as === "string") sources.set(normalizeIdentifier(source.as), columns);
+  }
+  return sources;
+}
+
+function resolveSelectColumnsFromStatement(select: Record<string, unknown>, knownSources: Map<string, ResultColumn[]>, depth: number) {
+  const wrapperSql = "SELECT 1";
+  const sourceColumns = buildSourceColumnMap(select, knownSources, depth);
+  const columns = (select.columns as Record<string, unknown>[] | undefined) ?? [];
+  if (!columns.length) return resolveSelectColumns(wrapperSql, knownSources, depth);
+  const output: string[] = [];
+  for (const column of columns) {
+    const columnId = typeof column.columnid === "string" ? column.columnid : null;
+    const tableId = typeof column.tableid === "string" ? column.tableid : null;
+    if (columnId === "*") {
+      const expanded = tableId ? sourceColumns.get(normalizeIdentifier(tableId)) ?? [] : Array.from(sourceColumns.values()).flat();
+      expanded.forEach((item) => output.push(item.name));
+    } else {
+      output.push(resolveOutputColumnName(column));
+    }
+  }
+  return deDuplicateColumns(output);
+}
+
+function columnsForSource(sourceName: string, knownSources: Map<string, ResultColumn[]>) {
+  const known = knownSources.get(normalizeIdentifier(sourceName));
+  if (known) return known;
+  const table = schema.find((candidate) => normalizeIdentifier(candidate.table) === normalizeIdentifier(sourceName));
+  return table?.columns.map((column) => ({ name: column.name, normalizedName: normalizeIdentifier(column.name), dataType: column.type })) ?? [];
+}
+
+function resolveSelectStatement(sql: string): Record<string, unknown> | null {
+  try {
+    const parsed = (alasql as unknown as { parse: (query: string) => { statements?: Record<string, unknown>[] } }).parse(normalizeSql(sql));
+    const statement = parsed.statements?.[0];
+    if (!statement) return null;
+    return (statement.select as Record<string, unknown> | undefined) ?? statement;
+  } catch {
+    return null;
+  }
+}
+
+function resolveOutputColumnName(column: Record<string, unknown>) {
+  if (typeof column.as === "string") return column.as;
+  if (typeof column.columnid === "string") return column.columnid;
+  if (typeof column.aggregatorid === "string") return `${column.aggregatorid.toUpperCase()}(...)`;
+  if (typeof column.funcid === "string") return column.funcid.toUpperCase();
+  return "Expression";
+}
+
+function deDuplicateColumns(columns: string[]) {
+  const seen = new Map<string, number>();
+  return columns.map((column) => {
+    const normalized = normalizeIdentifier(column);
+    const count = seen.get(normalized) ?? 0;
+    seen.set(normalized, count + 1);
+    return count === 0 ? column : `${column}_${count + 1}`;
+  });
+}
+
+function dataTypeForColumn(columnName: string) {
+  const normalized = normalizeIdentifier(columnName);
+  for (const table of schema) {
+    const column = table.columns.find((candidate) => normalizeIdentifier(candidate.name) === normalized);
+    if (column) return column.type;
+  }
+  return undefined;
+}
+
+function normalizeIdentifier(value: string) {
+  return value.replace(/[\[\]"`]/g, "").trim().toLowerCase();
 }
 
 function formatColumnList(columns: string[]) {
@@ -1157,6 +1432,10 @@ function stripComments(sql: string) {
 
 function stripStringLiterals(sql: string) {
   return sql.replace(/'(?:''|[^'])*'|"(?:[""]|[^"])*"/g, "''");
+}
+
+function hasDoubleQuotedLiteral(sql: string) {
+  return /"[^"]*"/.test(sql);
 }
 
 function hasMultipleStatements(sql: string) {

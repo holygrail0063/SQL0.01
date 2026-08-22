@@ -30,8 +30,15 @@ export type QueryResult = {
   executionTimeMs: number;
   truncated: boolean;
   rowCount: number;
+  displayedRowCount?: number;
   errorType?: string;
   message?: string;
+  evaluation?: {
+    correct: boolean;
+    type: string;
+    message: string | null;
+    details?: Record<string, unknown>;
+  };
 };
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";

@@ -20,7 +20,7 @@ export function ResultsTable({ result }: { result: QueryResult | null }) {
     <div className="p-5">
       <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-slate-400">
         <span>{result.rowCount} rows returned in {result.executionTimeMs} ms</span>
-        {result.truncated && <span className="text-amber">Displayed results were truncated.</span>}
+        {result.truncated && <span className="text-amber">Showing first {result.displayedRowCount ?? result.rows.length} rows.</span>}
       </div>
       <div className="max-h-[260px] overflow-auto rounded border border-line">
         <table className="min-w-full border-collapse text-left text-sm">
@@ -34,7 +34,13 @@ export function ResultsTable({ result }: { result: QueryResult | null }) {
             </tr>
           </thead>
           <tbody>
-            {result.rows.map((row, rowIndex) => (
+            {result.rows.length === 0 ? (
+              <tr>
+                <td className="px-3 py-4 text-center text-slate-500" colSpan={Math.max(result.columns.length, 1)}>
+                  No rows returned.
+                </td>
+              </tr>
+            ) : result.rows.map((row, rowIndex) => (
               <tr key={rowIndex} className="odd:bg-[#0c1626] even:bg-[#101b2d]">
                 {row.map((value, cellIndex) => (
                   <td key={`${rowIndex}-${cellIndex}`} className="whitespace-nowrap border-b border-line/70 px-3 py-2 text-slate-300">

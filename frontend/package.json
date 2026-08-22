@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node scripts/sqlbank-regression.mjs",
+    "validate:curriculum": "node scripts/validate-curriculum.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "4.7.0",

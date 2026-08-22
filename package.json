@@ -7,6 +7,8 @@
   ],
   "scripts": {
     "build": "npm --workspace frontend run build",
-    "start": "npm --workspace frontend run start"
+    "start": "npm --workspace frontend run start",
+    "test": "npm --workspace frontend test",
+    "validate:curriculum": "npm --workspace frontend run validate:curriculum"
   }
 }
