@@ -1,14 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Activity, BarChart3, CheckCircle2, Clock3, LineChart, Target, TrendingUp } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { api, Challenge } from "@/lib/api";
+import { api, type Challenge } from "@/lib/api";
+import { buildDashboardAnalytics, getChallengeAttempts, type DashboardAnalytics, type DashboardRange } from "@/lib/analytics";
 import { useAuth } from "@/lib/auth";
-import { courseCompletionPercent, deriveSkillMastery, getCourseForProfile, getDailyCommitment, lessonUrl, nextLesson, readinessScore, reviewDue, weeklyProgress } from "@/lib/course";
-import { getProfile, getProgress, profileDisplayName, type Profile, type ProgressRow } from "@/lib/progress";
+import { getCourseForProfile, type CourseDefinition } from "@/lib/course";
+import { getProfile, getProgress, type Profile, type ProgressRow } from "@/lib/progress";
+
+const rangeOptions: { label: string; value: DashboardRange }[] = [
+  { label: "7D", value: "7d" },
+  { label: "30D", value: "30d" },
+  { label: "90D", value: "90d" },
+  { label: "All", value: "all" },
+];
 
 function readableError(caught: unknown) {
   if (caught instanceof Error) return caught.message;
@@ -33,17 +43,18 @@ export default function DashboardPage() {
 function DashboardContent() {
   const { user } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [progress, setProgress] = useState<ProgressRow[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [attempts, setAttempts] = useState<Awaited<ReturnType<typeof getChallengeAttempts>>>([]);
+  const [range, setRange] = useState<DashboardRange>("30d");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    Promise.all([getProfile(user), getProgress(user), api.challenges()])
-      .then(([profileData, progressData, challengeData]) => {
+    Promise.all([getProfile(user), getProgress(user), api.challenges(), getChallengeAttempts(user)])
+      .then(([profileData, progressData, challengeData, attemptData]) => {
         if (!profileData?.onboarding_completed) {
           router.replace("/onboarding");
           return;
@@ -51,128 +62,222 @@ function DashboardContent() {
         setProfile(profileData);
         setProgress(progressData);
         setChallenges(challengeData);
+        setAttempts(attemptData);
+        setError(null);
       })
       .catch((caught) => setError(`Dashboard data could not be loaded. ${readableError(caught)}`))
       .finally(() => setLoading(false));
   }, [router, user]);
 
-  const completedIds = useMemo(() => new Set(progress.filter((row) => row.status === "completed").map((row) => row.challenge_id)), [progress]);
   const course = getCourseForProfile(profile);
-  const dailyCommitment = getDailyCommitment(profile);
-  const currentLesson = course ? nextLesson(course, progress) : null;
-  const currentChallenge = currentLesson ? challenges.find((challenge) => challenge.id === currentLesson.challengeId) : null;
-  const completion = course ? courseCompletionPercent(course, progress) : 0;
-  const readiness = course ? readinessScore(course, progress) : 0;
-  const skillSnapshot = course ? deriveSkillMastery(course, progress).slice(0, 5) : [];
-  const weekly = weeklyProgress(progress);
-  const reviews = course ? reviewDue(course, progress) : [];
-  const completedCount = completedIds.size;
-  const learnerName = profileDisplayName(profile, user);
-  const roleName = course?.learningGoal ?? profile?.selected_role ?? "SQL";
-  const roleAssignmentLabel = roleName === "Data Analyst" ? "SQLBank analysis" : "SQLBank assignment";
-  const roleAssignmentPlural = roleName === "Data Analyst" ? "SQLBank analyses" : "SQLBank assignments";
+  const analytics = useMemo(() => {
+    if (!course) return null;
+    return buildDashboardAnalytics(course, progress, challenges, attempts, range);
+  }, [attempts, challenges, course, progress, range]);
 
-  if (loading) return <main className="p-8 text-slate-400">Loading dashboard...</main>;
+  if (loading) return <main className="p-8 text-slate-400">Loading progress analytics...</main>;
   if (error) return <main className="p-8 text-red-200">{error}</main>;
+
+  if (!course || !analytics) {
+    return (
+      <main className="mx-auto max-w-5xl px-5 py-10">
+        <p className="font-mono text-sm text-cyan">Progress Dashboard</p>
+        <h1 className="mt-3 text-3xl font-semibold text-white">Choose a supported path to unlock analytics.</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Business Analyst and Data Analyst dashboards are available today.</p>
+        <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-white" href="/settings">Update Learning Path</Link>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-10">
-      {searchParams.get("welcome") && (
-        <div className="mb-6 rounded border border-cyan/40 bg-cyan/10 p-4 text-sm text-cyan">
-          Welcome to QueryRight. Your SQL workspace is ready.
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="font-mono text-sm text-cyan">Learning analytics</p>
+          <h1 className="mt-3 text-3xl font-semibold text-white">Your SQL Progress</h1>
+          <p className="mt-2 text-sm text-slate-400">{course.learningGoal} - {course.experienceLevel}</p>
         </div>
-      )}
-      <h1 className="text-3xl font-semibold text-white">Welcome back{learnerName ? `, ${learnerName}` : ""}.</h1>
+        <RangeSelector range={range} setRange={setRange} />
+      </div>
 
-      {!course ? (
-        <section className="mt-8 rounded border border-line bg-panel p-6">
-          <p className="font-mono text-sm text-cyan">Coming Soon</p>
-          <h2 className="mt-3 text-2xl font-semibold text-white">{profile?.selected_role} pathway is being built.</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Business Analyst and Data Analyst are active today. Your selected goal is saved, and this page will activate when that pathway is available.</p>
-          <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-white" href="/settings">Choose A Working Path</Link>
-        </section>
-      ) : (
-        <>
-          <section className="mt-8 grid gap-5 lg:grid-cols-[1fr_360px]">
-            <div className="rounded border border-line bg-panel p-6">
-              <p className="text-sm uppercase tracking-wider text-slate-500">{course.experienceLevel === "Interview Preparation" ? `${course.learningGoal} Interview Preparation` : `Continue Your ${course.learningGoal} Path`}</p>
-              {currentLesson && currentChallenge ? (
-                <>
-                  <h2 className="mt-4 text-2xl font-semibold text-white">
-                    {course.experienceLevel === "Interview Preparation" ? "Today's interview practice" : `Day ${Math.max(1, completedCount + 1)} - ${currentLesson.title}`}
-                  </h2>
-                  <p className="mt-2 text-sm text-slate-400">{currentLesson.difficulty} • {currentLesson.estimatedMinutes} minutes • {currentLesson.skills.slice(0, 3).join(", ")}</p>
-                  <div className="mt-5 rounded border border-line bg-[#0a1322] p-4">
-                    <p className="text-sm font-semibold text-white">Today&apos;s plan</p>
-                    <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                      <li>3 min - Concept</li>
-                      <li>5 min - Guided practice</li>
-                      <li>{Math.max(6, dailyCommitment - 15)} min - {roleAssignmentLabel}</li>
-                      <li>5 min - Review checkpoint</li>
-                      <li>2 min - Business interpretation</li>
-                    </ul>
-                  </div>
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <Link className="inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-white" href={lessonUrl(currentLesson)}>
-                      {course.experienceLevel === "Interview Preparation" ? "Start Interview Practice" : "Continue Learning"}
-                    </Link>
-                    <Link className="inline-flex rounded border border-line px-4 py-2 text-sm font-semibold text-slate-200 hover:border-cyan/70" href="/learn">View Course</Link>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="mt-4 text-2xl font-semibold text-white">{course.learningGoal} SQL Path Complete</h2>
-                  <p className="mt-3 text-sm text-slate-300">Review weak areas or revisit {roleAssignmentPlural} to keep skills fresh.</p>
-                  <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-white" href="/sqlbank">Open SQLBank</Link>
-                </>
-              )}
-            </div>
+      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard icon={<Target size={18} />} label="SQL Readiness" value={`${analytics.summary.readiness}%`} detail="Role readiness from completed course skills" />
+        <MetricCard icon={<BarChart3 size={18} />} label="Course Progress" value={`${analytics.summary.courseProgress}%`} detail={`${analytics.summary.completedLessons} of ${analytics.summary.totalLessons} lessons completed`} />
+        <MetricCard icon={<CheckCircle2 size={18} />} label="Query Accuracy" value={formatPercent(analytics.summary.accuracy)} detail={`${analytics.summary.correctAttempts} correct of ${analytics.summary.totalAttempts} attempts in range`} />
+        <MetricCard icon={<Activity size={18} />} label="Practice Streak" value={`${analytics.summary.currentStreak} days`} detail={`Best streak: ${analytics.summary.longestStreak} days`} />
+      </section>
 
-            <div className="rounded border border-line bg-panel p-6">
-              <p className="text-sm uppercase tracking-wider text-slate-500">Current SQL Readiness</p>
-              <div className="mt-4 text-5xl font-semibold text-white">{readiness}%</div>
-              <p className="mt-3 text-sm leading-6 text-slate-400">Building toward workplace-ready {course.learningGoal} SQL.</p>
-              <div className="mt-6 h-3 rounded bg-[#0a101b]">
-                <div className="h-3 rounded bg-brand" style={{ width: `${readiness}%` }} />
-              </div>
-              <div className="mt-5 text-sm text-slate-400">Course progress: {completion}%</div>
-            </div>
-          </section>
+      <section className="mt-5 grid gap-4 md:grid-cols-3">
+        <MetricCard icon={<TrendingUp size={18} />} label="First-Try Accuracy" value={formatPercent(analytics.problemSolving.firstTryAccuracy)} detail={`${analytics.problemSolving.firstTryCorrect} first tries correct of ${analytics.problemSolving.firstTryTotal} problems`} />
+        <MetricCard icon={<Clock3 size={18} />} label="Avg Attempts To Solve" value={analytics.problemSolving.averageAttemptsToSolve === null ? "--" : String(analytics.problemSolving.averageAttemptsToSolve)} detail="Completed problems only" />
+        <MetricCard icon={<LineChart size={18} />} label="Problems Solved" value={String(analytics.summary.solvedChallenges)} detail={`${analytics.summary.attemptedQueries} total query attempts recorded`} />
+      </section>
 
-          <section className="mt-5 grid gap-5 lg:grid-cols-3">
-            <div className="rounded border border-line bg-panel p-6">
-              <p className="text-sm uppercase tracking-wider text-slate-500">Skill Snapshot</p>
-              <div className="mt-5 space-y-4">
-                {skillSnapshot.map((skill) => (
-                  <div key={skill.skill}>
-                    <div className="mb-1 flex justify-between text-sm"><span>{skill.skill}</span><span>{skill.mastery}%</span></div>
-                    <div className="h-2 rounded bg-[#0a101b]"><div className="h-2 rounded bg-cyan" style={{ width: `${skill.mastery}%` }} /></div>
-                  </div>
-                ))}
-              </div>
-              <Link className="mt-5 inline-flex text-sm font-semibold text-cyan hover:text-white" href="/profile">View All Skills</Link>
-            </div>
-            <div className="rounded border border-line bg-panel p-6">
-              <p className="text-sm uppercase tracking-wider text-slate-500">Weekly Progress</p>
-              <div className="mt-5 space-y-3 text-sm text-slate-300">
-                <div className="flex justify-between"><span>Lessons completed</span><span>{weekly.lessonsCompleted}</span></div>
-                <div className="flex justify-between"><span>Exercises solved</span><span>{weekly.exercisesSolved}</span></div>
-                <div className="flex justify-between"><span>Minutes practiced</span><span>{weekly.minutesPracticed}</span></div>
-                <div className="flex justify-between"><span>Current streak</span><span>{weekly.currentStreak} days</span></div>
-                <div className="flex justify-between"><span>{roleAssignmentPlural}</span><span>{weekly.assignments}</span></div>
-              </div>
-            </div>
-            <div className="rounded border border-line bg-panel p-6">
-              <p className="text-sm uppercase tracking-wider text-slate-500">Review Due</p>
-              <h2 className="mt-4 text-xl font-semibold text-white">{reviews.length} concepts need review</h2>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {reviews.map((skill) => <span className="rounded border border-line px-2 py-1 text-xs text-slate-300" key={skill.skill}>{skill.skill}</span>)}
-              </div>
-              {currentLesson && <Link className="mt-6 inline-flex rounded border border-line px-4 py-2 text-sm font-semibold text-slate-200 hover:border-cyan/70" href={lessonUrl(currentLesson)}>Start 8-minute review</Link>}
-            </div>
-          </section>
-        </>
-      )}
+      <section className="mt-5 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+        <Panel title="SQL Activity">
+          <ActivityBars analytics={analytics} />
+        </Panel>
+        <Panel title="Accuracy Trend">
+          <AccuracyTrend analytics={analytics} />
+        </Panel>
+      </section>
+
+      <section className="mt-5 grid gap-5 xl:grid-cols-[1fr_1fr]">
+        <Panel title="Skill Mastery">
+          <div className="space-y-4">
+            {analytics.skillMastery.slice(0, 10).map((skill) => (
+              <ProgressRow key={skill.skill} label={skill.skill} value={skill.mastery} detail={`${skill.correctAttempts}/${skill.attempts} attempts correct`} />
+            ))}
+          </div>
+        </Panel>
+        <Panel title={`${course.learningGoal} Readiness`}>
+          <div className="space-y-4">
+            {analytics.careerReadiness.map((area) => (
+              <ProgressRow key={area.label} label={area.label} value={area.score} detail={area.skills.slice(0, 3).join(", ")} />
+            ))}
+          </div>
+        </Panel>
+      </section>
+
+      <section className="mt-5 grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+        <Panel title="Focus Areas">
+          <div className="grid gap-3">
+            {analytics.focusAreas.map((skill) => (
+              <Link className="rounded border border-line bg-[#090f1a] p-4 hover:border-cyan/60" href={skill.practiceHref} key={skill.skill}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-white">{skill.skill}</span>
+                  <span className="text-sm text-slate-400">{skill.mastery}%</span>
+                </div>
+                <p className="mt-2 text-sm text-slate-400">Practice this skill in your active course path.</p>
+              </Link>
+            ))}
+          </div>
+        </Panel>
+        <Panel title="Recent Query Activity">
+          <RecentActivityList analytics={analytics} />
+        </Panel>
+      </section>
     </main>
   );
+}
+
+function RangeSelector({ range, setRange }: { range: DashboardRange; setRange: (value: DashboardRange) => void }) {
+  return (
+    <div className="inline-flex rounded border border-line bg-panel p-1">
+      {rangeOptions.map((option) => (
+        <button
+          className={range === option.value ? "rounded bg-brand px-3 py-2 text-sm font-semibold text-white" : "rounded px-3 py-2 text-sm text-slate-400 hover:text-white"}
+          key={option.value}
+          onClick={() => setRange(option.value)}
+          type="button"
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function MetricCard({ detail, icon, label, value }: { detail: string; icon: ReactNode; label: string; value: string }) {
+  return (
+    <article className="rounded border border-line bg-panel p-5">
+      <div className="flex items-center gap-2 text-cyan">{icon}<p className="font-mono text-xs uppercase tracking-wider">{label}</p></div>
+      <div className="mt-4 text-3xl font-semibold text-white">{value}</div>
+      <p className="mt-2 text-sm leading-6 text-slate-400">{detail}</p>
+    </article>
+  );
+}
+
+function Panel({ children, title }: { children: ReactNode; title: string }) {
+  return (
+    <section className="rounded border border-line bg-panel p-6">
+      <h2 className="text-lg font-semibold text-white">{title}</h2>
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
+function ActivityBars({ analytics }: { analytics: DashboardAnalytics }) {
+  const visible = analytics.activitySeries.filter((point) => point.attempts > 0).length;
+  const max = Math.max(...analytics.activitySeries.map((point) => point.attempts), 1);
+  if (!visible) return <EmptyState text="No query attempts recorded in this range yet." />;
+
+  return (
+    <div className="flex h-56 items-end gap-2 overflow-x-auto pb-2">
+      {analytics.activitySeries.map((point) => (
+        <div className="flex min-w-8 flex-1 flex-col items-center gap-2" key={point.dateKey}>
+          <div className="flex h-40 w-full items-end rounded bg-[#090f1a] px-1">
+            <div className="w-full rounded bg-cyan" style={{ height: `${Math.max(6, (point.attempts / max) * 100)}%` }} title={`${point.attempts} attempts`} />
+          </div>
+          <span className="whitespace-nowrap text-[11px] text-slate-500">{point.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AccuracyTrend({ analytics }: { analytics: DashboardAnalytics }) {
+  if (analytics.accuracyTrend.length < 2) return <EmptyState text="Accuracy trend appears after attempts in at least two weekly buckets." />;
+  const width = 520;
+  const height = 180;
+  const points = analytics.accuracyTrend.map((point, index) => {
+    const x = analytics.accuracyTrend.length === 1 ? 0 : (index / (analytics.accuracyTrend.length - 1)) * width;
+    const y = height - (point.accuracy / 100) * height;
+    return { ...point, x, y };
+  });
+  const path = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+
+  return (
+    <div className="overflow-x-auto">
+      <svg className="min-w-[520px]" height={height + 44} role="img" viewBox={`0 0 ${width} ${height + 44}`} width={width}>
+        <path d={path} fill="none" stroke="#22d3ee" strokeWidth="3" />
+        {points.map((point) => (
+          <g key={`${point.label}-${point.accuracy}`}>
+            <circle cx={point.x} cy={point.y} fill="#4f7cff" r="5" />
+            <text fill="#94a3b8" fontSize="11" textAnchor="middle" x={point.x} y={height + 24}>{point.label}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function ProgressRow({ detail, label, value }: { detail: string; label: string; value: number }) {
+  return (
+    <div>
+      <div className="mb-1 flex justify-between gap-3 text-sm">
+        <span className="text-slate-200">{label}</span>
+        <span className="text-white">{value}%</span>
+      </div>
+      <div className="h-2 rounded bg-[#0a101b]">
+        <div className="h-2 rounded bg-brand" style={{ width: `${value}%` }} />
+      </div>
+      <p className="mt-1 text-xs text-slate-500">{detail}</p>
+    </div>
+  );
+}
+
+function RecentActivityList({ analytics }: { analytics: DashboardAnalytics }) {
+  if (!analytics.recentActivity.length) return <EmptyState text="Recent query attempts will appear here after you run SQL." />;
+  return (
+    <div className="divide-y divide-line">
+      {analytics.recentActivity.map((activity) => (
+        <Link className="flex items-center justify-between gap-4 py-3 hover:text-white" href={`/challenge/${activity.challengeId}`} key={`${activity.challengeId}-${activity.attemptedAt}`}>
+          <div>
+            <p className="font-semibold text-white">{activity.title}</p>
+            <p className="mt-1 text-sm text-slate-500">{new Date(activity.attemptedAt).toLocaleString()}</p>
+          </div>
+          <span className={activity.isCorrect ? "text-success" : "text-red-200"}>{activity.isCorrect ? "Correct" : "Incorrect"}</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return <div className="rounded border border-line bg-[#090f1a] p-6 text-sm text-slate-400">{text}</div>;
+}
+
+function formatPercent(value: number | null) {
+  return value === null ? "--" : `${value}%`;
 }

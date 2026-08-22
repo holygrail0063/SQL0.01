@@ -89,7 +89,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
           options: { captchaToken: captchaToken || undefined },
         });
         if (loginError) throw loginError;
-        window.location.href = "/dashboard";
+        const nextPath = new URLSearchParams(window.location.search).get("next");
+        window.location.href = safeNextPath(nextPath) ?? "/sql-space";
       } else {
         const { error: resetError } = await client.auth.resetPasswordForEmail(email, {
           redirectTo: authRedirectUrl("/login"),
@@ -275,6 +276,11 @@ function readableAuthError(caught: unknown) {
     return "Supabase has temporarily rate-limited confirmation emails for this project. Try again later, use another email for now, or configure custom SMTP in Supabase Auth to raise the email sending limit.";
   }
   return message;
+}
+
+function safeNextPath(value: string | null) {
+  if (!value) return null;
+  return value.startsWith("/") && !value.startsWith("//") ? value : null;
 }
 
 declare global {

@@ -8,6 +8,7 @@ import { requireSupabase } from "@/lib/supabase";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/sql-space", label: "SQL Space" },
   { href: "/learn", label: "Learn" },
   { href: "/sqlbank", label: "SQLBank" },
   { href: "/profile", label: "Profile" },
@@ -27,13 +28,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-ink text-slate-100">
       <header className="border-b border-line bg-[#0a0f19]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
-          <Link href="/dashboard">
+          <Link href="/sql-space">
             <BrandMark />
           </Link>
           <nav className="hidden items-center gap-2 md:flex">
             {navItems.map((item) => (
               <Link
-                className={pathname === item.href || (item.href === "/sqlbank" && (pathname.startsWith("/sqlbank") || pathname.startsWith("/challenge"))) ? "rounded bg-brand/15 px-3 py-2 text-sm text-white" : "rounded px-3 py-2 text-sm text-slate-400 hover:bg-panel hover:text-white"}
+                className={isActiveNav(pathname, item.href) ? "rounded bg-brand/15 px-3 py-2 text-sm text-white" : "rounded px-3 py-2 text-sm text-slate-400 hover:bg-panel hover:text-white"}
                 href={item.href}
                 key={item.href}
               >
@@ -49,4 +50,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       {children}
     </div>
   );
+}
+
+function isActiveNav(pathname: string, href: string) {
+  if (pathname === href || pathname.startsWith(`${href}/`)) return true;
+  if (href === "/sqlbank") return pathname.startsWith("/challenge");
+  if (href === "/learn") return pathname.startsWith("/learn/lesson");
+  return false;
 }

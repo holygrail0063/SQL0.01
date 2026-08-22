@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/auth";
-import { courseCompletionPercent, deriveSkillMastery, getCourseForProfile, getDailyCommitment, readinessScore, weeklyProgress } from "@/lib/course";
+import { buildModuleProgress, courseCompletionPercent, deriveSkillMastery, getCourseForProfile, getDailyCommitment, readinessScore } from "@/lib/course";
 import { roleOptions, sqlLevelOptions } from "@/lib/curriculum";
 import { getProgress, getProfile, profileDisplayName, saveProfile, type Profile, type ProgressRow } from "@/lib/progress";
 
@@ -61,13 +61,17 @@ function ProfileContent() {
   const course = getCourseForProfile(profile);
   const mastery = course ? deriveSkillMastery(course, progress) : [];
   const strongest = mastery.filter((skill) => skill.mastery > 0).sort((a, b) => b.mastery - a.mastery).slice(0, 3);
-  const needsWork = mastery.sort((a, b) => a.mastery - b.mastery).slice(0, 3);
-  const weekly = weeklyProgress(progress);
+  const needsWork = mastery.slice().sort((a, b) => a.mastery - b.mastery).slice(0, 3);
   const readiness = course ? readinessScore(course, progress) : 0;
   const completion = course ? courseCompletionPercent(course, progress) : 0;
   const profilePathLabel = course ? `${course.learningGoal} SQL` : `${profile?.selected_role ?? "SQL"} Path`;
   const analysisLabel = course?.learningGoal === "Data Analyst" ? "SQLBank Analyses" : "SQLBank Assignments";
   const capstoneId = course?.learningGoal === "Data Analyst" ? 25 : 15;
+  const completedRows = progress.filter((row) => row.status === "completed");
+  const completedIds = new Set(completedRows.map((row) => row.challenge_id));
+  const completedLessonCount = course ? buildModuleProgress(course, progress).reduce((sum, module) => sum + module.completedLessons, 0) : 0;
+  const roleAssignmentIds = course?.learningGoal === "Data Analyst" ? [18, 20, 21, 22, 23, 24, 25] : [8, 10, 11, 13, 14, 15];
+  const completedRoleAssignments = roleAssignmentIds.filter((id) => completedIds.has(id)).length;
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
@@ -80,10 +84,9 @@ function ProfileContent() {
             ["Current Level", profile?.sql_level ?? "Not set"],
             ["Readiness", `${readiness}%`],
             ["Course Progress", `${completion}%`],
-            ["Lessons Completed", String(weekly.lessonsCompleted)],
-            [analysisLabel, String(weekly.assignments)],
+            ["Lessons Completed", String(completedLessonCount)],
+            [analysisLabel, String(completedRoleAssignments)],
             ["Queries Executed", String(progress.reduce((sum, row) => sum + row.attempt_count, 0))],
-            ["Current Streak", `${weekly.currentStreak} days`],
             ["Daily Commitment", `${getDailyCommitment(profile)} minutes`],
             ["Projects Completed", `${progress.some((row) => row.challenge_id === capstoneId && row.status === "completed") ? 1 : 0} / 1`],
           ].map(([label, value]) => (
