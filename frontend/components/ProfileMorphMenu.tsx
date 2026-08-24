@@ -127,7 +127,7 @@ export function ProfileMorphMenu({ user, currentPath }: { user: User | null; cur
           onClick={() => setIsOpen((value) => !value)}
           type="button"
         >
-          {initials}
+          {!isOpen && initials}
         </button>
 
         <AnimatePresence>
@@ -148,10 +148,7 @@ export function ProfileMorphMenu({ user, currentPath }: { user: User | null; cur
                 initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
                 transition={{ duration: reduceMotion ? 0.08 : 0.24, ease }}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-brand/25 bg-brand/10 text-sm font-bold text-brand">
-                  {initials}
-                </div>
-                <p className="mt-3 truncate text-sm font-semibold text-slate-50">{displayName}</p>
+                <p className="truncate text-sm font-semibold text-slate-50">{displayName}</p>
                 <p className="mt-1 truncate text-xs text-slate-400">{pathLabel}</p>
               </motion.div>
 
