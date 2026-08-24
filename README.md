@@ -75,6 +75,7 @@ For an existing Supabase project, also run:
 
 - `supabase/migrations/202608200001_add_profile_names.sql`
 - `supabase/migrations/202608210001_add_daily_commitment.sql`
+- `supabase/migrations/202608240001_add_profile_accent_color.sql`
 
 Configure Supabase Auth:
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { FormEvent, useEffect, useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
+import { applyDefaultAccent } from "@/lib/accent";
 import { authRedirectUrl, isSupabaseConfigured, requireSupabase } from "@/lib/supabase";
 
 type Mode = "login" | "signup" | "forgot";
@@ -29,6 +30,10 @@ export function AuthForm({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (variant === "page") applyDefaultAccent();
+  }, [variant]);
 
   useEffect(() => {
     function updateCaptcha(event: Event) {

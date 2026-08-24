@@ -9,6 +9,7 @@ create table if not exists public.profiles (
   selected_role text,
   sql_level text,
   daily_commitment_minutes integer not null default 30,
+  accent_color text not null default 'lime' check (accent_color in ('lime', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'fuchsia', 'rose', 'orange', 'gold')),
   onboarding_completed boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -22,6 +23,20 @@ alter table public.profiles
 
 alter table public.profiles
   add column if not exists daily_commitment_minutes integer not null default 30;
+
+alter table public.profiles
+  add column if not exists accent_color text not null default 'lime';
+
+update public.profiles
+set accent_color = 'lime'
+where accent_color not in ('lime', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'fuchsia', 'rose', 'orange', 'gold');
+
+alter table public.profiles
+  drop constraint if exists profiles_accent_color_check;
+
+alter table public.profiles
+  add constraint profiles_accent_color_check
+  check (accent_color in ('lime', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'fuchsia', 'rose', 'orange', 'gold'));
 
 create table if not exists public.user_progress (
   id uuid primary key default gen_random_uuid(),

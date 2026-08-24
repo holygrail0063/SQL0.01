@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { AnimatedPrimaryNav, MobilePrimaryNav, type PrimaryNavItem } from "@/components/AnimatedPrimaryNav";
 import { BrandMark } from "@/components/BrandMark";
 import { ProfileMorphMenu } from "@/components/ProfileMorphMenu";
+import { applyAccent, applyDefaultAccent, cacheAccent, normalizeAccentId, readCachedAccent } from "@/lib/accent";
 import { useAuth } from "@/lib/auth";
+import { getProfile } from "@/lib/progress";
 
 const navItems: PrimaryNavItem[] = [
   { href: "/learn", label: "Learn" },
@@ -15,9 +17,36 @@ const navItems: PrimaryNavItem[] = [
   { href: "/progress", label: "Progress", mobileLabel: "Prog." },
 ];
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, manageAccent = true }: { children: ReactNode; manageAccent?: boolean }) {
   const pathname = usePathname();
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!manageAccent) return;
+    if (!user) {
+      applyDefaultAccent();
+      return;
+    }
+
+    const cachedAccent = readCachedAccent(user.id);
+    if (cachedAccent) applyAccent(cachedAccent);
+
+    let active = true;
+    getProfile(user)
+      .then((profile) => {
+        if (!active) return;
+        const accent = normalizeAccentId(profile?.accent_color);
+        applyAccent(accent);
+        cacheAccent(user.id, accent);
+      })
+      .catch(() => {
+        if (active) applyDefaultAccent();
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [manageAccent, user]);
 
   return (
     <div className="min-h-screen bg-ink pb-20 text-slate-50 md:pb-0">

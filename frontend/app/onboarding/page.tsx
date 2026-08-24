@@ -89,7 +89,7 @@ function OnboardingContent() {
             const supported = role === "Business Analyst" || role === "Data Analyst";
             return (
             <button
-              className={selectedRole === role ? "rounded-lg border border-brand-strong bg-brand/30 p-5 text-left text-slate-50 shadow-[0_0_0_1px_rgba(77,124,15,0.24)]" : supported ? "rounded-lg border border-line bg-panel p-5 text-left text-slate-300 hover:border-brand-strong/50" : "rounded-lg border border-line bg-elevated p-5 text-left text-slate-500 opacity-75"}
+              className={selectedRole === role ? "rounded-lg border border-brand-strong bg-brand/30 p-5 text-left text-slate-50 shadow-[0_0_0_1px_rgb(var(--color-brand-strong)/0.24)]" : supported ? "rounded-lg border border-line bg-panel p-5 text-left text-slate-300 hover:border-brand-strong/50" : "rounded-lg border border-line bg-elevated p-5 text-left text-slate-500 opacity-75"}
               disabled={!supported}
               key={role}
               onClick={() => {
@@ -110,7 +110,7 @@ function OnboardingContent() {
         <div className="mt-8 grid gap-3 md:grid-cols-2">
           {activeSqlLevelOptions.map((level) => (
             <button
-              className={sqlLevel === level.value ? "rounded-lg border border-brand-strong bg-brand/30 p-5 text-left text-slate-50 shadow-[0_0_0_1px_rgba(77,124,15,0.24)]" : "rounded-lg border border-line bg-panel p-5 text-left text-slate-300 hover:border-brand-strong/50"}
+              className={sqlLevel === level.value ? "rounded-lg border border-brand-strong bg-brand/30 p-5 text-left text-slate-50 shadow-[0_0_0_1px_rgb(var(--color-brand-strong)/0.24)]" : "rounded-lg border border-line bg-panel p-5 text-left text-slate-300 hover:border-brand-strong/50"}
               key={level.value}
               onClick={() => {
                 setSqlLevel(level.value);

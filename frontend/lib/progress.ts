@@ -1,4 +1,5 @@
 import type { User } from "@supabase/supabase-js";
+import { normalizeAccentId, type AccentId } from "@/lib/accent";
 import type { QueryResult } from "@/lib/api";
 import { requireSupabase, supabase } from "@/lib/supabase";
 
@@ -11,6 +12,7 @@ export type Profile = {
   selected_role: string | null;
   sql_level: string | null;
   daily_commitment_minutes: number | null;
+  accent_color: AccentId | string | null;
   onboarding_completed: boolean;
   created_at?: string;
   updated_at?: string;
@@ -52,11 +54,13 @@ export async function saveProfile(user: User, values: Partial<Profile>): Promise
     selected_role: values.selected_role ?? existing?.selected_role ?? null,
     sql_level: values.sql_level ?? existing?.sql_level ?? null,
     daily_commitment_minutes: values.daily_commitment_minutes ?? existing?.daily_commitment_minutes ?? 30,
+    accent_color: normalizeAccentId(values.accent_color ?? existing?.accent_color),
     onboarding_completed: values.onboarding_completed ?? existing?.onboarding_completed ?? false,
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await client.from("profiles").upsert(profile, { onConflict: "auth_user_id" }).select("*").single();
   if (error && isMissingProfileColumnError(error)) {
+    if ("accent_color" in values) throw error;
     const fallbackProfile = {
       auth_user_id: user.id,
       display_name: displayName,
@@ -67,7 +71,7 @@ export async function saveProfile(user: User, values: Partial<Profile>): Promise
     };
     const { data: fallbackData, error: fallbackError } = await client.from("profiles").upsert(fallbackProfile, { onConflict: "auth_user_id" }).select("*").single();
     if (fallbackError) throw fallbackError;
-    return { ...fallbackData, first_name: firstName, last_name: lastName };
+    return { ...fallbackData, first_name: firstName, last_name: lastName, accent_color: normalizeAccentId(existing?.accent_color) };
   }
   if (error) throw error;
   return data;
@@ -103,7 +107,7 @@ function isMissingProfileNameColumnError(error: unknown): boolean {
 function isMissingProfileColumnError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const maybeError = error as { code?: unknown; message?: unknown };
-  return maybeError.code === "PGRST204" && typeof maybeError.message === "string" && /first_name|last_name|daily_commitment_minutes/.test(maybeError.message);
+  return maybeError.code === "PGRST204" && typeof maybeError.message === "string" && /first_name|last_name|daily_commitment_minutes|accent_color/.test(maybeError.message);
 }
 
 export async function getProgress(user: User): Promise<ProgressRow[]> {

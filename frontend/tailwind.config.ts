@@ -10,6 +10,7 @@ const config: Config = {
         line: "rgb(var(--color-line) / <alpha-value>)",
         brand: "rgb(var(--color-brand) / <alpha-value>)",
         "brand-strong": "rgb(var(--color-brand-strong) / <alpha-value>)",
+        "brand-foreground": "rgb(var(--color-brand-foreground) / <alpha-value>)",
         cyan: "rgb(var(--color-cyan) / <alpha-value>)",
         success: "rgb(var(--color-success) / <alpha-value>)",
         warning: "rgb(var(--color-warning) / <alpha-value>)",
