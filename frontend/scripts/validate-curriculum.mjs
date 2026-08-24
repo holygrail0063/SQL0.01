@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import vm from "node:vm";
 
 const sqlbank = loadSqlBankServer();
@@ -47,9 +47,10 @@ function loadCourseModule() {
 }
 
 function loadTsModule(sourcePathValue) {
-  const require = createRequire(import.meta.url);
-  const ts = require("typescript");
+  const rootRequire = createRequire(import.meta.url);
+  const ts = rootRequire("typescript");
   const sourcePath = resolve(sourcePathValue);
+  const sourceRequire = createRequire(sourcePath);
   const source = readFileSync(sourcePath, "utf8");
   const output = ts.transpileModule(source, {
     compilerOptions: {
@@ -61,6 +62,18 @@ function loadTsModule(sourcePathValue) {
   }).outputText;
 
   const module = { exports: {} };
+  const require = (specifier) => {
+    if (specifier.startsWith("./") || specifier.startsWith("../")) {
+      const resolved = resolve(dirname(sourcePath), specifier);
+      if (existsSync(`${resolved}.ts`)) return loadTsModule(`${resolved}.ts`);
+      if (existsSync(resolved)) return sourceRequire(resolved);
+    }
+    if (specifier.startsWith("@/")) {
+      const resolved = resolve(specifier.slice(2));
+      if (existsSync(`${resolved}.ts`)) return loadTsModule(`${resolved}.ts`);
+    }
+    return sourceRequire(specifier);
+  };
   const context = {
     console,
     exports: module.exports,
@@ -112,10 +125,10 @@ function validateCurriculumNavigation() {
     }
   }
 
-  const baNew = course.allBusinessAnalystCourses().find((candidate) => candidate.id === "ba-completely-new");
-  const firstLesson = baNew?.modules[0]?.lessons[0];
-  const firstPosition = baNew && firstLesson ? course.resolveCurriculumPosition(baNew, firstLesson.id, 0) : null;
+  const firstCourse = course.allBusinessAnalystCourses().find((candidate) => candidate.id === "mode-completely-new") ?? course.allBusinessAnalystCourses()[0];
+  const firstLesson = firstCourse?.modules[0]?.lessons[0];
+  const firstPosition = firstCourse && firstLesson ? course.resolveCurriculumPosition(firstCourse, firstLesson.id, 0) : null;
   if (!firstPosition?.hasNextLesson || firstPosition.hasNextModule || firstPosition.isFinalCourseQuestion) {
-    failures.push("ba-completely-new first lesson should resolve to Next Lesson, not Next Module or Complete Course");
+    failures.push("first completely-new lesson should resolve to Next Lesson, not Next Module or Complete Course");
   }
 }

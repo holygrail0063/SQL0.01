@@ -1,7 +1,13 @@
 import type { Challenge } from "@/lib/api";
+import { learningModeLabel } from "@/lib/curriculum";
 
 export function ChallengePanel({ challenge, current, total, sqlLevel }: { challenge: Challenge; current: number; total: number; sqlLevel?: string | null }) {
-  const guidance = (sqlLevel && challenge.guidance[sqlLevel]) || challenge.guidance["Completely New"];
+  const modeLabel = learningModeLabel(sqlLevel);
+  const guidance =
+    challenge.guidance[modeLabel] ||
+    (modeLabel === "Quick Interview Prep" ? challenge.guidance["Interview Preparation"] : undefined) ||
+    (modeLabel === "Expert Study Mode" ? challenge.guidance["Comfortable With SQL"] : undefined) ||
+    challenge.guidance["Completely New"];
 
   return (
     <section className="border-b border-line bg-panel px-6 py-5">
@@ -45,7 +51,7 @@ export function ChallengePanel({ challenge, current, total, sqlLevel }: { challe
           </div>
           {guidance && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{sqlLevel ?? "Completely New"} Guidance</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{modeLabel} Guidance</p>
               <p className="mt-2 text-sm leading-6 text-slate-300">{guidance}</p>
             </div>
           )}

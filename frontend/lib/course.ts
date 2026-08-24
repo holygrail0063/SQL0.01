@@ -1,18 +1,22 @@
 import type { Challenge } from "@/lib/api";
+import { learningModeLabel, normalizeLearningModeId, type LearningModeId } from "./curriculum";
 import type { Profile, ProgressRow } from "@/lib/progress";
 
 export const dailyCommitmentOptions = [15, 30, 45, 60] as const;
 
 export type DailyCommitment = (typeof dailyCommitmentOptions)[number];
-export type ExperienceLevel = "Completely New" | "Know the Basics" | "Comfortable With SQL" | "Interview Preparation";
+export type ExperienceLevel = string;
 export type LessonType = "concept" | "exercise" | "assignment" | "review" | "interview" | "project";
 export type LearningGoal = "Business Analyst" | "Data Analyst";
 export type LessonStageType = "concept" | "guided_exercise" | "independent_exercise" | "business_task" | "interpretation" | "review";
+export type AssistanceLevel = "guided" | "standard" | "light" | "minimal" | "interview";
 
 export type CourseDefinition = {
   id: string;
   learningGoal: LearningGoal;
+  learningModeId: LearningModeId;
   experienceLevel: ExperienceLevel;
+  assistanceLevel: AssistanceLevel;
   title: string;
   shortTitle: string;
   description: string;
@@ -220,7 +224,7 @@ const dataAnalystLessons: LessonDefinition[] = [
 ];
 
 export const interviewQuestions = Array.from({ length: 40 }, (_, index) => {
-  const topics = ["Filtering", "Aggregations", "JOINs", "CASE", "Debugging", "Business Analyst"];
+  const topics = ["Filtering", "Aggregations", "JOINs", "CASE", "Debugging", "SQL Reasoning"];
   const topic = topics[index % topics.length];
   return {
     id: `ba-interview-${index + 1}`,
@@ -232,34 +236,27 @@ export const interviewQuestions = Array.from({ length: 40 }, (_, index) => {
 });
 
 const courses: CourseDefinition[] = [
-  course("Business Analyst", "ba-completely-new", "Completely New", "Business Analyst SQL Path", "Business Analyst - Completely New", "Learn SQL from the beginning while working through realistic SQLBank Business Analyst assignments.", "10-12 weeks", "~65 lessons", "120+ exercises", "6 projects", "1 capstone", "Beginner to Workplace SQL", baseLessons),
-  course("Business Analyst", "ba-know-basics", "Know the Basics", "Business Analyst SQL Acceleration Path", "Business Analyst - Know the Basics", "Review the essentials quickly, then build confidence solving real SQLBank business requests.", "6-8 weeks", "~40 lessons", "80+ exercises", "4 projects", "1 capstone", "Fundamentals to Applied Analysis", baseLessons.filter((lesson) => lesson.challengeId >= 3)),
-  course("Business Analyst", "ba-comfortable", "Comfortable With SQL", "Advanced Business Analyst SQL Path", "Business Analyst - Comfortable With SQL", "Skip basic syntax review and focus on analysis, joins, KPIs, validation, and investigations.", "4-6 weeks", "~30 lessons", "60+ exercises", "3 projects", "1 capstone", "Intermediate to Advanced BA SQL", baseLessons.filter((lesson) => lesson.challengeId >= 9)),
-  course("Business Analyst", "ba-interview", "Interview Preparation", "Business Analyst SQL Interview Path", "Business Analyst - Interview Preparation", "Practice SQL explanations, timed query writing, debugging, and Business Analyst scenario questions.", "2-4 weeks", "40 questions + 15 coding drills", "Timed practice sets", "Mock interview flow", "1 readiness review", "Interview Readiness", baseLessons.filter((lesson) => [3, 7, 8, 10, 12, 15].includes(lesson.challengeId)).map((lesson) => ({ ...lesson, type: "interview" as const }))),
-  course("Data Analyst", "da-completely-new", "Completely New", "Data Analyst SQL Path", "Data Analyst - Completely New", "Learn SQL from the beginning by analyzing realistic SQLBank customer, product, transaction, lending, and performance data.", "10-12 weeks", "~70 lessons", "140+ exercises", "6 mini-projects", "1 analytical capstone", "Beginner to Analytical SQL", dataAnalystLessons),
-  course("Data Analyst", "da-know-basics", "Know the Basics", "Data Analyst SQL Acceleration Path", "Data Analyst - Know the Basics", "Skip light syntax review and build confidence with aggregations, joins, dates, KPIs, segmentation, and trends.", "6-8 weeks", "~45 lessons", "90+ exercises", "4 mini-projects", "1 analytical capstone", "Fundamentals to Applied Analytics", dataAnalystLessons.filter((lesson) => lesson.challengeId >= 17)),
-  course("Data Analyst", "da-comfortable", "Comfortable With SQL", "Advanced Data Analyst SQL Path", "Data Analyst - Comfortable With SQL", "Focus on professional analytical SQL: KPI design, table grain, funnels, target analysis, and open-ended investigations.", "4-6 weeks", "~35 lessons", "70+ exercises", "4 case studies", "1 analytical capstone", "Intermediate to Advanced Analytics", dataAnalystLessons.filter((lesson) => lesson.challengeId >= 19)),
-  course("Data Analyst", "da-interview", "Interview Preparation", "Data Analyst SQL Interview Path", "Data Analyst - Interview Preparation", "Practice SQL screens, query explanation, debugging, metric reasoning, and Data Analyst scenario questions.", "2-4 weeks", "40 questions + 10 coding drills", "Timed practice sets", "Scenario drills", "1 readiness review", "Interview Readiness", dataAnalystLessons.filter((lesson) => [17, 19, 20, 21, 22, 24, 25].includes(lesson.challengeId)).map((lesson) => ({ ...lesson, type: "interview" as const }))),
+  course("Business Analyst", "mode-completely-new", "completely-new", "SQL Foundations", "Completely New", "Start from zero and build SQL fundamentals step by step through realistic SQLBank requests.", "10-12 weeks", "Beginner to Workplace SQL", "guided", baseLessons),
+  course("Business Analyst", "mode-know-the-basics", "know-the-basics", "Practical SQL Confidence", "Know the Basics", "Skip the earliest table tour and build confidence with filtering, sorting, reporting, joins, and CASE.", "6-8 weeks", "Fundamentals to Applied SQL", "standard", baseLessons.filter((lesson) => lesson.challengeId >= 3)),
+  course("Data Analyst", "mode-comfortable-with-sql", "comfortable-with-sql", "Applied SQL Problems", "Comfortable With SQL", "Move quickly into practical analysis: joins, KPI design, table grain, funnels, targets, and investigations.", "4-6 weeks", "Intermediate to Advanced SQL", "light", dataAnalystLessons.filter((lesson) => lesson.challengeId >= 19)),
+  course("Data Analyst", "mode-expert-study", "expert-study", "Expert Study Mode", "Expert Study Mode", "Deep practice for advanced SQL reasoning with complex analytical requests and reduced scaffolding.", "Focused study", "Advanced SQL Problem Solving", "minimal", reduceAssistance([...baseLessons.filter((lesson) => lesson.challengeId >= 14), ...dataAnalystLessons.filter((lesson) => lesson.challengeId >= 21)])),
+  course("Data Analyst", "mode-quick-interview-prep", "quick-interview-prep", "Quick Interview Prep", "Quick Interview Prep", "Practice common SQL interview patterns without taking the full course.", "Fast track", "Interview Readiness", "interview", [...baseLessons.filter((lesson) => [3, 7, 8, 10, 12, 15].includes(lesson.challengeId)), ...dataAnalystLessons.filter((lesson) => [17, 19, 20, 21, 24, 25].includes(lesson.challengeId))].map((lesson) => ({ ...lesson, type: "interview" as const }))),
 ];
 
 export function getBusinessAnalystCourse(experienceLevel?: string | null) {
-  return courses.find((course) => course.learningGoal === "Business Analyst" && course.experienceLevel === experienceLevel) ?? courses.find((course) => course.id === "ba-completely-new")!;
+  return getCourseForMode(experienceLevel);
 }
 
 export function getDataAnalystCourse(experienceLevel?: string | null) {
-  return courses.find((course) => course.learningGoal === "Data Analyst" && course.experienceLevel === experienceLevel) ?? courses.find((course) => course.id === "da-completely-new")!;
+  return getCourseForMode(experienceLevel);
 }
 
 export function getCourseForSelection(learningGoal?: string | null, experienceLevel?: string | null) {
-  const safeExperience = experienceLevel === "Interview Preparation" ? "Completely New" : experienceLevel;
-  if (learningGoal === "Business Analyst") return getBusinessAnalystCourse(safeExperience);
-  if (learningGoal === "Data Analyst") return getDataAnalystCourse(safeExperience);
-  return null;
+  return getCourseForMode(experienceLevel ?? learningGoal);
 }
 
 export function getCourseForProfile(profile: Pick<Profile, "selected_role" | "sql_level"> | null) {
-  if (!profile?.selected_role) return getBusinessAnalystCourse("Completely New");
-  return getCourseForSelection(profile.selected_role, profile.sql_level);
+  return getCourseForMode(profile?.sql_level);
 }
 
 export function getDailyCommitment(profile: Pick<Profile, "daily_commitment_minutes"> | null | undefined): DailyCommitment {
@@ -268,11 +265,16 @@ export function getDailyCommitment(profile: Pick<Profile, "daily_commitment_minu
 }
 
 export function allBusinessAnalystCourses() {
-  return courses.filter((course) => course.learningGoal === "Business Analyst");
+  return courses;
 }
 
 export function allDataAnalystCourses() {
-  return courses.filter((course) => course.learningGoal === "Data Analyst");
+  return [];
+}
+
+export function getCourseForMode(value?: string | null) {
+  const modeId = normalizeLearningModeId(value);
+  return courses.find((course) => course.learningModeId === modeId) ?? courses[0];
 }
 
 export function getLessonById(lessonId: string): LessonBundle | null {
@@ -464,16 +466,13 @@ export function getLessonStages(lesson: LessonDefinition): LessonStageDefinition
 function course(
   learningGoal: LearningGoal,
   id: string,
-  experienceLevel: ExperienceLevel,
+  learningModeId: LearningModeId,
   title: string,
   shortTitle: string,
   description: string,
   estimatedWeeks: string,
-  lessonCountLabel: string,
-  exerciseCountLabel: string,
-  projectCountLabel: string,
-  capstoneCountLabel: string,
   difficulty: string,
+  assistanceLevel: AssistanceLevel,
   lessons: LessonDefinition[],
 ): CourseDefinition {
   const modules = groupModules(lessons);
@@ -484,7 +483,9 @@ function course(
   return {
     id,
     learningGoal,
-    experienceLevel,
+    learningModeId,
+    experienceLevel: learningModeLabel(learningModeId),
+    assistanceLevel,
     title,
     shortTitle,
     description,
@@ -497,6 +498,19 @@ function course(
     skills: learningGoal === "Data Analyst" ? dataAnalystSkills : businessAnalystSkills,
     modules,
   };
+}
+
+function reduceAssistance(lessons: LessonDefinition[]): LessonDefinition[] {
+  return lessons.map((lessonDefinition) => ({
+    ...lessonDefinition,
+    guidedPrompt: lessonDefinition.independentPrompt,
+    hints: lessonDefinition.hints.slice(0, 1),
+    stages: lessonDefinition.stages?.map((stageDefinition) => ({
+      ...stageDefinition,
+      starterSql: undefined,
+      hints: stageDefinition.hints.slice(0, 1),
+    })),
+  }));
 }
 
 function pluralize(count: number, label: string) {

@@ -83,9 +83,9 @@ function ProgressContent() {
     return (
       <main className="mx-auto max-w-5xl px-5 py-10">
         <p className="font-mono text-sm text-cyan">Progress</p>
-        <h1 className="mt-3 text-3xl font-semibold text-slate-50">Choose a supported path to unlock analytics.</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Business Analyst and Data Analyst progress views are available today.</p>
-        <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground" href="/account/preferences">Update Learning Path</Link>
+        <h1 className="mt-3 text-3xl font-semibold text-slate-50">Choose a learning mode to unlock analytics.</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Your SQL progress view adapts to the learning mode you select.</p>
+        <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground" href="/account/preferences">Update Learning Mode</Link>
       </main>
     );
   }
@@ -103,7 +103,7 @@ function ProgressContent() {
         <div>
           <p className="font-mono text-sm text-cyan">Learning progress</p>
           <h1 className="mt-3 text-3xl font-semibold text-slate-50">Your SQL Progress</h1>
-          <p className="mt-2 text-sm text-slate-400">{course.learningGoal} · {course.experienceLevel}</p>
+          <p className="mt-2 text-sm text-slate-400">{course.experienceLevel}</p>
         </div>
         <RangeSelector range={range} setRange={setRange} />
       </div>

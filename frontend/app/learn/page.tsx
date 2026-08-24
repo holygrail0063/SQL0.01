@@ -48,21 +48,13 @@ function LearnContent() {
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
-      <p className="font-mono text-sm text-cyan">{course ? `${course.learningGoal} SQL Path` : "Career SQL Path"}</p>
-      <h1 className="mt-3 text-3xl font-semibold text-slate-50">{course ? course.title : "Career pathway coming soon"}</h1>
+      <p className="font-mono text-sm text-cyan">Your SQL Path</p>
+      <h1 className="mt-3 text-3xl font-semibold text-slate-50">{course.title}</h1>
       {course && <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{course.description}</p>}
       {error && (
         <div className="mt-6 rounded border border-red-900/70 bg-red-950/40 p-4 text-sm text-red-100">
           Learning data could not be loaded. {error}
         </div>
-      )}
-      {!course && (
-        <section className="mt-8 rounded border border-line bg-panel p-6">
-          <p className="font-mono text-xs uppercase tracking-wider text-cyan">Coming Soon</p>
-          <h2 className="mt-3 text-xl font-semibold text-slate-50">{profile?.selected_role ?? "This pathway"} is being built.</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-300">Business Analyst and Data Analyst are available now. Other learning goals remain selectable so future paths can plug into the same course engine.</p>
-          <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href="/account/preferences">Update Learning Path</Link>
-        </section>
       )}
       <div className="mt-8 space-y-6">
         {moduleProgress.map(({ module, completedLessons, totalLessons, status, percent }) => (

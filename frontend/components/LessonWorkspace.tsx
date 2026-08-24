@@ -174,6 +174,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const activeStage = stages[activeStageIndex] ?? stages[0];
   const activeChallenge = activeStage?.challengeId ? challenges.find((challenge) => challenge.id === activeStage.challengeId) ?? null : null;
   const visibleHints = activeStage?.hints.slice(0, hintCount) ?? [];
+  const showLessonCoach = course.assistanceLevel !== "minimal";
   const canRevealMoreHints = Boolean(activeStage && hintCount < activeStage.hints.length);
   const activeStageStoredCompleted = Boolean(activeStage && isStageCompleted(activeStage, progress, completedConceptStages));
   const currentRunCorrect = Boolean(result?.correct);
@@ -270,7 +271,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     <main className="min-h-[calc(100dvh-4rem)] bg-ink text-slate-50 lg:flex lg:h-[calc(100dvh-4rem)] lg:min-h-[560px] lg:flex-col lg:overflow-hidden">
       <header className="shrink-0 border-b border-line bg-panel px-5 py-3">
         <div className="mx-auto max-w-7xl">
-          <p className="font-mono text-xs uppercase tracking-wider text-cyan">{course.learningGoal} Path / Module {module.sequence} / Lesson {lesson.sequence}</p>
+          <p className="font-mono text-xs uppercase tracking-wider text-cyan">SQL Learning Path / {course.experienceLevel} / Module {module.sequence} / Lesson {lesson.sequence}</p>
           <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="text-2xl font-semibold text-slate-50">{lesson.title}</h1>
@@ -340,17 +341,19 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                       <div className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</div>
                       <p className="mt-3 text-xs text-slate-500">{lesson.difficulty} • ~{lesson.estimatedMinutes} min</p>
                     </section>
-                    <section className="rounded-lg border border-line bg-elevated p-3">
-                      <button className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-50" onClick={() => setShowTutor((value) => !value)} type="button">
-                        <span className="inline-flex items-center gap-2"><BookOpen size={16} /> Lesson Coach</span>
-                        <span className="text-cyan">{showTutor ? "Hide" : "Open"}</span>
-                      </button>
-                      {showTutor && (
-                        <p className="mt-3 text-sm leading-6 text-slate-300">
-                          You are working on {activeStage.title}. Focus on this request: {activeStage.instructions.split("\n")[0]} {activeChallenge ? "Run a query that returns the requested business output." : "Read the concept, then continue when it makes sense."}
-                        </p>
-                      )}
-                    </section>
+                    {showLessonCoach && (
+                      <section className="rounded-lg border border-line bg-elevated p-3">
+                        <button className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-50" onClick={() => setShowTutor((value) => !value)} type="button">
+                          <span className="inline-flex items-center gap-2"><BookOpen size={16} /> Lesson Coach</span>
+                          <span className="text-cyan">{showTutor ? "Hide" : "Open"}</span>
+                        </button>
+                        {showTutor && (
+                          <p className="mt-3 text-sm leading-6 text-slate-300">
+                            You are working on {activeStage.title}. Focus on this request: {activeStage.instructions.split("\n")[0]} {activeChallenge ? "Run a query that returns the requested business output." : "Read the concept, then continue when it makes sense."}
+                          </p>
+                        )}
+                      </section>
+                    )}
                     <section className="rounded-lg border border-line bg-elevated p-3">
                       <div className="flex items-center justify-between gap-3">
                         <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-50"><Lightbulb size={16} /> Hints</p>
@@ -361,7 +364,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                         )}
                       </div>
                       <div className="mt-3 space-y-2 text-sm leading-6 text-slate-300">
-                        {visibleHints.length ? visibleHints.map((hint, index) => <p key={hint}>Hint {index + 1}: {hint}</p>) : <p className="text-slate-500">{activeChallenge ? "Need direction? Reveal one hint at a time." : "No SQL hints needed for this concept stage."}</p>}
+                        {visibleHints.length ? visibleHints.map((hint, index) => <p key={hint}>Hint {index + 1}: {hint}</p>) : <p className="text-slate-500">{activeChallenge ? course.assistanceLevel === "minimal" ? "Expert mode keeps hints minimal. Reveal one only if you are blocked." : "Need direction? Reveal one hint at a time." : "No SQL hints needed for this concept stage."}</p>}
                       </div>
                     </section>
                   </div>

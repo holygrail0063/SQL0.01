@@ -6,11 +6,7 @@ import { HowItWorks } from "@/components/landing/HowItWorks";
 import { LandingAuthModal } from "@/components/landing/LandingAuthModal";
 import { LandingAuthTrigger } from "@/components/landing/LandingAuthTrigger";
 import { PublicHeader } from "@/components/PublicHeader";
-
-const roleCards = [
-  ["Business Analyst", "SELECT, JOIN, GROUP BY, KPIs, reconciliation"],
-  ["Data Analyst", "aggregations, CTEs, trends, segmentation, cohorts"],
-];
+import { LEARNING_MODES } from "@/lib/curriculum";
 
 export default function LandingPage() {
   return (
@@ -81,12 +77,12 @@ export default function LandingPage() {
 
       <section className="border-y border-line bg-panel/60" id="paths">
         <div className="mx-auto max-w-7xl px-5 py-20">
-          <h2 className="text-3xl font-semibold text-slate-50">SQL for where you&apos;re going.</h2>
-          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {roleCards.map(([title, copy]) => (
-              <div className="rounded-lg border border-line bg-panel p-5" key={title}>
-                <h3 className="font-semibold text-slate-50">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-400">{copy}</p>
+          <h2 className="text-3xl font-semibold text-slate-50">Choose how you want to learn SQL.</h2>
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            {LEARNING_MODES.map((mode) => (
+              <div className="rounded-lg border border-line bg-panel p-5" key={mode.id}>
+                <h3 className="font-semibold text-slate-50">{mode.label}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-400">{mode.description}</p>
               </div>
             ))}
           </div>

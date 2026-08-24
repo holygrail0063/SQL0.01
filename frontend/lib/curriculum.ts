@@ -1,48 +1,73 @@
 import type { Challenge } from "@/lib/api";
 
-export const roleOptions = [
-  "Business Analyst",
-  "Data Analyst",
-  "Data Scientist",
-  "Data Engineer",
-  "BI Analyst",
-  "Product Analyst",
-  "Financial / Risk Analyst",
-  "Backend Developer",
-  "Just learning SQL",
-];
+export const LEARNING_MODES = [
+  {
+    id: "completely-new",
+    label: "Completely New",
+    description: "Start from zero and build SQL fundamentals step by step.",
+  },
+  {
+    id: "know-the-basics",
+    label: "Know the Basics",
+    description: "You know basic SELECT and filtering. Build confidence with practical SQL.",
+  },
+  {
+    id: "comfortable-with-sql",
+    label: "Comfortable With SQL",
+    description: "You can write everyday SQL and want to tackle more complex problems.",
+  },
+  {
+    id: "expert-study",
+    label: "Expert Study Mode",
+    description: "Deep practice for experienced SQL users who want advanced challenges and stronger problem-solving skills.",
+  },
+  {
+    id: "quick-interview-prep",
+    label: "Quick Interview Prep",
+    description: "Practice common SQL interview questions without completing a full course.",
+  },
+] as const;
 
-export const activeRoleOptions = roleOptions.filter((role) => role === "Business Analyst" || role === "Data Analyst");
+export type LearningMode = (typeof LEARNING_MODES)[number];
+export type LearningModeId = LearningMode["id"];
 
-export const sqlLevelOptions = [
-  {
-    value: "Completely New",
-    description: "I've barely used SQL or I'm starting from scratch.",
-  },
-  {
-    value: "Know the Basics",
-    description: "I'm familiar with SELECT, WHERE, and simple queries.",
-  },
-  {
-    value: "Comfortable With SQL",
-    description: "I've worked with joins, aggregations, and more complex queries.",
-  },
-  {
-    value: "Interview Preparation",
-    description: "Interview preparation is coming soon.",
-  },
-];
+const learningModeIds = new Set<string>(LEARNING_MODES.map((mode) => mode.id));
+const learningModeMap = new Map<string, LearningMode>(LEARNING_MODES.map((mode) => [mode.id, mode]));
 
-export const activeSqlLevelOptions = sqlLevelOptions.filter((option) => option.value !== "Interview Preparation");
+const legacyModeMap: Record<string, LearningModeId> = {
+  "Completely New": "completely-new",
+  "Know the Basics": "know-the-basics",
+  "Comfortable With SQL": "comfortable-with-sql",
+  "Interview Preparation": "quick-interview-prep",
+  "Expert Study Mode": "expert-study",
+  "Quick Interview Prep": "quick-interview-prep",
+};
+
+export function normalizeLearningModeId(value: unknown): LearningModeId {
+  if (typeof value === "string") {
+    if (learningModeIds.has(value)) return value as LearningModeId;
+    const legacyMode = legacyModeMap[value];
+    if (legacyMode) return legacyMode;
+  }
+  return "completely-new";
+}
+
+export function getLearningMode(value: unknown): LearningMode {
+  return learningModeMap.get(normalizeLearningModeId(value)) ?? LEARNING_MODES[0];
+}
+
+export function learningModeLabel(value: unknown): string {
+  return getLearningMode(value).label;
+}
 
 export const challengeGroups = [
   { title: "Beginner Foundations", ids: [1, 2, 3, 4] },
   { title: "Beginner Reporting", ids: [5, 6, 7, 8] },
   { title: "Intermediate Analysis", ids: [9, 10, 11, 12, 13] },
   { title: "Advanced Business Questions", ids: [14, 15] },
-  { title: "Data Analyst Foundations", ids: [16, 17, 18] },
-  { title: "Data Analyst Analysis", ids: [19, 20, 21, 23] },
-  { title: "Data Analyst Projects", ids: [22, 24, 25] },
+  { title: "Analytics Foundations", ids: [16, 17, 18] },
+  { title: "Analytics Practice", ids: [19, 20, 21, 23] },
+  { title: "Advanced Projects", ids: [22, 24, 25] },
 ];
 
 export function skillForChallenge(challenge: Challenge) {

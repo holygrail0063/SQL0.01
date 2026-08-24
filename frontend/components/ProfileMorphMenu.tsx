@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { CircleHelp, LogOut, Moon, SlidersHorizontal, UserRound, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { learningModeLabel } from "@/lib/curriculum";
 import { getProfile, profileDisplayName, type Profile } from "@/lib/progress";
 import { logoutToLogin } from "@/lib/session-boundary";
 
@@ -86,7 +87,7 @@ export function ProfileMorphMenu({ user, currentPath }: { user: User | null; cur
 
   const displayName = profileDisplayName(profile, user) || user?.email || "Account";
   const initials = accountInitials(profile, user);
-  const pathLabel = profile?.selected_role ? `${profile.selected_role} Path` : user?.email ? user.email : "QueryRight";
+  const pathLabel = profile?.sql_level ? learningModeLabel(profile.sql_level) : user?.email ? user.email : "QueryRight";
 
   return (
     <div ref={rootRef} className="relative h-10 w-10 shrink-0">
