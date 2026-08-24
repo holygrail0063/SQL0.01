@@ -82,6 +82,35 @@ export type ModuleProgress = {
   percent: number;
 };
 
+export type LessonBundle = {
+  course: CourseDefinition;
+  module: ModuleDefinition;
+  lesson: LessonDefinition;
+};
+
+export type CurriculumPosition = {
+  courseIndex: number;
+  moduleIndex: number;
+  lessonIndex: number;
+  questionIndex: number;
+  questionCount: number;
+  lessonCount: number;
+  moduleCount: number;
+  hasPreviousQuestion: boolean;
+  hasNextQuestion: boolean;
+  hasNextLesson: boolean;
+  hasNextModule: boolean;
+  isLastQuestionInLesson: boolean;
+  isLastLessonInModule: boolean;
+  isLastModuleInCourse: boolean;
+  isFinalCourseQuestion: boolean;
+  previousQuestionIndex?: number;
+  nextQuestionIndex?: number;
+  nextLesson?: LessonDefinition;
+  nextModule?: ModuleDefinition;
+  nextModuleLesson?: LessonDefinition;
+};
+
 const businessAnalystSkills = [
   "Database Fundamentals",
   "SELECT",
@@ -246,7 +275,7 @@ export function allDataAnalystCourses() {
   return courses.filter((course) => course.learningGoal === "Data Analyst");
 }
 
-export function getLessonById(lessonId: string) {
+export function getLessonById(lessonId: string): LessonBundle | null {
   for (const courseDefinition of courses) {
     for (const module of courseDefinition.modules) {
       const lesson = module.lessons.find((candidate) => candidate.id === lessonId);
@@ -254,6 +283,55 @@ export function getLessonById(lessonId: string) {
     }
   }
   return null;
+}
+
+export function getLessonByIdInCourse(courseDefinition: CourseDefinition, lessonId: string): LessonBundle | null {
+  for (const module of courseDefinition.modules) {
+    const lesson = module.lessons.find((candidate) => candidate.id === lessonId);
+    if (lesson) return { course: courseDefinition, module, lesson };
+  }
+  return null;
+}
+
+export function resolveCurriculumPosition(courseDefinition: CourseDefinition, lessonId: string, questionIndex: number): CurriculumPosition | null {
+  const courseIndex = courses.findIndex((course) => course.id === courseDefinition.id);
+  const moduleIndex = courseDefinition.modules.findIndex((module) => module.lessons.some((lesson) => lesson.id === lessonId));
+  const module = courseDefinition.modules[moduleIndex];
+  if (!module) return null;
+
+  const lessonIndex = module.lessons.findIndex((lesson) => lesson.id === lessonId);
+  const lesson = module.lessons[lessonIndex];
+  if (!lesson) return null;
+
+  const questionCount = getLessonStages(lesson).length;
+  const safeQuestionIndex = clampIndex(questionIndex, questionCount);
+  const hasNextQuestion = safeQuestionIndex < questionCount - 1;
+  const hasNextLesson = !hasNextQuestion && lessonIndex < module.lessons.length - 1;
+  const hasNextModule = !hasNextQuestion && !hasNextLesson && moduleIndex < courseDefinition.modules.length - 1;
+  const nextModule = hasNextModule ? courseDefinition.modules[moduleIndex + 1] : undefined;
+
+  return {
+    courseIndex,
+    moduleIndex,
+    lessonIndex,
+    questionIndex: safeQuestionIndex,
+    questionCount,
+    lessonCount: module.lessons.length,
+    moduleCount: courseDefinition.modules.length,
+    hasPreviousQuestion: safeQuestionIndex > 0,
+    hasNextQuestion,
+    hasNextLesson,
+    hasNextModule,
+    isLastQuestionInLesson: safeQuestionIndex === questionCount - 1,
+    isLastLessonInModule: lessonIndex === module.lessons.length - 1,
+    isLastModuleInCourse: moduleIndex === courseDefinition.modules.length - 1,
+    isFinalCourseQuestion: safeQuestionIndex === questionCount - 1 && lessonIndex === module.lessons.length - 1 && moduleIndex === courseDefinition.modules.length - 1,
+    previousQuestionIndex: safeQuestionIndex > 0 ? safeQuestionIndex - 1 : undefined,
+    nextQuestionIndex: hasNextQuestion ? safeQuestionIndex + 1 : undefined,
+    nextLesson: hasNextLesson ? module.lessons[lessonIndex + 1] : undefined,
+    nextModule,
+    nextModuleLesson: nextModule?.lessons[0],
+  };
 }
 
 export function findLessonForChallenge(courseDefinition: CourseDefinition, challengeId: number) {
@@ -313,6 +391,15 @@ export function courseCompletionPercent(courseDefinition: CourseDefinition, prog
   if (!lessons.length) return 0;
   const completed = completedChallengeIds(progressRows);
   return Math.round((lessons.filter((lesson) => isLessonCompleted(lesson, completed)).length / lessons.length) * 100);
+}
+
+export function isCourseCompleted(courseDefinition: CourseDefinition, progressRows: ProgressRow[]) {
+  return isCourseCompletedByChallengeIds(courseDefinition, completedChallengeIds(progressRows));
+}
+
+export function isCourseCompletedByChallengeIds(courseDefinition: CourseDefinition, completed: Set<number>) {
+  const lessons = courseDefinition.modules.flatMap((module) => module.lessons);
+  return lessons.length > 0 && lessons.every((lesson) => isLessonCompleted(lesson, completed));
 }
 
 export function readinessScore(courseDefinition: CourseDefinition, progressRows: ProgressRow[]) {
@@ -520,6 +607,11 @@ function isLessonCompleted(lesson: LessonDefinition, completed: Set<number>) {
   if (completed.has(lesson.challengeId)) return true;
   const requiredChallengeIds = lessonChallengeIds(lesson);
   return requiredChallengeIds.length > 0 && requiredChallengeIds.every((challengeId) => completed.has(challengeId));
+}
+
+function clampIndex(index: number, count: number) {
+  if (count <= 0) return 0;
+  return Math.min(Math.max(index, 0), count - 1);
 }
 
 function average(values: number[]) {

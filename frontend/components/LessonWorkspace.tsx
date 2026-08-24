@@ -9,15 +9,28 @@ import { SchemaExplorer } from "@/components/SchemaExplorer";
 import { SqlEditor } from "@/components/SqlEditor";
 import { api, type Challenge, type QueryResult, type SchemaTable } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { getLessonById, getLessonStages, type LessonStageDefinition } from "@/lib/course";
-import { getProgress, recordAttempt, type ProgressRow } from "@/lib/progress";
+import {
+  type CurriculumPosition,
+  getCourseForProfile,
+  getLessonById,
+  getLessonByIdInCourse,
+  getLessonStages,
+  isCourseCompletedByChallengeIds,
+  lessonUrl,
+  resolveCurriculumPosition,
+  type LessonStageDefinition,
+} from "@/lib/course";
+import { getProfile, getProgress, recordAttempt, type Profile, type ProgressRow } from "@/lib/progress";
 import { lastSqlWorkspaceKey, lessonDraftKey, lessonHintKey, lessonResultKey, lessonResultTabKey, lessonTutorKey } from "@/lib/sql-editor-state";
 
 type ResultTabId = "results" | "feedback" | "breakdown";
 
 export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const { user } = useAuth();
-  const lessonBundle = useMemo(() => getLessonById(lessonId), [lessonId]);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const fallbackLessonBundle = useMemo(() => getLessonById(lessonId), [lessonId]);
+  const selectedCourse = useMemo(() => getCourseForProfile(profile) ?? fallbackLessonBundle?.course ?? null, [fallbackLessonBundle, profile]);
+  const lessonBundle = useMemo(() => (selectedCourse ? getLessonByIdInCourse(selectedCourse, lessonId) : null) ?? fallbackLessonBundle, [fallbackLessonBundle, lessonId, selectedCourse]);
   const stages = useMemo(() => (lessonBundle ? getLessonStages(lessonBundle.lesson) : []), [lessonBundle]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [schema, setSchema] = useState<SchemaTable[]>([]);
@@ -39,15 +52,16 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [editorPercent, setEditorPercent] = useState(52);
   const [resultTab, setResultTab] = useState<ResultTabId>("results");
-  const [completionReadyStageId, setCompletionReadyStageId] = useState<string | null>(null);
+  const [courseCompletionAcknowledged, setCourseCompletionAcknowledged] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    Promise.all([api.challenges(), api.schema(), getProgress(user)])
-      .then(([challengeData, schemaData, progressData]) => {
+    Promise.all([api.challenges(), api.schema(), getProgress(user), getProfile(user)])
+      .then(([challengeData, schemaData, progressData, profileData]) => {
         setChallenges(challengeData);
         setSchema(schemaData);
         setProgress(progressData);
+        setProfile(profileData);
       })
       .catch((caught) => setError(caught instanceof Error ? caught.message : "Lesson data could not be loaded."))
       .finally(() => setLoading(false));
@@ -78,7 +92,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   useEffect(() => {
     const activeStage = stages[activeStageIndex];
     setProgressMessage(null);
-    setCompletionReadyStageId(null);
     if (activeStage && user) {
       const restoredResult = parseStoredResult(window.localStorage.getItem(lessonResultKey(user.id, lessonId, activeStage.id)));
       const restoredHints = Number(window.localStorage.getItem(lessonHintKey(user.id, lessonId, activeStage.id)));
@@ -149,6 +162,11 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     window.localStorage.setItem(sidebarWidthKey(user.id), String(sidebarWidth));
   }, [sidebarWidth, user]);
 
+  useEffect(() => {
+    if (!user || !lessonBundle) return;
+    setCourseCompletionAcknowledged(window.localStorage.getItem(courseCompletionKey(user.id, lessonBundle.course.id)) === "true");
+  }, [lessonBundle, user]);
+
   if (loading) return <main className="p-8 text-slate-400">Preparing your lesson...</main>;
   if (!lessonBundle) return <main className="p-8 text-red-200">This lesson was not found.</main>;
 
@@ -158,16 +176,20 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const visibleHints = activeStage?.hints.slice(0, hintCount) ?? [];
   const canRevealMoreHints = Boolean(activeStage && hintCount < activeStage.hints.length);
   const activeStageStoredCompleted = Boolean(activeStage && isStageCompleted(activeStage, progress, completedConceptStages));
-  const activeStageCompleted = activeStageStoredCompleted || Boolean(result?.correct);
+  const currentRunCorrect = Boolean(result?.correct);
+  const activeStageCompleted = activeStageStoredCompleted || currentRunCorrect || Boolean(activeStage && !activeStage.challengeId);
   const lessonCompletedFromHistory = stages.length > 0 && stages.every((stage) => isStageCompleted(stage, progress, completedConceptStages));
-  const isFinalStage = activeStageIndex === stages.length - 1;
+  const position = resolveCurriculumPosition(course, lesson.id, activeStageIndex);
+  const completedChallengeIds = new Set(progress.filter((row) => row.status === "completed").map((row) => row.challenge_id));
+  if (currentRunCorrect && activeChallenge) completedChallengeIds.add(activeChallenge.id);
+  const courseCompleted = isCourseCompletedByChallengeIds(course, completedChallengeIds);
   const isReviewingPastStage = activeStageIndex < frontierStageIndex && !lessonCompletedFromHistory;
-  const taskContextLabel = stages.length ? `Task ${activeStageIndex + 1} of ${stages.length}` : "Task";
-  const frontierTaskLabel = `Task ${frontierStageIndex + 1}`;
-  const shouldShowPreviousTask = activeStageIndex > 0;
+  const questionContextLabel = stages.length ? `Question ${activeStageIndex + 1} of ${stages.length}` : "Question";
+  const frontierTaskLabel = `Question ${frontierStageIndex + 1}`;
+  const shouldShowPreviousQuestion = Boolean(position?.hasPreviousQuestion);
   const shouldShowReturnToFrontier = isReviewingPastStage;
-  const shouldShowCompleteLesson = Boolean(completionReadyStageId && completionReadyStageId === activeStage?.id && isFinalStage);
-  const shouldShowLessonCompleted = isFinalStage && lessonCompletedFromHistory && !shouldShowCompleteLesson;
+  const progressionAction = position ? resolveProgressionAction(position, activeStageCompleted, courseCompleted, courseCompletionAcknowledged) : null;
+  const courseCompletionKeyValue = user ? courseCompletionKey(user.id, course.id) : null;
 
   async function runQuery() {
     if (!activeChallenge || !activeStage) return;
@@ -186,7 +208,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
         const progressData = await getProgress(user);
         setProgress(progressData);
         if (queryResult.correct) setProgressMessage(`${activeStage.title} complete.`);
-        if (queryResult.correct && isFinalStage && !lessonCompletedFromHistory && !isReviewingPastStage) setCompletionReadyStageId(activeStage.id);
       }
     } catch (caught) {
       setResult(null);
@@ -234,7 +255,13 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     setActiveStageIndex(frontierStageIndex);
   }
 
-  const canContinue = Boolean(activeStage && (!activeStage.challengeId || result?.correct || (lessonCompletedFromHistory && activeStageStoredCompleted)));
+  function completeCourse() {
+    if (!courseCompletionKeyValue || !courseCompleted) return;
+    window.localStorage.setItem(courseCompletionKeyValue, "true");
+    setCourseCompletionAcknowledged(true);
+    window.location.href = "/progress";
+  }
+
   const editorHeight = `${editorPercent}%`;
   const resultsHeight = `${100 - editorPercent}%`;
   const hasMultipleStages = stages.length > 1;
@@ -363,14 +390,17 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line bg-elevated px-5 py-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{activeChallenge ? "SQL Editor" : "Concept"}</p>
-              <p className="mt-1 text-xs text-slate-500">{course.shortTitle} • {stageTitle(activeStage)} • {taskContextLabel}</p>
+              <p className="mt-1 text-xs text-slate-500">{course.shortTitle} • {stageTitle(activeStage)} • {questionContextLabel}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {activeChallenge && !shouldShowLessonCompleted && executionStatus(result, running, error, activeStageStoredCompleted) && <span className={`text-xs ${statusTone(result, running, error, activeStageStoredCompleted)}`}>{executionStatus(result, running, error, activeStageStoredCompleted)}</span>}
-              {shouldShowLessonCompleted && <span className="text-xs text-success">✓ Lesson Completed</span>}
-              {shouldShowPreviousTask && (
-                <button aria-label="Previous task" className="inline-flex h-9 items-center rounded border border-transparent px-3 text-sm text-slate-400 hover:border-line hover:text-slate-100 focus-visible:ring-2 focus-visible:ring-brand" onClick={moveToPreviousStage} type="button">
-                  ← Previous Task
+              {activeChallenge && executionStatus(result, running, error, activeStageCompleted, courseCompleted && courseCompletionAcknowledged && Boolean(position?.isFinalCourseQuestion)) && (
+                <span className={`text-xs ${statusTone(result, running, error, activeStageCompleted)}`}>
+                  {executionStatus(result, running, error, activeStageCompleted, courseCompleted && courseCompletionAcknowledged && Boolean(position?.isFinalCourseQuestion))}
+                </span>
+              )}
+              {shouldShowPreviousQuestion && (
+                <button aria-label="Previous question" className="inline-flex h-9 items-center rounded border border-transparent px-3 text-sm text-slate-400 hover:border-line hover:text-slate-100 focus-visible:ring-2 focus-visible:ring-brand" onClick={moveToPreviousStage} type="button">
+                  ← Previous Question
                 </button>
               )}
               {activeChallenge && (
@@ -392,13 +422,21 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                   Return to {frontierTaskLabel} →
                 </button>
               )}
-              {!shouldShowReturnToFrontier && canContinue && activeStageIndex < stages.length - 1 && (
+              {!shouldShowReturnToFrontier && progressionAction?.type === "next-question" && (
                 <button className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={continueToNextStage} type="button">
-                  Next Task →
+                  Next Question →
                 </button>
               )}
-              {shouldShowCompleteLesson && (
-                <Link className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" href="/learn">Complete Lesson →</Link>
+              {!shouldShowReturnToFrontier && progressionAction?.type === "next-lesson" && progressionAction.href && (
+                <Link className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" href={progressionAction.href}>Next Lesson →</Link>
+              )}
+              {!shouldShowReturnToFrontier && progressionAction?.type === "next-module" && progressionAction.href && (
+                <Link className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" href={progressionAction.href}>Next Module →</Link>
+              )}
+              {!shouldShowReturnToFrontier && progressionAction?.type === "complete-course" && (
+                <button className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={completeCourse} type="button">
+                  Complete Course →
+                </button>
               )}
             </div>
           </div>
@@ -449,21 +487,29 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                 <h2 className="mt-3 text-2xl font-semibold text-white">{activeStage.title}</h2>
                 <p className="mt-4 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</p>
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
-                  {shouldShowPreviousTask && (
-                    <button aria-label="Previous task" className="rounded border border-line px-4 py-2 text-sm font-semibold text-slate-300 hover:border-brand-strong/50" onClick={moveToPreviousStage} type="button">
-                      ← Previous Task
+                  {shouldShowPreviousQuestion && (
+                    <button aria-label="Previous question" className="rounded border border-line px-4 py-2 text-sm font-semibold text-slate-300 hover:border-brand-strong/50" onClick={moveToPreviousStage} type="button">
+                      ← Previous Question
                     </button>
                   )}
                   {shouldShowReturnToFrontier ? (
                     <button aria-label={`Return to ${frontierTaskLabel.toLowerCase()}`} className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={returnToFrontierStage} type="button">
                       Return to {frontierTaskLabel} →
                     </button>
-                  ) : activeStageIndex < stages.length - 1 ? (
+                  ) : progressionAction?.type === "next-question" ? (
                     <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={continueToNextStage} type="button">
-                      Continue to {stageTitle(stages[activeStageIndex + 1])}
+                      Next Question →
                     </button>
-                  ) : shouldShowLessonCompleted ? (
-                    <span className="text-sm font-semibold text-success">✓ Lesson Completed</span>
+                  ) : progressionAction?.type === "next-lesson" && progressionAction.href ? (
+                    <Link className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href={progressionAction.href}>Next Lesson →</Link>
+                  ) : progressionAction?.type === "next-module" && progressionAction.href ? (
+                    <Link className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href={progressionAction.href}>Next Module →</Link>
+                  ) : progressionAction?.type === "complete-course" ? (
+                    <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={completeCourse} type="button">
+                      Complete Course →
+                    </button>
+                  ) : progressionAction?.type === "course-completed" ? (
+                    <span className="text-sm font-semibold text-success">✓ Course Completed</span>
                   ) : null}
                 </div>
               </div>
@@ -497,6 +543,27 @@ function frontierStorageKey(userId: string, lessonId: string) {
 
 function conceptStorageKey(userId: string) {
   return `queryright:lesson:${userId}:completed-concepts`;
+}
+
+function courseCompletionKey(userId: string, courseId: string) {
+  return `queryright:course:${userId}:${courseId}:completion-acknowledged`;
+}
+
+type ProgressionAction =
+  | { type: "next-question" }
+  | { type: "next-lesson"; href: string }
+  | { type: "next-module"; href: string }
+  | { type: "complete-course" }
+  | { type: "course-completed" };
+
+function resolveProgressionAction(position: CurriculumPosition, questionCompleted: boolean, courseCompleted: boolean, courseCompletionAcknowledged: boolean): ProgressionAction | null {
+  if (!questionCompleted) return null;
+  if (position.hasNextQuestion) return { type: "next-question" };
+  if (position.nextLesson) return { type: "next-lesson", href: lessonUrl(position.nextLesson) };
+  if (position.nextModuleLesson) return { type: "next-module", href: lessonUrl(position.nextModuleLesson) };
+  if (position.isFinalCourseQuestion && courseCompleted && courseCompletionAcknowledged) return { type: "course-completed" };
+  if (position.isFinalCourseQuestion && courseCompleted) return { type: "complete-course" };
+  return null;
 }
 
 function workspaceSplitKey(userId: string) {
@@ -622,14 +689,15 @@ function FeedbackPanel({ activeStage, lessonPrompt, result }: { activeStage: Les
   );
 }
 
-function executionStatus(result: QueryResult | null, running: boolean, error: string | null, completed: boolean) {
+function executionStatus(result: QueryResult | null, running: boolean, error: string | null, completed: boolean, courseCompleted: boolean) {
   if (running) return "Running query...";
   if (error) return "Query error";
-  if (completed && !result) return "✓ Completed";
+  if (courseCompleted) return "✓ Course Completed";
+  if (completed && !result) return "✓ Question Completed";
   if (!result) return null;
   if (!result.success) return "Query error";
+  if (completed) return "✓ Question Completed";
   if (result.correct) return `Correct · ${result.rowCount} rows`;
-  if (completed) return "✓ Completed";
   return `Executed · ${result.rowCount} rows`;
 }
 
