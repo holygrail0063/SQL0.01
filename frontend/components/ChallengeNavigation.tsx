@@ -16,7 +16,7 @@ export function ChallengeNavigation({
   return (
     <div className="flex items-center gap-2">
       <button
-        className="inline-flex h-9 items-center gap-1 rounded border border-line px-3 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex h-9 items-center gap-1 rounded border border-line px-3 text-sm text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={!canGoPrevious}
         onClick={onPrevious}
         type="button"
@@ -25,7 +25,7 @@ export function ChallengeNavigation({
         Previous
       </button>
       <button
-        className="inline-flex h-9 items-center gap-1 rounded bg-brand px-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+        className="inline-flex h-9 items-center gap-1 rounded bg-brand px-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
         disabled={!canGoNext || !nextEnabled}
         onClick={onNext}
         type="button"

@@ -110,14 +110,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const passwordChecks = getPasswordChecks(password);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-ink px-5 py-12 text-slate-950">
+    <main className="flex min-h-screen items-center justify-center bg-ink px-5 py-12 text-slate-50">
       {captchaRequired && (
         <Script src="https://js.hcaptcha.com/1/api.js" strategy="afterInteractive" />
       )}
       <section className="w-full max-w-md rounded-lg border border-line bg-panel p-8 shadow-2xl shadow-slate-900/10">
         <div className="mb-8 text-center">
           <BrandMark />
-          <h1 className="mt-7 text-2xl font-semibold text-slate-950">{title}</h1>
+          <h1 className="mt-7 text-2xl font-semibold text-slate-50">{title}</h1>
         </div>
 
         <form className="space-y-4" onSubmit={submit}>
@@ -133,22 +133,22 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
           {mode === "signup" && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-300">
                 First Name
                 <input
                   autoComplete="given-name"
-                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-950 focus:border-brand-strong"
+                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-50 focus:border-brand-strong"
                   onChange={(event) => setFirstName(event.target.value)}
                   required
                   type="text"
                   value={firstName}
                 />
               </label>
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-300">
                 Last Name
                 <input
                   autoComplete="family-name"
-                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-950 focus:border-brand-strong"
+                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-50 focus:border-brand-strong"
                   onChange={(event) => setLastName(event.target.value)}
                   required
                   type="text"
@@ -158,11 +158,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
             </div>
           )}
 
-          <label className="block text-sm text-slate-700">
+          <label className="block text-sm text-slate-300">
             Email
             <input
               autoComplete="email"
-              className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-950 focus:border-brand-strong"
+              className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-50 focus:border-brand-strong"
               onChange={(event) => setEmail(event.target.value)}
               required
               type="email"
@@ -171,11 +171,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </label>
 
           {mode !== "forgot" && (
-            <label className="block text-sm text-slate-700">
+            <label className="block text-sm text-slate-300">
               Password
               <input
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-950 focus:border-brand-strong"
+                className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-50 focus:border-brand-strong"
                 minLength={mode === "signup" ? 10 : 6}
                 onChange={(event) => setPassword(event.target.value)}
                 required
@@ -187,11 +187,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
           {mode === "signup" && (
             <>
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-300">
                 Confirm Password
                 <input
                   autoComplete="new-password"
-                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-950 focus:border-brand-strong"
+                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-50 focus:border-brand-strong"
                   minLength={10}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   required
@@ -222,7 +222,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           {message && <p className="status-success rounded border p-3 text-sm" role="status">{message}</p>}
 
           <button
-            className="h-11 w-full rounded bg-brand text-sm font-semibold text-slate-950 disabled:cursor-wait disabled:bg-slate-300"
+            className="h-11 w-full rounded bg-brand text-sm font-semibold text-slate-950 disabled:cursor-wait disabled:bg-slate-700"
             disabled={loading}
             type="submit"
           >
@@ -230,17 +230,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-slate-600">
+        <div className="mt-6 text-center text-sm text-slate-400">
           {mode === "login" && (
             <>
-              <Link href="/forgot-password" className="text-cyan hover:text-slate-950">Forgot password?</Link>
-              <div className="mt-4">Don&apos;t have an account? <Link className="text-cyan hover:text-slate-950" href="/signup">Create one</Link></div>
+              <Link href="/forgot-password" className="text-cyan hover:text-slate-50">Forgot password?</Link>
+              <div className="mt-4">Don&apos;t have an account? <Link className="text-cyan hover:text-slate-50" href="/signup">Create one</Link></div>
             </>
           )}
-          {mode === "signup" && <>Already have an account? <Link className="text-cyan hover:text-slate-950" href="/login">Log in</Link></>}
-          {mode === "forgot" && <Link className="text-cyan hover:text-slate-950" href="/login">Back to login</Link>}
+          {mode === "signup" && <>Already have an account? <Link className="text-cyan hover:text-slate-50" href="/login">Log in</Link></>}
+          {mode === "forgot" && <Link className="text-cyan hover:text-slate-50" href="/login">Back to login</Link>}
           <div className="mt-4">
-            <Link className="text-slate-500 hover:text-slate-950" href="/">Back to home page</Link>
+            <Link className="text-slate-500 hover:text-slate-50" href="/">Back to home page</Link>
           </div>
         </div>
       </section>

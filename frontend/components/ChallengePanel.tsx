@@ -8,10 +8,10 @@ export function ChallengePanel({ challenge, current, total, sqlLevel }: { challe
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-wider text-slate-500">SQLBank • Task #{String(challenge.id).padStart(3, "0")} • Progress {current} / {total}</p>
-          <h1 className="mt-1 text-2xl font-semibold text-slate-950">{challenge.title}</h1>
+          <h1 className="mt-1 text-2xl font-semibold text-slate-50">{challenge.title}</h1>
         </div>
         <div className="flex gap-2 text-xs">
-          <span className="rounded border border-line px-2 py-1 text-slate-700">{challenge.difficulty}</span>
+          <span className="rounded border border-line px-2 py-1 text-slate-300">{challenge.difficulty}</span>
           <span className="rounded border border-line px-2 py-1 text-mint">{challenge.topic}</span>
         </div>
       </div>
@@ -19,15 +19,15 @@ export function ChallengePanel({ challenge, current, total, sqlLevel }: { challe
         <div className="space-y-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-cyan">Work Request</p>
-            <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-700">{challenge.description}</p>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-300">{challenge.description}</p>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Concept</p>
-            <p className="mt-2 text-sm leading-6 text-slate-700">{challenge.concept}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-300">{challenge.concept}</p>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">How It Works</p>
-            <p className="mt-2 text-sm leading-6 text-slate-700">{challenge.lesson}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-300">{challenge.lesson}</p>
           </div>
         </div>
         <div className="space-y-4 rounded-lg border border-line bg-elevated p-4">
@@ -37,7 +37,7 @@ export function ChallengePanel({ challenge, current, total, sqlLevel }: { challe
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Checklist</p>
-            <ul className="mt-2 space-y-1 text-sm text-slate-700">
+            <ul className="mt-2 space-y-1 text-sm text-slate-300">
               {challenge.success_criteria.map((item) => (
                 <li key={item}>- {item}</li>
               ))}
@@ -46,7 +46,7 @@ export function ChallengePanel({ challenge, current, total, sqlLevel }: { challe
           {guidance && (
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{sqlLevel ?? "Completely New"} Guidance</p>
-              <p className="mt-2 text-sm leading-6 text-slate-700">{guidance}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{guidance}</p>
             </div>
           )}
         </div>

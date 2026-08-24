@@ -75,15 +75,15 @@ function ProgressContent() {
     return buildDashboardAnalytics(course, progress, challenges, attempts, range);
   }, [attempts, challenges, course, progress, range]);
 
-  if (loading) return <main className="p-8 text-slate-600">Loading progress analytics...</main>;
+  if (loading) return <main className="p-8 text-slate-400">Loading progress analytics...</main>;
   if (error) return <main className="p-8 text-red-200">{error}</main>;
 
   if (!course || !analytics) {
     return (
       <main className="mx-auto max-w-5xl px-5 py-10">
         <p className="font-mono text-sm text-cyan">Progress</p>
-        <h1 className="mt-3 text-3xl font-semibold text-slate-950">Choose a supported path to unlock analytics.</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-700">Business Analyst and Data Analyst progress views are available today.</p>
+        <h1 className="mt-3 text-3xl font-semibold text-slate-50">Choose a supported path to unlock analytics.</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Business Analyst and Data Analyst progress views are available today.</p>
         <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href="/account/preferences">Update Learning Path</Link>
       </main>
     );
@@ -94,8 +94,8 @@ function ProgressContent() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-sm text-cyan">Learning progress</p>
-          <h1 className="mt-3 text-3xl font-semibold text-slate-950">Your SQL Progress</h1>
-          <p className="mt-2 text-sm text-slate-600">{course.learningGoal} - {course.experienceLevel}</p>
+          <h1 className="mt-3 text-3xl font-semibold text-slate-50">Your SQL Progress</h1>
+          <p className="mt-2 text-sm text-slate-400">{course.learningGoal} - {course.experienceLevel}</p>
         </div>
         <RangeSelector range={range} setRange={setRange} />
       </div>
@@ -145,10 +145,10 @@ function ProgressContent() {
             {analytics.focusAreas.map((skill) => (
               <Link className="rounded border border-line bg-elevated p-4 hover:border-cyan/60" href={skill.practiceHref} key={skill.skill}>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-semibold text-slate-950">{skill.skill}</span>
-                  <span className="text-sm text-slate-600">{skill.mastery}%</span>
+                  <span className="font-semibold text-slate-50">{skill.skill}</span>
+                  <span className="text-sm text-slate-400">{skill.mastery}%</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-600">Practice this skill in your active course path.</p>
+                <p className="mt-2 text-sm text-slate-400">Practice this skill in your active course path.</p>
               </Link>
             ))}
           </div>
@@ -166,7 +166,7 @@ function RangeSelector({ range, setRange }: { range: DashboardRange; setRange: (
     <div className="inline-flex rounded-full border border-line bg-panel p-1">
       {rangeOptions.map((option) => (
         <button
-          className={range === option.value ? "rounded-full bg-brand px-3 py-2 text-sm font-semibold text-slate-950" : "rounded-full px-3 py-2 text-sm text-slate-600 hover:bg-brand/20 hover:text-slate-950"}
+          className={range === option.value ? "rounded-full bg-brand px-3 py-2 text-sm font-semibold text-slate-950" : "rounded-full px-3 py-2 text-sm text-slate-400 hover:bg-brand/20 hover:text-slate-50"}
           key={option.value}
           onClick={() => setRange(option.value)}
           type="button"
@@ -182,8 +182,8 @@ function MetricCard({ detail, icon, label, value }: { detail: string; icon: Reac
   return (
     <article className="rounded-lg border border-line bg-panel p-5">
       <div className="flex items-center gap-2 text-cyan">{icon}<p className="font-mono text-xs uppercase tracking-wider">{label}</p></div>
-      <div className="mt-4 text-3xl font-semibold text-slate-950">{value}</div>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+      <div className="mt-4 text-3xl font-semibold text-slate-50">{value}</div>
+      <p className="mt-2 text-sm leading-6 text-slate-400">{detail}</p>
     </article>
   );
 }
@@ -191,7 +191,7 @@ function MetricCard({ detail, icon, label, value }: { detail: string; icon: Reac
 function Panel({ children, title }: { children: ReactNode; title: string }) {
   return (
     <section className="rounded-lg border border-line bg-panel p-6">
-      <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+      <h2 className="text-lg font-semibold text-slate-50">{title}</h2>
       <div className="mt-5">{children}</div>
     </section>
   );
@@ -246,10 +246,10 @@ function ProgressRow({ detail, label, value }: { detail: string; label: string; 
   return (
     <div>
       <div className="mb-1 flex justify-between gap-3 text-sm">
-        <span className="text-slate-800">{label}</span>
-        <span className="text-slate-950">{value}%</span>
+        <span className="text-slate-200">{label}</span>
+        <span className="text-slate-50">{value}%</span>
       </div>
-      <div className="h-2 rounded bg-slate-200">
+      <div className="h-2 rounded bg-slate-800">
         <div className="h-2 rounded bg-brand-strong" style={{ width: `${value}%` }} />
       </div>
       <p className="mt-1 text-xs text-slate-500">{detail}</p>
@@ -262,9 +262,9 @@ function RecentActivityList({ analytics }: { analytics: DashboardAnalytics }) {
   return (
     <div className="divide-y divide-line">
       {analytics.recentActivity.map((activity) => (
-        <Link className="flex items-center justify-between gap-4 py-3 hover:text-slate-950" href={`/challenge/${activity.challengeId}`} key={`${activity.challengeId}-${activity.attemptedAt}`}>
+        <Link className="flex items-center justify-between gap-4 py-3 hover:text-slate-50" href={`/challenge/${activity.challengeId}`} key={`${activity.challengeId}-${activity.attemptedAt}`}>
           <div>
-            <p className="font-semibold text-slate-950">{activity.title}</p>
+            <p className="font-semibold text-slate-50">{activity.title}</p>
             <p className="mt-1 text-sm text-slate-500">{new Date(activity.attemptedAt).toLocaleString()}</p>
           </div>
           <span className={activity.isCorrect ? "text-success" : "text-red-200"}>{activity.isCorrect ? "Correct" : "Incorrect"}</span>
@@ -275,7 +275,7 @@ function RecentActivityList({ analytics }: { analytics: DashboardAnalytics }) {
 }
 
 function EmptyState({ text }: { text: string }) {
-  return <div className="rounded border border-line bg-elevated p-6 text-sm text-slate-600">{text}</div>;
+  return <div className="rounded border border-line bg-elevated p-6 text-sm text-slate-400">{text}</div>;
 }
 
 function formatPercent(value: number | null) {

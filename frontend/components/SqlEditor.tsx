@@ -1,8 +1,13 @@
 "use client";
 
-import Editor from "@monaco-editor/react";
+import Editor, { type OnMount } from "@monaco-editor/react";
 
-export function SqlEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export function SqlEditor({ onChange, onRun, value }: { value: string; onChange: (value: string) => void; onRun?: () => void }) {
+  const handleMount: OnMount = (editor, monaco) => {
+    if (!onRun) return;
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => onRun());
+  };
+
   return (
     <div className="min-h-[320px] flex-1 border-b border-line">
       <Editor
@@ -10,6 +15,7 @@ export function SqlEditor({ value, onChange }: { value: string; onChange: (value
         defaultLanguage="sql"
         theme="vs-dark"
         value={value}
+        onMount={handleMount}
         onChange={(next) => onChange(next ?? "")}
         options={{
           minimap: { enabled: false },

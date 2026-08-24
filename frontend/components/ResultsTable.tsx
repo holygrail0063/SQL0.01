@@ -44,7 +44,7 @@ export function ResultsTable({ result }: { result: QueryResult | null }) {
               <tr key={rowIndex} className="odd:bg-[#0c1626] even:bg-[#101b2d]">
                 {row.map((value, cellIndex) => (
                   <td key={`${rowIndex}-${cellIndex}`} className="whitespace-nowrap border-b border-line/70 px-3 py-2 text-slate-300">
-                    {value === null ? <span className="text-slate-600">NULL</span> : String(value)}
+                    {value === null ? <span className="text-slate-400">NULL</span> : String(value)}
                   </td>
                 ))}
               </tr>

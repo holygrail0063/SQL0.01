@@ -11,6 +11,7 @@ import { api, type Challenge, type QueryResult, type SchemaTable } from "@/lib/a
 import { useAuth } from "@/lib/auth";
 import { getLessonById, getLessonStages, type LessonStageDefinition } from "@/lib/course";
 import { getProgress, recordAttempt, type ProgressRow } from "@/lib/progress";
+import { lastSqlWorkspaceKey, lessonDraftKey } from "@/lib/sql-editor-state";
 
 export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const { user } = useAuth();
@@ -45,6 +46,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
 
   useEffect(() => {
     if (!lessonBundle || !user) return;
+    window.localStorage.setItem(lastSqlWorkspaceKey(user.id), `/learn/lesson/${lessonId}`);
     const saved = window.localStorage.getItem(storageKey(user.id, lessonId));
     const savedConcepts = JSON.parse(window.localStorage.getItem(conceptStorageKey(user.id)) ?? "[]") as string[];
     setCompletedConceptStages(new Set(savedConcepts));
@@ -65,9 +67,16 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     setShowExplanation(false);
     setProgressMessage(null);
     if (activeStage && !activeStage.carryForwardQuery) {
-      setQuery(activeStage.starterSql ?? "");
+      const draft = user ? window.localStorage.getItem(lessonDraftKey(user.id, lessonId, activeStage.id)) : null;
+      setQuery(draft ?? activeStage.starterSql ?? "");
     }
-  }, [activeStageIndex, stages]);
+  }, [activeStageIndex, lessonId, stages, user]);
+
+  useEffect(() => {
+    const activeStage = stages[activeStageIndex];
+    if (!user || !activeStage || !activeStage.challengeId || result?.correct) return;
+    window.localStorage.setItem(lessonDraftKey(user.id, lessonId, activeStage.id), query);
+  }, [activeStageIndex, lessonId, query, result?.correct, stages, user]);
 
   if (loading) return <main className="p-8 text-slate-400">Preparing your lesson...</main>;
   if (!lessonBundle) return <main className="p-8 text-red-200">This lesson was not found.</main>;
@@ -127,16 +136,16 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const canContinue = Boolean(activeStage && (!activeStage.challengeId || result?.correct));
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-ink text-slate-950">
+    <main className="min-h-[calc(100vh-4rem)] bg-ink text-slate-50">
       <header className="border-b border-line bg-panel px-5 py-5">
         <div className="mx-auto max-w-7xl">
           <p className="font-mono text-xs uppercase tracking-wider text-cyan">{course.learningGoal} Path / Module {module.sequence} / Lesson {lesson.sequence}</p>
           <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-semibold text-slate-950">{lesson.title}</h1>
+              <h1 className="text-3xl font-semibold text-slate-50">{lesson.title}</h1>
               <p className="mt-2 text-sm text-slate-400">{lesson.difficulty} • {lesson.estimatedMinutes} min • {lesson.skills.join(", ")}</p>
             </div>
-            <Link className="rounded border border-line px-4 py-2 text-sm font-semibold text-slate-700 hover:border-brand-strong/50" href="/learn">Back to Course</Link>
+            <Link className="rounded border border-line px-4 py-2 text-sm font-semibold text-slate-300 hover:border-brand-strong/50" href="/learn">Back to Course</Link>
           </div>
         </div>
       </header>
@@ -153,7 +162,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                   const previousStagesComplete = stages.slice(0, index).every((candidate) => isStageCompleted(candidate, progress, completedConceptStages));
                   return (
                     <button
-                      className={`flex w-full items-center gap-2 rounded border px-3 py-2 text-left text-sm ${current ? "border-brand-strong bg-brand/25 text-slate-950" : completed ? "border-line text-slate-700" : "border-transparent text-slate-500"}`}
+                      className={`flex w-full items-center gap-2 rounded border px-3 py-2 text-left text-sm ${current ? "border-brand-strong bg-brand/25 text-slate-50" : completed ? "border-line text-slate-300" : "border-transparent text-slate-500"}`}
                       disabled={!previousStagesComplete}
                       key={stage.id}
                       onClick={() => moveToStage(index)}
@@ -169,17 +178,17 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
 
             <section className="rounded-lg border border-line bg-elevated p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-cyan">Stage {activeStageIndex + 1} of {stages.length}</p>
-              <h2 className="mt-2 text-lg font-semibold text-slate-950">{activeStage.title}</h2>
-              <div className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{activeStage.instructions}</div>
+              <h2 className="mt-2 text-lg font-semibold text-slate-50">{activeStage.title}</h2>
+              <div className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</div>
             </section>
 
             <section className="rounded-lg border border-line bg-elevated p-4">
-              <button className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-950" onClick={() => setShowTutor((value) => !value)} type="button">
+              <button className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-50" onClick={() => setShowTutor((value) => !value)} type="button">
                 <span className="inline-flex items-center gap-2"><BookOpen size={16} /> Lesson Coach</span>
                 <span className="text-cyan">{showTutor ? "Hide" : "Open"}</span>
               </button>
               {showTutor && (
-                <p className="mt-3 text-sm leading-6 text-slate-700">
+                <p className="mt-3 text-sm leading-6 text-slate-300">
                   You are working on {activeStage.title}. Focus only on this stage&apos;s request: {activeStage.instructions.split("\n")[0]} {activeChallenge ? "Run a query that returns the same business output, not necessarily the same formatting." : "Read the concept, then continue when it makes sense."}
                 </p>
               )}
@@ -187,14 +196,14 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
 
             <section className="rounded-lg border border-line bg-elevated p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-950"><Lightbulb size={16} /> Hints</p>
+                <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-50"><Lightbulb size={16} /> Hints</p>
                 {canRevealMoreHints && (
-                  <button className="rounded border border-line px-3 py-1 text-xs text-slate-700 hover:border-brand-strong/50" onClick={() => setHintCount((value) => value + 1)} type="button">
+                  <button className="rounded border border-line px-3 py-1 text-xs text-slate-300 hover:border-brand-strong/50" onClick={() => setHintCount((value) => value + 1)} type="button">
                     Show Hint {hintCount + 1}
                   </button>
                 )}
               </div>
-              <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+              <div className="mt-3 space-y-2 text-sm leading-6 text-slate-300">
                 {visibleHints.length ? visibleHints.map((hint, index) => <p key={hint}>Hint {index + 1}: {hint}</p>) : <p className="text-slate-500">{activeChallenge ? "Use hints only when you need direction." : "No SQL hints needed for this concept stage."}</p>}
               </div>
             </section>
@@ -214,14 +223,15 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               {activeChallenge && <QueryStatus result={result} />}
               {activeChallenge && (
                 <>
-                  <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-700 hover:border-brand-strong/50" onClick={() => setQuery(activeStage.starterSql ?? "")} type="button">
+                  <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-300 hover:border-brand-strong/50" onClick={() => setQuery(activeStage.starterSql ?? "")} type="button">
                     <RotateCcw size={15} />
                     Reset
                   </button>
-                  <button className="inline-flex h-9 items-center gap-2 rounded bg-brand px-4 text-sm font-semibold text-slate-950 disabled:cursor-wait disabled:bg-slate-300 disabled:text-slate-500" disabled={running} onClick={runQuery} type="button">
+                  <button className="inline-flex h-9 items-center gap-2 rounded bg-brand px-4 text-sm font-semibold text-slate-950 disabled:cursor-wait disabled:bg-slate-700 disabled:text-slate-400" disabled={running} onClick={runQuery} type="button">
                     <Play size={16} fill="currentColor" />
                     {running ? "Running..." : "Run Query"}
                   </button>
+                  <span className="hidden text-xs text-slate-500 md:inline">Ctrl/⌘ + Enter</span>
                 </>
               )}
               {canContinue && activeStageIndex < stages.length - 1 && (
@@ -237,7 +247,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
 
           {activeChallenge ? (
             <>
-              <SqlEditor value={query} onChange={setQuery} />
+          <SqlEditor value={query} onChange={setQuery} onRun={runQuery} />
               {result?.success && result.correct && (
                 <div className="border-b border-success/40 bg-success/10 px-6 py-3 text-sm text-green-100">
                   Correct. {activeStage.title} is complete. {activeStageIndex < stages.length - 1 ? "Continue when you are ready for the next stage." : lesson.interpretationPrompt}
@@ -270,7 +280,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               <ResultsTable result={activeChallenge ? result : null} />
             </div>
             <aside className="border-t border-line p-5 xl:border-l xl:border-t-0">
-              <button className="text-sm font-semibold text-cyan hover:text-white disabled:text-slate-600" disabled={!result?.success} onClick={() => setShowExplanation((value) => !value)} type="button">
+              <button className="text-sm font-semibold text-cyan hover:text-white disabled:text-slate-400" disabled={!result?.success} onClick={() => setShowExplanation((value) => !value)} type="button">
                 Query Breakdown
               </button>
               {showExplanation && (

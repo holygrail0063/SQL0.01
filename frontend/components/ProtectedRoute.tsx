@@ -20,7 +20,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   }
 
   if (!configured) {
-    return <main className="flex min-h-screen items-center justify-center bg-ink px-5 text-center text-slate-700">Supabase is not configured yet. Add the QueryRight Supabase environment variables to continue.</main>;
+    return <main className="flex min-h-screen items-center justify-center bg-ink px-5 text-center text-slate-300">Supabase is not configured yet. Add the QueryRight Supabase environment variables to continue.</main>;
   }
 
   if (!user) {

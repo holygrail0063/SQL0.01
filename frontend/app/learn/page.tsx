@@ -49,8 +49,8 @@ function LearnContent() {
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
       <p className="font-mono text-sm text-cyan">{course ? `${course.learningGoal} SQL Path` : "Career SQL Path"}</p>
-      <h1 className="mt-3 text-3xl font-semibold text-slate-950">{course ? course.title : "Career pathway coming soon"}</h1>
-      {course && <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-700">{course.description}</p>}
+      <h1 className="mt-3 text-3xl font-semibold text-slate-50">{course ? course.title : "Career pathway coming soon"}</h1>
+      {course && <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{course.description}</p>}
       {error && (
         <div className="mt-6 rounded border border-red-900/70 bg-red-950/40 p-4 text-sm text-red-100">
           Learning data could not be loaded. {error}
@@ -59,8 +59,8 @@ function LearnContent() {
       {!course && (
         <section className="mt-8 rounded border border-line bg-panel p-6">
           <p className="font-mono text-xs uppercase tracking-wider text-cyan">Coming Soon</p>
-          <h2 className="mt-3 text-xl font-semibold text-slate-950">{profile?.selected_role ?? "This pathway"} is being built.</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-700">Business Analyst and Data Analyst are available now. Other learning goals remain selectable so future paths can plug into the same course engine.</p>
+          <h2 className="mt-3 text-xl font-semibold text-slate-50">{profile?.selected_role ?? "This pathway"} is being built.</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-300">Business Analyst and Data Analyst are available now. Other learning goals remain selectable so future paths can plug into the same course engine.</p>
           <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href="/account/preferences">Update Learning Path</Link>
         </section>
       )}
@@ -70,18 +70,18 @@ function LearnContent() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="font-mono text-xs uppercase tracking-wider text-cyan">Module {module.sequence}</p>
-                <h2 className="mt-2 text-xl font-semibold text-slate-950">{module.title}</h2>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{module.description}</p>
+                <h2 className="mt-2 text-xl font-semibold text-slate-50">{module.title}</h2>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{module.description}</p>
               </div>
               <div className="text-right text-sm">
-                <div className={status === "Completed" ? "text-success" : status === "In Progress" ? "text-cyan" : status === "Locked" ? "text-slate-500" : "text-slate-700"}>
+                <div className={status === "Completed" ? "text-success" : status === "In Progress" ? "text-cyan" : status === "Locked" ? "text-slate-500" : "text-slate-300"}>
                   {status === "Locked" && <Lock className="mr-1 inline" size={14} />}
                   {status}
                 </div>
                 <div className="mt-1 text-slate-500">{completedLessons} / {totalLessons} lessons</div>
               </div>
             </div>
-            <div className="mt-4 h-2 rounded bg-slate-200">
+            <div className="mt-4 h-2 rounded bg-slate-800">
               <div className="h-2 rounded bg-brand" style={{ width: `${percent}%` }} />
             </div>
             <div className="mt-4 divide-y divide-line">
@@ -89,16 +89,16 @@ function LearnContent() {
                 const challenge = challenges.find((candidate) => candidate.id === lesson.challengeId);
                 const completed = completedIds.has(lesson.challengeId);
                 return (
-                  <Link className="flex items-center justify-between gap-4 py-4 hover:text-slate-950" href={lessonUrl(lesson)} key={lesson.id}>
+                  <Link className="flex items-center justify-between gap-4 py-4 hover:text-slate-50" href={lessonUrl(lesson)} key={lesson.id}>
                     <div className="flex items-center gap-3">
-                      {completed ? <CheckCircle2 className="text-success" size={18} /> : <Circle className="text-slate-600" size={18} />}
+                      {completed ? <CheckCircle2 className="text-success" size={18} /> : <Circle className="text-slate-400" size={18} />}
                       <div>
-                        <p className="font-medium text-slate-950">{lesson.title}</p>
+                        <p className="font-medium text-slate-50">{lesson.title}</p>
                         <p className="mt-1 text-sm text-slate-500">{lesson.difficulty} • {lesson.estimatedMinutes} min • {lesson.skills.slice(0, 3).join(", ")}</p>
-                        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{challenge?.concept ?? lesson.concept}</p>
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{challenge?.concept ?? lesson.concept}</p>
                       </div>
                     </div>
-                    <span className={completed ? "text-success" : "text-slate-500"}>{completed ? "Completed" : "Open"}</span>
+                    <span className={completed ? "text-success" : "text-brand"}>{completed ? "Completed" : "Open SQL Editor"}</span>
                   </Link>
                 );
               })}

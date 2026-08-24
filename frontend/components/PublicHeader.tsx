@@ -11,15 +11,15 @@ export function PublicHeader() {
         <Link href="/" aria-label="QueryRight home">
           <BrandMark />
         </Link>
-        <nav className="hidden items-center gap-7 text-sm text-slate-600 md:flex">
-          <a href="/#product" className="hover:text-slate-950">Product</a>
-          <a href="/#how-it-works" className="hover:text-slate-950">How It Works</a>
-          <a href="/#paths" className="hover:text-slate-950">Learning Paths</a>
-          <a href="/#about" className="hover:text-slate-950">About</a>
+        <nav className="hidden items-center gap-7 text-sm text-slate-400 md:flex">
+          <a href="/#product" className="hover:text-slate-50">Product</a>
+          <a href="/#how-it-works" className="hover:text-slate-50">How It Works</a>
+          <a href="/#paths" className="hover:text-slate-50">Learning Paths</a>
+          <a href="/#about" className="hover:text-slate-50">About</a>
         </nav>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="hidden text-sm text-slate-600 hover:text-slate-950 sm:block">Log in</Link>
-          <Link href="/signup" className="hidden rounded-full border border-line px-4 py-2 text-sm font-semibold text-slate-700 hover:border-brand-strong/50 hover:text-slate-950 sm:inline-flex">
+          <Link href="/login" className="hidden text-sm text-slate-400 hover:text-slate-50 sm:block">Log in</Link>
+          <Link href="/signup" className="hidden rounded-full border border-line px-4 py-2 text-sm font-semibold text-slate-300 hover:border-brand-strong/50 hover:text-slate-50 sm:inline-flex">
             Sign Up
           </Link>
           <Link href="/signup" className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-brand/80">

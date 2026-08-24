@@ -12,6 +12,7 @@ import { SqlEditor } from "@/components/SqlEditor";
 import { useAuth } from "@/lib/auth";
 import { api, Challenge, QueryResult, SchemaTable } from "@/lib/api";
 import { getProfile, recordAttempt } from "@/lib/progress";
+import { challengeDraftKey, lastSqlWorkspaceKey } from "@/lib/sql-editor-state";
 
 export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
   const router = useRouter();
@@ -49,11 +50,18 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
 
   useEffect(() => {
     if (challenge) {
-      setQuery("");
+      const draft = user ? window.localStorage.getItem(challengeDraftKey(user.id, challenge.id)) : null;
+      setQuery(draft ?? "");
       setResult(null);
       setProgressMessage(null);
+      if (user) window.localStorage.setItem(lastSqlWorkspaceKey(user.id), `/challenge/${challenge.id}`);
     }
-  }, [challenge?.id]);
+  }, [challenge?.id, user]);
+
+  useEffect(() => {
+    if (!user || !challenge || result?.correct) return;
+    window.localStorage.setItem(challengeDraftKey(user.id, challenge.id), query);
+  }, [challenge, query, result?.correct, user]);
 
   async function runQuery() {
     if (!challenge) return;
@@ -84,7 +92,7 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
   const canMoveNext = useMemo(() => Boolean(result?.success && result.correct), [result]);
 
   if (loading) {
-    return <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-ink text-slate-700">Loading SQLBank workspace...</main>;
+    return <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-ink text-slate-300">Loading SQLBank workspace...</main>;
   }
 
   if (!challenge) {
@@ -96,12 +104,12 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
   }
 
   return (
-    <main className="grid min-h-[calc(100vh-4rem)] grid-cols-1 bg-ink text-slate-950 lg:grid-cols-[320px_1fr]">
+    <main className="grid min-h-[calc(100vh-4rem)] grid-cols-1 bg-ink text-slate-50 lg:grid-cols-[320px_1fr]">
       <SchemaExplorer schema={schema} />
       <div className="flex min-w-0 flex-col">
         <header className="flex min-h-14 items-center justify-between gap-4 border-b border-line bg-panel px-6 py-3">
           <div>
-            <div className="text-lg font-semibold text-slate-950">SQLBank Analytics Team</div>
+            <div className="text-lg font-semibold text-slate-50">SQLBank Analytics Team</div>
             <div className="font-mono text-xs uppercase tracking-wider text-slate-500">SQLBankTraining</div>
           </div>
           <ChallengeNavigation
@@ -124,7 +132,7 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
             <div className="flex items-center gap-4">
               <QueryStatus result={result} />
               <button
-                className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-700 hover:border-brand-strong/50"
+                className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-300 hover:border-brand-strong/50"
                 onClick={() => setQuery("")}
                 type="button"
               >
@@ -132,7 +140,7 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
                 Reset
               </button>
               <button
-                className="inline-flex h-9 items-center gap-2 rounded bg-brand px-4 text-sm font-semibold text-slate-950 disabled:cursor-wait disabled:bg-slate-300 disabled:text-slate-500"
+                className="inline-flex h-9 items-center gap-2 rounded bg-brand px-4 text-sm font-semibold text-slate-950 disabled:cursor-wait disabled:bg-slate-700 disabled:text-slate-400"
                 disabled={running}
                 onClick={runQuery}
                 type="button"
@@ -140,9 +148,10 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
                 <Play size={16} fill="currentColor" />
                 {running ? "Running..." : "Run Query"}
               </button>
+              <span className="hidden text-xs text-slate-500 md:inline">Ctrl/⌘ + Enter</span>
             </div>
           </div>
-          <SqlEditor value={query} onChange={setQuery} />
+          <SqlEditor value={query} onChange={setQuery} onRun={runQuery} />
           {result?.success && result.correct && (
             <div className="border-b border-success/40 bg-success/10 px-6 py-3 text-sm text-green-100">
               Correct. Your query returned the expected result.
