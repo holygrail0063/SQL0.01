@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, Database, Play, ShieldCheck, TerminalSquare } from "lucide-react";
+import { ArrowRight, BarChart3, Database, ShieldCheck, TerminalSquare } from "lucide-react";
 import { AuthHashRedirect } from "@/components/AuthHashRedirect";
+import { SqlTypewriter } from "@/components/animations/SqlTypewriter";
 import { PublicHeader } from "@/components/PublicHeader";
 
 const roleCards = [
@@ -33,41 +34,7 @@ export default function LandingPage() {
           <p className="mt-6 text-sm text-slate-500">Stop watching SQL. Start writing it.</p>
         </div>
 
-        <div className="rounded-lg border border-line bg-panel shadow-2xl shadow-slate-900/10">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold text-slate-50">SQLBank / Loan Analytics</p>
-              <p className="font-mono text-xs text-slate-500">Task #010</p>
-            </div>
-            <span className="inline-flex items-center gap-2 rounded bg-brand px-3 py-2 text-xs font-semibold text-slate-950" aria-hidden="true">
-              <Play size={14} fill="currentColor" />
-              Run Query
-            </span>
-          </div>
-          <div className="grid min-h-[410px] grid-cols-1 md:grid-cols-[1fr_220px]">
-            <div className="border-r border-line">
-              <div className="border-b border-line p-4">
-                <h2 className="text-lg font-semibold text-slate-50">Find the five branches with the highest loan approval rate.</h2>
-                <p className="mt-2 text-sm text-slate-400">Intermediate • Business Analysis</p>
-              </div>
-              <pre className="min-h-[250px] overflow-hidden p-5 font-mono text-sm leading-7 text-slate-300">
-                <span className="text-slate-400">1</span> SELECT{"\n"}
-                <span className="text-slate-400">2</span>   b.BranchName,{"\n"}
-                <span className="text-slate-400">3</span>   COUNT(*) AS Applications{"\n"}
-                <span className="text-slate-400">4</span> FROM Applications a{"\n"}
-                <span className="text-slate-400">5</span> JOIN Branches b ON ...{"\n"}
-                <span className="text-cyan">6</span> <span className="inline-block h-4 w-2 translate-y-1 bg-cyan" />
-              </pre>
-              <div className="border-t border-line px-5 py-3 text-sm text-success">Correct output appears here instantly.</div>
-            </div>
-            <aside className="p-4 font-mono text-xs text-slate-400">
-              <p className="mb-4 text-cyan">SQLBankTraining</p>
-              {["Customers", "Branches", "Applications", "Loans", "Payments"].map((table) => (
-                <p className="mb-3" key={table}>▸ {table}</p>
-              ))}
-            </aside>
-          </div>
-        </div>
+        <SqlTypewriter />
       </section>
 
       <section className="border-y border-line bg-panel/60" id="product">
