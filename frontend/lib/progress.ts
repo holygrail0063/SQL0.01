@@ -77,6 +77,41 @@ export async function saveProfile(user: User, values: Partial<Profile>): Promise
   return data;
 }
 
+export async function saveAccentColor(user: User, accentColor: unknown): Promise<AccentId> {
+  const client = requireSupabase();
+  const accent = normalizeAccentId(accentColor);
+  const updatedAt = new Date().toISOString();
+
+  const { data, error } = await client
+    .from("profiles")
+    .update({ accent_color: accent, updated_at: updatedAt })
+    .eq("auth_user_id", user.id)
+    .select("accent_color")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (data) return normalizeAccentId(data.accent_color);
+
+  const metadataNames = namesFromMetadata(user);
+  const displayName = metadataNames.displayName || user.email?.split("@")[0] || null;
+  const { data: inserted, error: insertError } = await client
+    .from("profiles")
+    .insert({
+      auth_user_id: user.id,
+      first_name: metadataNames.firstName,
+      last_name: metadataNames.lastName,
+      display_name: displayName,
+      accent_color: accent,
+      onboarding_completed: false,
+      updated_at: updatedAt,
+    })
+    .select("accent_color")
+    .single();
+
+  if (insertError) throw insertError;
+  return normalizeAccentId(inserted.accent_color);
+}
+
 export function profileDisplayName(profile: Profile | null, user?: User | null): string {
   const profileName = [cleanName(profile?.first_name), cleanName(profile?.last_name)].filter(Boolean).join(" ");
   if (profileName) return profileName;

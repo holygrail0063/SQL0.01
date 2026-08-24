@@ -14,7 +14,7 @@ import {
   type AccentPreset,
 } from "@/lib/accent";
 import { useAuth } from "@/lib/auth";
-import { getProfile, saveProfile } from "@/lib/progress";
+import { getProfile, saveAccentColor } from "@/lib/progress";
 
 export default function AppearancePage() {
   return (
@@ -93,15 +93,14 @@ function AppearanceContent() {
     setMessage(null);
     setError(null);
     try {
-      const saved = await saveProfile(user, { accent_color: draftAccent });
-      const persistedAccent = normalizeAccentId(saved.accent_color ?? draftAccent);
+      const persistedAccent = await saveAccentColor(user, draftAccent);
       setSavedAccent(persistedAccent);
       setDraftAccent(persistedAccent);
       applyAccent(persistedAccent);
       cacheAccent(user.id, persistedAccent);
       setMessage("Appearance updated.");
-    } catch {
-      setError("We couldn't save your appearance settings. Try again.");
+    } catch (caught) {
+      setError(`We couldn't save your appearance settings. ${readableSaveError(caught)}`);
     } finally {
       setSaving(false);
     }
@@ -169,6 +168,17 @@ function AppearanceContent() {
       </section>
     </main>
   );
+}
+
+function readableSaveError(caught: unknown) {
+  if (caught instanceof Error && caught.message) return caught.message;
+  if (caught && typeof caught === "object") {
+    const maybeError = caught as { message?: unknown; details?: unknown; hint?: unknown; code?: unknown };
+    const parts = [maybeError.message, maybeError.details, maybeError.hint, maybeError.code]
+      .filter((part): part is string => typeof part === "string" && part.trim().length > 0);
+    if (parts.length) return parts.join(" ");
+  }
+  return "Try again.";
 }
 
 function AccentPresetOption({
