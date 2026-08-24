@@ -146,9 +146,8 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
                 type="button"
               >
                 <Play size={16} fill="currentColor" />
-                {running ? "Running..." : "Run Query"}
+                {running ? "Running..." : result?.correct ? "Run Again" : "Run Query"}
               </button>
-              <span className="hidden text-xs text-slate-500 md:inline">Ctrl/⌘ + Enter</span>
             </div>
           </div>
           <SqlEditor value={query} onChange={setQuery} onRun={runQuery} />

@@ -298,18 +298,17 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                   </button>
                   <button className="inline-flex h-9 items-center gap-2 rounded bg-brand px-4 text-sm font-semibold text-slate-950 disabled:cursor-wait disabled:bg-slate-700 disabled:text-slate-400" disabled={running} onClick={runQuery} type="button">
                     <Play size={16} fill="currentColor" />
-                    {running ? "Running..." : "Run Query"}
+                    {running ? "Running..." : result?.correct ? "Run Again" : "Run Query"}
                   </button>
-                  <span className="hidden text-xs text-slate-500 md:inline">Ctrl/⌘ + Enter</span>
                 </>
               )}
               {canContinue && activeStageIndex < stages.length - 1 && (
                 <button className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={continueToNextStage} type="button">
-                  Continue to {stageTitle(stages[activeStageIndex + 1])}
+                  Next Task →
                 </button>
               )}
               {allStagesCompleted && activeStageIndex === stages.length - 1 && (
-                <Link className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" href="/learn">Complete Lesson</Link>
+                <Link className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" href="/learn">Complete Lesson →</Link>
               )}
             </div>
           </div>

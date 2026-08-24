@@ -67,7 +67,6 @@ function SandboxContent() {
             <button className="inline-flex h-9 items-center gap-2 rounded bg-brand px-4 text-sm font-semibold text-slate-950 disabled:bg-slate-700" disabled={running} onClick={runQuery} type="button">
               <Play size={16} fill="currentColor" /> {running ? "Running..." : "Run Query"}
             </button>
-            <span className="hidden self-center text-xs text-slate-500 md:inline">Ctrl/⌘ + Enter</span>
           </div>
         </div>
         <SqlEditor value={query} onChange={setQuery} onRun={runQuery} />
