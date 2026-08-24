@@ -39,10 +39,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function isActiveNav(pathname: string, href: string) {
-  if (pathname === href || pathname.startsWith(`${href}/`)) return true;
-  if (href === "/practice") return pathname.startsWith("/challenge") || pathname.startsWith("/sqlbank");
   if (href === "/sql-editor") return pathname.startsWith("/learn/lesson");
   if (href === "/learn") return pathname === "/learn";
+  if (href === "/practice") return pathname.startsWith("/challenge") || pathname.startsWith("/sqlbank");
   if (href === "/progress") return pathname.startsWith("/dashboard");
+  if (pathname === href || pathname.startsWith(`${href}/`)) return true;
   return false;
 }
