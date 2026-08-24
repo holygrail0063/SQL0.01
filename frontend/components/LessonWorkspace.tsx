@@ -186,7 +186,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const courseCompleted = isCourseCompletedByChallengeIds(course, completedChallengeIds);
   const isReviewingPastStage = activeStageIndex < frontierStageIndex && !lessonCompletedFromHistory;
   const questionContextLabel = stages.length ? `Question ${activeStageIndex + 1} of ${stages.length}` : "Question";
-  const frontierTaskLabel = `Question ${frontierStageIndex + 1}`;
+  const frontierQuestionLabel = `Question ${frontierStageIndex + 1}`;
   const shouldShowPreviousQuestion = Boolean(position?.hasPreviousQuestion);
   const shouldShowReturnToFrontier = isReviewingPastStage;
   const progressionAction = position ? resolveProgressionAction(position, activeStageCompleted, courseCompleted, courseCompletionAcknowledged) : null;
@@ -309,7 +309,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
         <aside className="relative min-h-0 border-b border-line bg-panel lg:border-b-0 lg:border-r">
           {sidebarCollapsed ? (
             <button
-              aria-label="Expand task and database panel"
+              aria-label="Expand question and database panel"
               className="flex h-full w-full items-start justify-center pt-4 text-slate-400 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand"
               onClick={() => setSidebarCollapsed(false)}
               type="button"
@@ -320,11 +320,11 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
             <div className="flex h-full min-h-0 flex-col">
               <div className="flex items-center justify-between border-b border-line px-3 py-2">
                 <div className="grid flex-1 grid-cols-2 rounded-lg border border-line bg-ink p-1 text-xs">
-                  <button className={`rounded px-2 py-1.5 ${sidebarTab === "task" ? "bg-brand/15 text-brand" : "text-slate-400"}`} onClick={() => setSidebarTab("task")} type="button">Task</button>
+                  <button className={`rounded px-2 py-1.5 ${sidebarTab === "task" ? "bg-brand/15 text-brand" : "text-slate-400"}`} onClick={() => setSidebarTab("task")} type="button">Question</button>
                   <button className={`rounded px-2 py-1.5 ${sidebarTab === "database" ? "bg-brand/15 text-brand" : "text-slate-400"}`} onClick={() => setSidebarTab("database")} type="button">Database</button>
                 </div>
                 <button
-                  aria-label="Collapse task and database panel"
+                  aria-label="Collapse question and database panel"
                   className="ml-2 rounded border border-line p-2 text-slate-400 hover:border-brand/40 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand"
                   onClick={() => setSidebarCollapsed(true)}
                   type="button"
@@ -336,7 +336,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                 {sidebarTab === "task" ? (
                   <div className="space-y-4 p-4">
                     <section>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-cyan">Task</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-cyan">Question</p>
                       <h2 className="mt-2 text-lg font-semibold text-slate-50">{activeStage.title}</h2>
                       <div className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</div>
                       <p className="mt-3 text-xs text-slate-500">{lesson.difficulty} • ~{lesson.estimatedMinutes} min</p>
@@ -364,7 +364,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                         )}
                       </div>
                       <div className="mt-3 space-y-2 text-sm leading-6 text-slate-300">
-                        {visibleHints.length ? visibleHints.map((hint, index) => <p key={hint}>Hint {index + 1}: {hint}</p>) : <p className="text-slate-500">{activeChallenge ? course.assistanceLevel === "minimal" ? "Expert mode keeps hints minimal. Reveal one only if you are blocked." : "Need direction? Reveal one hint at a time." : "No SQL hints needed for this concept stage."}</p>}
+                        {visibleHints.length ? visibleHints.map((hint, index) => <p key={hint}>Hint {index + 1}: {hint}</p>) : <p className="text-slate-500">{activeChallenge ? course.assistanceLevel === "minimal" ? "Expert mode keeps hints minimal. Reveal one only if you are blocked." : "Need direction? Reveal one hint at a time." : "No SQL hints needed for this lesson concept."}</p>}
                       </div>
                     </section>
                   </div>
@@ -373,7 +373,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                 )}
               </div>
               <div
-                aria-label="Resize task and database panel"
+                aria-label="Resize question and database panel"
                 className="absolute bottom-0 right-[-3px] top-0 hidden w-1 cursor-col-resize bg-transparent hover:bg-brand/40 lg:block"
                 onPointerDown={(event) => startSidebarResize(event, setSidebarWidth)}
                 role="separator"
@@ -421,8 +421,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                 </>
               )}
               {shouldShowReturnToFrontier && (
-                <button aria-label={`Return to ${frontierTaskLabel.toLowerCase()}`} className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={returnToFrontierStage} type="button">
-                  Return to {frontierTaskLabel} →
+                <button aria-label={`Return to ${frontierQuestionLabel.toLowerCase()}`} className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={returnToFrontierStage} type="button">
+                  Return to {frontierQuestionLabel} →
                 </button>
               )}
               {!shouldShowReturnToFrontier && progressionAction?.type === "next-question" && (
@@ -486,7 +486,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
           ) : (
             <div className="flex min-h-0 flex-1 items-center justify-center bg-editor px-6 py-10 text-center">
               <div className="max-w-xl">
-                <p className="font-mono text-xs uppercase tracking-wider text-cyan">Concept Stage</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-cyan">Lesson Concept</p>
                 <h2 className="mt-3 text-2xl font-semibold text-white">{activeStage.title}</h2>
                 <p className="mt-4 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</p>
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -496,8 +496,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                     </button>
                   )}
                   {shouldShowReturnToFrontier ? (
-                    <button aria-label={`Return to ${frontierTaskLabel.toLowerCase()}`} className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={returnToFrontierStage} type="button">
-                      Return to {frontierTaskLabel} →
+                    <button aria-label={`Return to ${frontierQuestionLabel.toLowerCase()}`} className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={returnToFrontierStage} type="button">
+                      Return to {frontierQuestionLabel} →
                     </button>
                   ) : progressionAction?.type === "next-question" ? (
                     <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={continueToNextStage} type="button">
@@ -713,10 +713,7 @@ function statusTone(result: QueryResult | null, running: boolean, error: string 
 }
 
 function stageTitle(stage: LessonStageDefinition) {
-  if (stage.type === "guided_exercise") return "Guided Exercise";
-  if (stage.type === "business_task") return "Business Task";
-  if (stage.type === "independent_exercise") return "Independent Exercise";
-  return stage.type.charAt(0).toUpperCase() + stage.type.slice(1);
+  return stage.title || "Question";
 }
 
 function explainQuery(query: string, result: QueryResult | null, stage: LessonStageDefinition, challenge: Challenge | null) {
@@ -743,6 +740,6 @@ function explainQuery(query: string, result: QueryResult | null, stage: LessonSt
   }
   if (result?.correct) lines.push("This query satisfies the current business request.");
   if (result?.success && !result.correct && result.message) lines.push(`The query is valid SQL, but ${result.message.charAt(0).toLowerCase()}${result.message.slice(1)}`);
-  if (!challenge) lines.push(`This is a ${stageTitle(stage).toLowerCase()} stage, so there is no SQL validation yet.`);
+  if (!challenge) lines.push("This lesson concept has no SQL validation yet.");
   return lines;
 }

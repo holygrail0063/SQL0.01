@@ -89,7 +89,7 @@ function loadTsModule(sourcePathValue) {
 }
 
 function validateCurriculumNavigation() {
-  const courses = [...course.allBusinessAnalystCourses(), ...course.allDataAnalystCourses()];
+  const courses = course.allSqlCourses();
   for (const courseDefinition of courses) {
     for (let moduleIndex = 0; moduleIndex < courseDefinition.modules.length; moduleIndex += 1) {
       const module = courseDefinition.modules[moduleIndex];
@@ -125,7 +125,7 @@ function validateCurriculumNavigation() {
     }
   }
 
-  const firstCourse = course.allBusinessAnalystCourses().find((candidate) => candidate.id === "mode-completely-new") ?? course.allBusinessAnalystCourses()[0];
+  const firstCourse = course.allSqlCourses().find((candidate) => candidate.learningModeId === "completely-new") ?? course.allSqlCourses()[0];
   const firstLesson = firstCourse?.modules[0]?.lessons[0];
   const firstPosition = firstCourse && firstLesson ? course.resolveCurriculumPosition(firstCourse, firstLesson.id, 0) : null;
   if (!firstPosition?.hasNextLesson || firstPosition.hasNextModule || firstPosition.isFinalCourseQuestion) {

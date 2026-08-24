@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { api, Challenge } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { buildModuleProgress, getCourseForProfile, lessonUrl } from "@/lib/course";
+import { buildModuleProgress, getCourseForProfile, isModuleBeforeRecommendedStart, lessonUrl } from "@/lib/course";
 import { getProfile, getProgress, type Profile, type ProgressRow } from "@/lib/progress";
 
 export default function LearnPage() {
@@ -51,17 +51,20 @@ function LearnContent() {
       <p className="font-mono text-sm text-cyan">Your SQL Path</p>
       <h1 className="mt-3 text-3xl font-semibold text-slate-50">{course.title}</h1>
       {course && <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{course.description}</p>}
+      {course && <p className="mt-2 text-sm text-slate-500">{course.moduleCountLabel} • {course.lessonCountLabel} • {course.questionCountLabel} • Self-paced</p>}
       {error && (
         <div className="mt-6 rounded border border-red-900/70 bg-red-950/40 p-4 text-sm text-red-100">
           Learning data could not be loaded. {error}
         </div>
       )}
       <div className="mt-8 space-y-6">
-        {moduleProgress.map(({ module, completedLessons, totalLessons, status, percent }) => (
+        {moduleProgress.map(({ module, completedLessons, totalLessons, status, percent }) => {
+          const optionalReview = isModuleBeforeRecommendedStart(course, module);
+          return (
           <section className="rounded border border-line bg-panel p-5" key={module.id}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="font-mono text-xs uppercase tracking-wider text-cyan">Module {module.sequence}</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-cyan">Module {module.sequence}{optionalReview ? " • Optional Review" : ""}</p>
                 <h2 className="mt-2 text-xl font-semibold text-slate-50">{module.title}</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{module.description}</p>
               </div>
@@ -96,7 +99,8 @@ function LearnContent() {
               })}
             </div>
           </section>
-        ))}
+          );
+        })}
       </div>
     </main>
   );

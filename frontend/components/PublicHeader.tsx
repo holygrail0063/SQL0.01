@@ -15,7 +15,7 @@ export function PublicHeader() {
         <nav className="hidden items-center gap-7 text-sm text-slate-400 md:flex">
           <a href="/#product" className="hover:text-slate-50">Product</a>
           <a href="/#how-it-works" className="hover:text-slate-50">How It Works</a>
-          <a href="/#paths" className="hover:text-slate-50">Learning Paths</a>
+          <a href="/#paths" className="hover:text-slate-50">Learning Modes</a>
           <a href="/#about" className="hover:text-slate-50">About</a>
         </nav>
         <div className="flex items-center gap-3">

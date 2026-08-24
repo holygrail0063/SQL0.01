@@ -107,7 +107,7 @@ export default function LandingPage() {
           <div className="flex flex-wrap gap-4">
             <a href="/#product">Product</a>
             <a href="/#how-it-works">How It Works</a>
-            <a href="/#paths">Learning Paths</a>
+            <a href="/#paths">Learning Modes</a>
             <LandingAuthTrigger className="text-left" mode="login" testId="landing-footer-login-trigger">Login</LandingAuthTrigger>
             <LandingAuthTrigger className="text-left" mode="signup" testId="landing-footer-signup-trigger">Sign Up</LandingAuthTrigger>
           </div>

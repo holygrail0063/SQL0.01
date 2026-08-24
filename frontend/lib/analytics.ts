@@ -211,20 +211,13 @@ function buildSkillInsights(course: CourseDefinition, progressRows: ProgressRow[
 }
 
 function buildCareerReadiness(course: CourseDefinition, skillInsights: SkillInsight[]): CareerReadinessArea[] {
-  const areas =
-    course.learningGoal === "Data Analyst"
-      ? [
-          { label: "SQL Foundations", skills: ["SQL Fundamentals", "SELECT", "Filtering", "Dates"] },
-          { label: "Analysis Patterns", skills: ["Aggregations", "GROUP BY", "CASE", "JOINs", "Table Grain"] },
-          { label: "Business Metrics", skills: ["KPI Analysis", "Trend Analysis", "Period Comparison", "Dashboard Dataset Preparation"] },
-          { label: "Advanced Analytics", skills: ["CTEs", "Window Functions", "Funnel Analysis", "Retention Analysis", "Analytical Interpretation"] },
-        ]
-      : [
-          { label: "SQL Foundations", skills: ["Database Fundamentals", "SELECT", "Filtering", "ORDER BY"] },
-          { label: "Reporting", skills: ["Aggregate Functions", "GROUP BY", "KPI Analysis", "Operational Reporting"] },
-          { label: "Business Logic", skills: ["CASE", "Requirement Validation", "UAT Validation", "Data Validation"] },
-          { label: "Investigations", skills: ["INNER JOIN", "Multi-table JOIN", "Root Cause Analysis", "Stakeholder Request Interpretation"] },
-        ];
+  const areas = [
+    { label: "SQL Foundations", skills: ["database-fundamentals", "select", "columns", "filtering", "where", "and-or", "order-by", "top-limit"] },
+    { label: "Summarizing Data", skills: ["count", "aggregation", "group-by", "sum", "avg"] },
+    { label: "Joining Tables", skills: ["inner-join", "table-relationships", "joins", "grain"] },
+    { label: "Business Logic", skills: ["case", "business-logic", "conditional-aggregation", "kpi-analysis", "dates"] },
+    { label: "Real SQL Work", skills: ["stakeholder-requests", "target-analysis", "investigation", "reporting"] },
+  ];
 
   return areas.map((area) => {
     const scores = skillInsights.filter((skill) => area.skills.includes(skill.skill)).map((skill) => skill.mastery);

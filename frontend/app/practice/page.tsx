@@ -77,12 +77,12 @@ function PracticeContent() {
 
       <section className="mt-8 grid gap-5 lg:grid-cols-[1fr_360px]">
         <div className="rounded border border-line bg-panel p-6">
-          <div className="flex items-center gap-2 text-cyan"><Inbox size={18} /><span className="font-mono text-xs uppercase tracking-wider">Daily SQL Task</span></div>
+          <div className="flex items-center gap-2 text-cyan"><Inbox size={18} /><span className="font-mono text-xs uppercase tracking-wider">Daily SQL Question</span></div>
           {daily ? (
             <>
               <h2 className="mt-4 text-2xl font-semibold text-slate-50">{daily.title}</h2>
               <p className="mt-3 text-sm leading-6 text-slate-300">{daily.independentPrompt}</p>
-              <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground" href={lessonUrl(daily)}>Open SQL Task</Link>
+              <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground" href={lessonUrl(daily)}>Open SQL Question</Link>
             </>
           ) : (
             <p className="mt-4 text-sm text-slate-300">You have completed the current SQLBank practice set.</p>
