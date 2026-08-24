@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
+import { isExplicitLogoutInProgress } from "@/lib/session-boundary";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading, configured } = useAuth();
@@ -11,7 +12,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!loading && (!configured || !user)) {
-      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+      router.replace(isExplicitLogoutInProgress() ? "/login" : `/login?next=${encodeURIComponent(pathname)}`);
     }
   }, [configured, loading, pathname, router, user]);
 

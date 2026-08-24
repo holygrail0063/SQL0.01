@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -10,7 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { dailyCommitmentOptions, getCourseForSelection, getDailyCommitment } from "@/lib/course";
 import { activeRoleOptions, activeSqlLevelOptions } from "@/lib/curriculum";
 import { getProfile, saveProfile, type Profile } from "@/lib/progress";
-import { requireSupabase } from "@/lib/supabase";
+import { logoutToLogin } from "@/lib/session-boundary";
 
 export default function LearningPreferencesPage() {
   return (
@@ -24,12 +23,12 @@ export default function LearningPreferencesPage() {
 
 function LearningPreferencesContent() {
   const { user } = useAuth();
-  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<string>(activeRoleOptions[0]);
   const [level, setLevel] = useState(activeSqlLevelOptions[1].value);
   const [dailyCommitment, setDailyCommitment] = useState(30);
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [confirmingPathChange, setConfirmingPathChange] = useState(false);
 
   useEffect(() => {
@@ -68,8 +67,13 @@ function LearningPreferencesContent() {
   }
 
   async function logout() {
-    await requireSupabase().auth.signOut();
-    router.replace("/");
+    setMessage(null);
+    setError(null);
+    try {
+      await logoutToLogin(user);
+    } catch {
+      setError("Could not log out. Try again.");
+    }
   }
 
   return (
@@ -124,6 +128,7 @@ function LearningPreferencesContent() {
           </div>
         )}
         {message && <p className="text-sm text-success">{message}</p>}
+        {error && <p className="status-error rounded border p-3 text-sm">{error}</p>}
         <div className="flex flex-wrap gap-3">
           <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={requestSave} type="button">
             {hasExistingPath ? "Update Learning Path" : "Save & Build My Learning Path"}

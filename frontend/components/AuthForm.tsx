@@ -5,6 +5,7 @@ import Script from "next/script";
 import { FormEvent, useEffect, useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { applyDefaultAccent } from "@/lib/accent";
+import { clearExplicitLogoutFlag, DEFAULT_AUTHENTICATED_ROUTE, safeNextPath } from "@/lib/session-boundary";
 import { authRedirectUrl, isSupabaseConfigured, requireSupabase } from "@/lib/supabase";
 
 type Mode = "login" | "signup" | "forgot";
@@ -33,6 +34,7 @@ export function AuthForm({
 
   useEffect(() => {
     if (variant === "page") applyDefaultAccent();
+    clearExplicitLogoutFlag();
   }, [variant]);
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export function AuthForm({
         });
         if (loginError) throw loginError;
         const nextPath = new URLSearchParams(window.location.search).get("next");
-        window.location.href = safeNextPath(nextPath) ?? "/learn";
+        window.location.href = safeNextPath(nextPath) ?? DEFAULT_AUTHENTICATED_ROUTE;
       } else {
         const { error: resetError } = await client.auth.resetPasswordForEmail(email, {
           redirectTo: authRedirectUrl("/login"),
@@ -324,11 +326,6 @@ function readableAuthError(caught: unknown) {
     return "Supabase has temporarily rate-limited confirmation emails for this project. Try again later, use another email for now, or configure custom SMTP in Supabase Auth to raise the email sending limit.";
   }
   return message;
-}
-
-function safeNextPath(value: string | null) {
-  if (!value) return null;
-  return value.startsWith("/") && !value.startsWith("//") ? value : null;
 }
 
 declare global {
