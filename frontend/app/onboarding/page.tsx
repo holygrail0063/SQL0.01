@@ -6,7 +6,7 @@ import { useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/auth";
-import { LEARNING_MODES, type LearningModeId } from "@/lib/curriculum";
+import { activeLearningModes, comingSoonLearningModes, type LearningModeId } from "@/lib/curriculum";
 import { saveProfile } from "@/lib/progress";
 
 function readableError(caught: unknown) {
@@ -65,13 +65,13 @@ function OnboardingContent() {
           <fieldset className="mt-8">
             <legend className="sr-only">Learning mode</legend>
             <div className="grid gap-3 md:grid-cols-2">
-              {LEARNING_MODES.map((mode, index) => {
+              {activeLearningModes().map((mode) => {
                 const selected = selectedMode === mode.id;
                 return (
                   <label
                     className={`group relative flex min-h-32 cursor-pointer rounded-lg border p-5 transition ${
                       selected ? "border-brand bg-brand/10 shadow-[0_0_0_1px_rgb(var(--color-brand)/0.24)]" : "border-line bg-panel hover:border-brand/50 hover:bg-brand/5"
-                    } ${index === LEARNING_MODES.length - 1 ? "md:col-span-2" : ""}`}
+                    }`}
                     key={mode.id}
                   >
                     <input
@@ -98,6 +98,20 @@ function OnboardingContent() {
                   </label>
                 );
               })}
+            </div>
+            <div className="mt-8 border-t border-line pt-6">
+              <p className="font-mono text-xs uppercase tracking-wider text-slate-500">Coming Soon</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-3">
+                {comingSoonLearningModes().map((mode) => (
+                  <div aria-disabled="true" className="rounded-lg border border-line bg-elevated/60 p-5 opacity-75" key={mode.id}>
+                    <div className="flex items-start justify-between gap-3">
+                      <h2 className="font-semibold text-slate-300">{mode.label}</h2>
+                      <span className="rounded-full border border-line px-2 py-1 text-xs text-slate-500">Coming Soon</span>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-500">{mode.description}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </fieldset>
 

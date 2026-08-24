@@ -3,38 +3,48 @@ import type { Challenge } from "@/lib/api";
 export const LEARNING_MODES = [
   {
     id: "completely-new",
-    label: "Completely New",
-    description: "Start from zero and build SQL fundamentals step by step.",
+    label: "Beginner",
+    description: "Learn SQL from scratch by working with the SQLBank database.",
+    status: "active",
+    curriculumId: "beginner",
   },
   {
     id: "know-the-basics",
     label: "Know the Basics",
-    description: "You know basic SELECT and filtering. Build confidence with practical SQL.",
+    description: "For learners who already know basic SELECT and filtering.",
+    status: "coming-soon",
   },
   {
     id: "comfortable-with-sql",
     label: "Comfortable With SQL",
-    description: "You can write everyday SQL and want to tackle more complex problems.",
+    description: "For learners ready for more complex SQL and multi-table problems.",
+    status: "coming-soon",
   },
   {
     id: "expert-study",
     label: "Expert Study Mode",
-    description: "Deep practice for experienced SQL users who want advanced challenges and stronger problem-solving skills.",
+    description: "Advanced SQL across complex real-world datasets.",
+    status: "coming-soon",
   },
   {
     id: "quick-interview-prep",
     label: "Quick Interview Prep",
-    description: "Practice common SQL interview questions without completing a full course.",
+    description: "Review essential SQL and practice interview-style questions.",
+    status: "active",
+    curriculumId: "interview-prep",
   },
 ] as const;
 
 export type LearningMode = (typeof LEARNING_MODES)[number];
 export type LearningModeId = LearningMode["id"];
+export type LearningModeStatus = LearningMode["status"];
 
 const learningModeIds = new Set<string>(LEARNING_MODES.map((mode) => mode.id));
 const learningModeMap = new Map<string, LearningMode>(LEARNING_MODES.map((mode) => [mode.id, mode]));
 
 const legacyModeMap: Record<string, LearningModeId> = {
+  "beginner": "completely-new",
+  "Beginner": "completely-new",
   "Completely New": "completely-new",
   "Know the Basics": "know-the-basics",
   "Comfortable With SQL": "comfortable-with-sql",
@@ -58,6 +68,18 @@ export function getLearningMode(value: unknown): LearningMode {
 
 export function learningModeLabel(value: unknown): string {
   return getLearningMode(value).label;
+}
+
+export function isLearningModeActive(value: unknown): boolean {
+  return getLearningMode(value).status === "active";
+}
+
+export function activeLearningModes() {
+  return LEARNING_MODES.filter((mode) => mode.status === "active");
+}
+
+export function comingSoonLearningModes() {
+  return LEARNING_MODES.filter((mode) => mode.status === "coming-soon");
 }
 
 export const challengeGroups = [

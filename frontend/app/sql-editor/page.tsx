@@ -45,10 +45,11 @@ function SqlEditorResumeContent() {
 
   const destination = useMemo(() => {
     if (!user || !profile) return null;
+    const course = getCourseForProfile(profile);
+    if (!course) return "/account/preferences";
     const last = typeof window === "undefined" ? null : window.localStorage.getItem(lastSqlWorkspaceKey(user.id));
     if (last && isSafeWorkspacePath(last)) return last;
-    const course = getCourseForProfile(profile);
-    const lesson = course ? nextLesson(course, progress) : null;
+    const lesson = nextLesson(course, progress);
     if (lesson) return lessonUrl(lesson);
     const completed = new Set(progress.filter((row) => row.status === "completed").map((row) => row.challenge_id));
     const practice = challenges.find((challenge) => !completed.has(challenge.id)) ?? challenges[0];

@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { api, type Challenge } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { getCourseForProfile, lessonUrl, nextLesson } from "@/lib/course";
+import { getLearningMode } from "@/lib/curriculum";
 import { getProfile, getProgress, type Profile, type ProgressRow } from "@/lib/progress";
 
 export default function PracticePage() {
@@ -45,24 +46,23 @@ function PracticeContent() {
   const daily = course ? nextLesson(course, progress) : null;
   const managerRequests = useMemo(() => {
     const requestIds = course?.learningModeId === "quick-interview-prep"
-      ? [3, 7, 8, 10, 12, 15, 19, 20, 21, 24]
-      : course?.learningModeId === "expert-study"
-        ? [14, 15, 21, 22, 24, 25]
-        : [8, 10, 11, 13, 14, 15, 19, 20, 21, 22, 23, 24, 25];
+      ? [3, 7, 8, 10, 12, 15]
+      : [8, 10, 11, 13, 14, 15];
     return requestIds.map((id) => challenges.find((challenge) => challenge.id === id)).filter(Boolean) as Challenge[];
   }, [challenges, course?.learningModeId]);
   const investigations = managerRequests.filter((challenge) => ["Intermediate", "Advanced"].includes(challenge.difficulty));
-  const capstoneId = course?.learningModeId === "expert-study" || course?.learningModeId === "comfortable-with-sql" ? 25 : 15;
+  const capstoneId = 15;
 
   if (loading) return <main className="p-8 text-slate-400">Loading practice...</main>;
   if (error) return <main className="p-8 text-red-200">{error}</main>;
   if (!course) {
+    const mode = getLearningMode(profile?.sql_level);
     return (
       <main className="mx-auto max-w-5xl px-5 py-10">
         <p className="font-mono text-sm text-cyan">Practice</p>
-        <h1 className="mt-3 text-3xl font-semibold text-slate-50">Choose a learning mode to unlock practice.</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Practice recommendations adapt to your selected SQL learning mode.</p>
-        <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground" href="/account/preferences">Update Learning Mode</Link>
+        <h1 className="mt-3 text-3xl font-semibold text-slate-50">{mode.label} is coming soon.</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Practice recommendations are active for Beginner and Quick Interview Prep right now.</p>
+        <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground" href="/account/preferences">Switch Learning Mode</Link>
       </main>
     );
   }

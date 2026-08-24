@@ -11,6 +11,7 @@ import { api, type Challenge } from "@/lib/api";
 import { buildDashboardAnalytics, getChallengeAttempts, type DashboardAnalytics, type DashboardRange, type SkillInsight } from "@/lib/analytics";
 import { useAuth } from "@/lib/auth";
 import { buildModuleProgress, getCourseForProfile, type ModuleProgress } from "@/lib/course";
+import { getLearningMode } from "@/lib/curriculum";
 import { getProfile, getProgress, type Profile, type ProgressRow } from "@/lib/progress";
 
 const rangeOptions: { label: string; value: DashboardRange }[] = [
@@ -80,12 +81,13 @@ function ProgressContent() {
   if (error) return <main className="p-8 text-red-200">{error}</main>;
 
   if (!course || !analytics) {
+    const mode = getLearningMode(profile?.sql_level);
     return (
       <main className="mx-auto max-w-5xl px-5 py-10">
         <p className="font-mono text-sm text-cyan">Progress</p>
-        <h1 className="mt-3 text-3xl font-semibold text-slate-50">Choose a learning mode to unlock analytics.</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Your SQL progress view adapts to the learning mode you select.</p>
-        <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground" href="/account/preferences">Update Learning Mode</Link>
+        <h1 className="mt-3 text-3xl font-semibold text-slate-50">{mode.label} is coming soon.</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Progress analytics are active for Beginner and Quick Interview Prep right now.</p>
+        <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground" href="/account/preferences">Switch Learning Mode</Link>
       </main>
     );
   }

@@ -1,5 +1,5 @@
 import type { Challenge } from "@/lib/api";
-import { learningModeLabel, normalizeLearningModeId, type LearningModeId } from "./curriculum";
+import { isLearningModeActive, learningModeLabel, normalizeLearningModeId, type LearningModeId } from "./curriculum";
 import type { Profile, ProgressRow } from "@/lib/progress";
 
 export const dailyCommitmentOptions = [15, 30, 45, 60] as const;
@@ -132,12 +132,12 @@ export const LEARNING_MODE_CONFIG: Record<LearningModeId, { startModuleId: strin
 };
 
 const MODULES: Omit<ModuleDefinition, "lessons">[] = [
-  { id: "sql-foundations", sequence: 1, title: "SQL Foundations", description: "Learn databases, tables, rows, columns, SELECT, WHERE, conditions, sorting, and result limits.", estimatedMinutes: 55, prerequisiteSkills: [] },
-  { id: "summarizing-data", sequence: 2, title: "Summarizing Data", description: "Turn rows into useful business metrics with COUNT, SUM, AVG, GROUP BY, and ranked summaries.", estimatedMinutes: 40, prerequisiteSkills: ["select", "filtering"] },
-  { id: "joining-tables", sequence: 3, title: "Joining Tables", description: "Connect customers, branches, applications, and loans while keeping the reporting grain clear.", estimatedMinutes: 44, prerequisiteSkills: ["group-by"] },
-  { id: "business-logic-dates", sequence: 4, title: "Business Logic & Dates", description: "Use CASE, date ranges, and conditional KPIs to translate business rules into SQL.", estimatedMinutes: 42, prerequisiteSkills: ["filtering", "aggregation"] },
-  { id: "advanced-sql", sequence: 5, title: "Advanced SQL", description: "Practice supported advanced patterns such as CTEs, target comparisons, and multi-step analysis.", estimatedMinutes: 52, prerequisiteSkills: ["joins", "case"] },
-  { id: "real-sql-work", sequence: 6, title: "Real SQL Work", description: "Solve realistic SQLBank stakeholder requests that combine reporting, validation, KPIs, and investigation.", estimatedMinutes: 48, prerequisiteSkills: ["joins", "aggregation", "business-logic"] },
+  { id: "sql-foundations", sequence: 1, title: "SQL Foundations", description: "Learn databases, tables, rows, columns, SELECT, and basic WHERE filters.", estimatedMinutes: 45, prerequisiteSkills: [] },
+  { id: "filtering-sorting", sequence: 2, title: "Filtering & Sorting", description: "Narrow SQLBank data with multiple conditions, ordering, and limited result sets.", estimatedMinutes: 25, prerequisiteSkills: ["select"] },
+  { id: "summarizing-data", sequence: 3, title: "Summarizing Data", description: "Turn rows into useful business metrics with COUNT, SUM, AVG, and GROUP BY.", estimatedMinutes: 30, prerequisiteSkills: ["select", "filtering"] },
+  { id: "joining-tables", sequence: 4, title: "Joining Tables", description: "Connect customers, branches, applications, and loans while keeping the reporting grain clear.", estimatedMinutes: 44, prerequisiteSkills: ["group-by"] },
+  { id: "business-logic", sequence: 5, title: "Business Logic", description: "Use CASE and date filters to translate business rules into SQL.", estimatedMinutes: 24, prerequisiteSkills: ["filtering", "aggregation"] },
+  { id: "sqlbank-practice", sequence: 6, title: "SQLBank Practice", description: "Solve a realistic SQLBank request that combines reporting, KPIs, and investigation.", estimatedMinutes: 20, prerequisiteSkills: ["joins", "aggregation", "business-logic"] },
 ];
 
 const MASTER_LESSONS: LessonDefinition[] = [
@@ -147,21 +147,18 @@ const MASTER_LESSONS: LessonDefinition[] = [
     stage("ba-new-m0-lesson-2", 2, "Customer Contact Extract", "Create a customer contact extract containing CustomerID, FirstName, LastName, Province, and City.", 8, 2, undefined, ["The stakeholder wants five columns.", "Include the customer's name and location.", "Add FirstName and LastName to the guided query."], "business", "foundation", true),
   ]),
   lesson("ba-new-m1-lesson-3", "sql-foundations", 3, 3, "Filtering Records", "exercise", 9, "foundation", ["filtering", "where"], "Branch operations only wants Ontario customers for a local campaign check.", "WHERE keeps only rows that match a condition. It turns a broad table into a focused answer.", "Return every customer who lives in Ontario.", "What business question does the Province filter answer?", ["You need to reduce rows.", "Look at the Province column.", "Use WHERE Province = 'Ontario'."]),
-  lesson("ba-new-m1-lesson-4", "sql-foundations", 4, 4, "Combining Conditions", "exercise", 10, "foundation", ["filtering", "and-or"], "A requirements analyst needs Toronto customers in Ontario to validate a city-specific rule.", "AND narrows a result by requiring multiple conditions to be true.", "Return customers where Province is Ontario and City is Toronto.", "If the result is smaller than the Ontario-only list, what does that tell you?", ["Use two conditions.", "Both conditions must be true.", "Use WHERE Province = 'Ontario' AND City = 'Toronto'."]),
-  lesson("ba-new-m1-lesson-5", "sql-foundations", 5, 5, "Sorting Results", "exercise", 8, "foundation", ["order-by", "reporting"], "Customer service wants recent customers first while reviewing onboarding activity.", "ORDER BY changes result order without changing which rows are returned.", "Return customers ordered by CustomerSince with newest customers first.", "Why is sorting important when a human is reviewing the result?", ["You need ordering, not filtering.", "Use CustomerSince.", "Newest first means DESC."]),
-  lesson("ba-new-m2-lesson-6", "sql-foundations", 6, 6, "Limiting Results", "review", 7, "foundation", ["top-limit", "reporting"], "Your manager wants a quick sample before approving a larger report extract.", "TOP limits returned rows. Pair limits with ORDER BY when the chosen rows need to be deterministic.", "Show the first 10 customer records from SQLBank.", "Why might a learner sample data before building a full report?", ["Use TOP after SELECT.", "Keep the Customers table.", "Ask for 10 rows."]),
+  lesson("ba-new-m1-lesson-4", "filtering-sorting", 1, 4, "Combining Conditions", "exercise", 10, "foundation", ["filtering", "and-or"], "A requirements analyst needs Toronto customers in Ontario to validate a city-specific rule.", "AND narrows a result by requiring multiple conditions to be true.", "Return customers where Province is Ontario and City is Toronto.", "If the result is smaller than the Ontario-only list, what does that tell you?", ["Use two conditions.", "Both conditions must be true.", "Use WHERE Province = 'Ontario' AND City = 'Toronto'."]),
+  lesson("ba-new-m1-lesson-5", "filtering-sorting", 2, 5, "Sorting Results", "exercise", 8, "foundation", ["order-by", "reporting"], "Customer service wants recent customers first while reviewing onboarding activity.", "ORDER BY changes result order without changing which rows are returned.", "Return customers ordered by CustomerSince with newest customers first.", "Why is sorting important when a human is reviewing the result?", ["You need ordering, not filtering.", "Use CustomerSince.", "Newest first means DESC."]),
+  lesson("ba-new-m2-lesson-6", "filtering-sorting", 3, 6, "Limiting Results", "review", 7, "foundation", ["top-limit", "reporting"], "Your manager wants a quick sample before approving a larger report extract.", "TOP limits returned rows. Pair limits with ORDER BY when the chosen rows need to be deterministic.", "Show the first 10 customer records from SQLBank.", "Why might a learner sample data before building a full report?", ["Use TOP after SELECT.", "Keep the Customers table.", "Ask for 10 rows."]),
   lesson("ba-new-m2-lesson-7", "summarizing-data", 1, 7, "Counting Records", "exercise", 8, "foundation", ["count", "aggregation"], "A dashboard owner asks how many loan applications exist in the training dataset.", "COUNT summarizes rows into a number. It is often the first metric stakeholders ask for.", "Return the total number of records in Applications.", "What does the count measure, and what does it not tell you?", ["Use COUNT(*).", "The table is Applications.", "This returns one row with one value."]),
   lesson("ba-new-m2-lesson-8", "summarizing-data", 2, 8, "Grouping Business Data", "assignment", 12, "foundation", ["group-by", "count", "reporting"], "Lending leadership wants application volume by status to understand the pipeline.", "GROUP BY creates one summary row per category. It turns raw records into a report.", "Return each application Status and the number of applications in that status.", "Which status needs the most operational attention?", ["Status is the category.", "COUNT(*) is the metric.", "GROUP BY Status."]),
   lesson("ba-new-m3-lesson-9", "summarizing-data", 3, 9, "Aggregating Values", "exercise", 10, "intermediate", ["sum", "avg", "aggregation"], "Finance wants total and average loan exposure for active reporting.", "SUM and AVG calculate business measures. Used together, they explain both total size and typical size.", "Return total loan amount and average loan amount from Loans.", "How would total exposure and average exposure be used differently?", ["Use SUM on LoanAmount.", "Use AVG on LoanAmount.", "Both come from Loans."]),
   lesson("ba-new-m3-lesson-10", "joining-tables", 1, 10, "INNER JOIN", "assignment", 14, "intermediate", ["inner-join", "table-relationships", "reporting"], "The branch manager needs application records with branch names instead of branch IDs.", "JOIN combines related tables. Business users usually need descriptive fields from lookup tables, not just IDs.", "Return application ID, branch name, requested amount, and status.", "Why is BranchName more useful than BranchID in a stakeholder report?", ["Applications has BranchID.", "Branches also has BranchID.", "Join on matching BranchID values."]),
   lesson("ba-new-m3-lesson-11", "joining-tables", 2, 11, "JOIN + GROUP BY", "assignment", 15, "intermediate", ["inner-join", "group-by", "aggregation"], "A regional director wants to compare application volume by branch.", "JOIN plus GROUP BY is a core SQL pattern: connect descriptive data, then summarize it.", "Return each BranchName and its application count.", "Which branch appears busiest, and what follow-up question would you ask?", ["Start from Applications.", "Join Branches for BranchName.", "Group by BranchName."]),
   lesson("ba-new-m6-lesson-14", "joining-tables", 3, 14, "Ranking Joined Summaries", "assignment", 15, "advanced", ["inner-join", "aggregation", "order-by"], "Executives want to know which branches hold the highest total loan value.", "Ranking helps prioritize business review. Sort the most important summary rows first.", "Return the top branches by total loan amount.", "Which branch would you investigate first and why?", ["Join Loans to Branches.", "SUM LoanAmount.", "Order the total descending."]),
-  lesson("ba-new-m4-lesson-12", "business-logic-dates", 1, 12, "CASE Statements", "exercise", 12, "intermediate", ["case", "business-logic"], "Risk operations wants requested loan amounts labeled into review bands.", "CASE creates business labels from data. It is useful when requirements define categories that are not stored in the table.", "Return ApplicationID, RequestedAmount, and a size band for each application.", "How could you validate that the bands match the written requirement?", ["CASE belongs in SELECT.", "Use RequestedAmount thresholds.", "Name the calculated label clearly."]),
-  lesson("ba-new-m5-lesson-13", "business-logic-dates", 2, 13, "Filtering By Date", "assignment", 12, "intermediate", ["dates", "filtering"], "Operations needs January 2025 applications for a monthly control check.", "Date filters turn open-ended data into a reporting period. They are essential for monthly reports and validation windows.", "Return applications submitted in January 2025.", "What does this result prove about the reporting period?", ["Use ApplicationDate.", "A month is a range.", "Use dates from 2025-01-01 through 2025-01-31."]),
-  lesson("da-new-m4-lesson-21", "business-logic-dates", 3, 21, "Conditional KPIs", "assignment", 18, "intermediate", ["case", "conditional-aggregation", "kpi-analysis", "dates"], "Lending Analytics needs a 2025 monthly application scorecard for leadership.", "A KPI is only useful when the numerator, denominator, and grain are correct.", "Return the requested 2025 monthly applications, approvals, approval rate, and average requested amount.", "What is the denominator for approval rate, and why?", ["Use CASE inside SUM for approvals.", "Use COUNT(*) as applications.", "Filter ApplicationDate to 2025."]),
-  lesson("da-new-m7-lesson-24", "advanced-sql", 1, 24, "CTEs for Target Comparison", "project", 24, "advanced", ["cte", "grain", "target-analysis", "aggregation"], "Operations wants to know which branches beat monthly application targets.", "CTEs help split a multi-step query into readable parts. Here, actuals are built first and then compared to targets.", "Return the top branch-month target achievement rates.", "How can mismatched grain create an inflated achievement rate?", ["Create branch-month actuals first.", "Join on BranchID and Month.", "Calculate actual applications divided by target."]),
-  lesson("da-new-m8-lesson-25", "advanced-sql", 2, 25, "Analytical Investigation", "project", 28, "advanced", ["investigation", "aggregation", "joins", "dates"], "Senior leadership believes engagement has weakened and needs evidence before acting.", "An investigation starts by defining metrics. Active customers, transaction count, and value answer different parts of engagement.", "Return monthly active customers, transaction count, and transaction value.", "Is this output enough to prove the cause of engagement decline? What would you segment next?", ["Transactions need Accounts to reach CustomerID.", "Use COUNT(DISTINCT a.CustomerID).", "Group by transaction month."]),
-  lesson("ba-new-m6-lesson-15", "real-sql-work", 1, 15, "Approval Rate Investigation", "project", 20, "advanced", ["case", "conditional-aggregation", "kpi-analysis", "stakeholder-requests"], "Your manager is preparing an executive update and needs the five branches with the highest application approval rate.", "Approval rate is a KPI: approved applications divided by total applications. The denominator must include all applications.", "Return BranchName and ApprovalRate for the five highest approval-rate branches.", "What does a high approval rate suggest, and what might you validate before acting on it?", ["Use all applications as the denominator.", "Use CASE to count approved rows.", "Divide approved count by total count and order the result."]),
+  lesson("ba-new-m4-lesson-12", "business-logic", 1, 12, "CASE Statements", "exercise", 12, "intermediate", ["case", "business-logic"], "Risk operations wants requested loan amounts labeled into review bands.", "CASE creates business labels from data. It is useful when requirements define categories that are not stored in the table.", "Return ApplicationID, RequestedAmount, and a size band for each application.", "How could you validate that the bands match the written requirement?", ["CASE belongs in SELECT.", "Use RequestedAmount thresholds.", "Name the calculated label clearly."]),
+  lesson("ba-new-m5-lesson-13", "business-logic", 2, 13, "Filtering By Date", "assignment", 12, "intermediate", ["dates", "filtering"], "Operations needs January 2025 applications for a monthly control check.", "Date filters turn open-ended data into a reporting period. They are essential for monthly reports and validation windows.", "Return applications submitted in January 2025.", "What does this result prove about the reporting period?", ["Use ApplicationDate.", "A month is a range.", "Use dates from 2025-01-01 through 2025-01-31."]),
+  lesson("ba-new-m6-lesson-15", "sqlbank-practice", 1, 15, "Approval Rate Investigation", "project", 20, "advanced", ["case", "conditional-aggregation", "kpi-analysis", "stakeholder-requests"], "Your manager is preparing an executive update and needs the five branches with the highest application approval rate.", "Approval rate is a KPI: approved applications divided by total applications. The denominator must include all applications.", "Return BranchName and ApprovalRate for the five highest approval-rate branches.", "What does a high approval rate suggest, and what might you validate before acting on it?", ["Use all applications as the denominator.", "Use CASE to count approved rows.", "Divide approved count by total count and order the result."]),
 ];
 
 const MASTER_MODULES = MODULES.map((module) => ({
@@ -169,9 +166,8 @@ const MASTER_MODULES = MODULES.map((module) => ({
   lessons: MASTER_LESSONS.filter((lessonDefinition) => lessonDefinition.moduleId === module.id),
 })).filter((module) => module.lessons.length > 0);
 
-const INTERVIEW_PLAYLIST = ["ba-new-m0-lesson-1", "ba-new-m1-lesson-3", "ba-new-m2-lesson-7", "ba-new-m2-lesson-8", "ba-new-m3-lesson-10", "ba-new-m3-lesson-11", "ba-new-m4-lesson-12", "ba-new-m6-lesson-15", "da-new-m7-lesson-24", "da-new-m8-lesson-25"];
-const NORMAL_MODE_IDS: LearningModeId[] = ["completely-new", "know-the-basics", "comfortable-with-sql", "expert-study"];
-const courses: CourseDefinition[] = [...NORMAL_MODE_IDS.map(createNormalCourse), createInterviewCourse()];
+const INTERVIEW_PLAYLIST = ["ba-new-m0-lesson-1", "ba-new-m1-lesson-3", "ba-new-m2-lesson-7", "ba-new-m2-lesson-8", "ba-new-m3-lesson-10", "ba-new-m3-lesson-11", "ba-new-m4-lesson-12", "ba-new-m6-lesson-15"];
+const courses: CourseDefinition[] = [createBeginnerCourse(), createInterviewCourse()];
 
 export function getCourseForSelection(_learningGoal?: string | null, experienceLevel?: string | null) {
   return getCourseForMode(experienceLevel);
@@ -196,6 +192,7 @@ export function getMasterCurriculum() {
 
 export function getCourseForMode(value?: string | null) {
   const modeId = normalizeLearningModeId(value);
+  if (!isLearningModeActive(modeId)) return null;
   return courses.find((course) => course.learningModeId === modeId) ?? courses[0];
 }
 
@@ -399,14 +396,15 @@ export function getLessonStages(lessonDefinition: LessonDefinition): LessonStage
   ];
 }
 
-function createNormalCourse(modeId: LearningModeId): CourseDefinition {
+function createBeginnerCourse(): CourseDefinition {
+  const modeId: LearningModeId = "completely-new";
   const config = LEARNING_MODE_CONFIG[modeId];
   return createCourse({
-    id: `sql-curriculum-${modeId}`,
+    id: "sql-curriculum-beginner",
     learningModeId: modeId,
-    title: "Your SQL Path",
-    shortTitle: "SQL Learning Path",
-    description: `${learningModeLabel(modeId)} uses the same SQLBank curriculum and recommends the right starting point for your current confidence level.`,
+    title: "Beginner",
+    shortTitle: "Beginner SQL Path",
+    description: "Learn SQL from scratch by working with the SQLBank database.",
     assistanceLevel: config.assistanceLevel,
     recommendedStartModuleId: config.startModuleId,
     modules: MASTER_MODULES,
@@ -436,7 +434,7 @@ function createInterviewCourse(): CourseDefinition {
     lessons: lessons.filter((lessonDefinition) => {
       if (module.id === "interview-fundamentals") return [1, 3, 7].includes(lessonDefinition.challengeId);
       if (module.id === "interview-aggregation-joins") return [8, 10, 11].includes(lessonDefinition.challengeId);
-      return [12, 15, 24, 25].includes(lessonDefinition.challengeId);
+      return [12, 15].includes(lessonDefinition.challengeId);
     }).map((lessonDefinition, index) => ({ ...lessonDefinition, moduleId: module.id, sequence: index + 1 })),
   })).filter((module) => module.lessons.length > 0);
 
@@ -445,7 +443,7 @@ function createInterviewCourse(): CourseDefinition {
     learningModeId: "quick-interview-prep",
     title: "Quick Interview Prep",
     shortTitle: "Interview Prep",
-    description: "A focused SQLBank playlist for common interview patterns, debugging conversations, and business scenarios.",
+    description: "Review essential SQL and practice interview-style questions.",
     assistanceLevel: "interview",
     recommendedStartModuleId: "interview-fundamentals",
     modules,

@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { api, Challenge } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { buildModuleProgress, getCourseForProfile, isModuleBeforeRecommendedStart, lessonUrl } from "@/lib/course";
+import { getLearningMode } from "@/lib/curriculum";
 import { getProfile, getProgress, type Profile, type ProgressRow } from "@/lib/progress";
 
 export default function LearnPage() {
@@ -46,12 +47,27 @@ function LearnContent() {
   const course = getCourseForProfile(profile);
   const moduleProgress = course ? buildModuleProgress(course, progress) : [];
 
+  if (!course) {
+    const mode = getLearningMode(profile?.sql_level);
+    return (
+      <main className="mx-auto max-w-3xl px-5 py-10">
+        <p className="font-mono text-sm text-cyan">Your SQL Path</p>
+        <h1 className="mt-3 text-3xl font-semibold text-slate-50">{mode.label}</h1>
+        <div className="mt-6 rounded-lg border border-line bg-panel p-6">
+          <p className="font-mono text-xs uppercase tracking-wider text-slate-500">Coming Soon</p>
+          <p className="mt-3 text-sm leading-6 text-slate-300">We're still building this learning experience. Beginner and Quick Interview Prep are active right now.</p>
+          <Link className="mt-5 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground" href="/account/preferences">Switch Learning Mode</Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
       <p className="font-mono text-sm text-cyan">Your SQL Path</p>
       <h1 className="mt-3 text-3xl font-semibold text-slate-50">{course.title}</h1>
-      {course && <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{course.description}</p>}
-      {course && <p className="mt-2 text-sm text-slate-500">{course.moduleCountLabel} • {course.lessonCountLabel} • {course.questionCountLabel} • Self-paced</p>}
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{course.description}</p>
+      <p className="mt-2 text-sm text-slate-500">{course.moduleCountLabel} • {course.lessonCountLabel} • {course.questionCountLabel} • Self-paced</p>
       {error && (
         <div className="mt-6 rounded border border-red-900/70 bg-red-950/40 p-4 text-sm text-red-100">
           Learning data could not be loaded. {error}

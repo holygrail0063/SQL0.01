@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/auth";
 import { dailyCommitmentOptions, getCourseForMode, getDailyCommitment } from "@/lib/course";
-import { LEARNING_MODES, normalizeLearningModeId, type LearningModeId } from "@/lib/curriculum";
+import { LEARNING_MODES, isLearningModeActive, normalizeLearningModeId, type LearningModeId } from "@/lib/curriculum";
 import { getProfile, saveProfile, type Profile } from "@/lib/progress";
 import { logoutToLogin } from "@/lib/session-boundary";
 
@@ -40,11 +40,16 @@ function LearningPreferencesContent() {
   }, [user]);
 
   const selectedCourse = getCourseForMode(mode);
+  const selectedModeActive = isLearningModeActive(mode);
   const savedMode = normalizeLearningModeId(profile?.sql_level);
   const hasExistingMode = Boolean(profile?.onboarding_completed && profile.sql_level);
   const modeChanged = hasExistingMode && savedMode !== mode;
 
   async function requestSave() {
+    if (!selectedModeActive) {
+      setError("That learning mode is coming soon. Choose Beginner or Quick Interview Prep for now.");
+      return;
+    }
     if (modeChanged) {
       setConfirmingModeChange(true);
       return;
@@ -86,18 +91,22 @@ function LearningPreferencesContent() {
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {LEARNING_MODES.map((option) => {
               const selected = mode === option.id;
+              const unavailable = option.status === "coming-soon";
               return (
                 <label
-                  className={`relative flex cursor-pointer rounded-lg border p-4 transition ${
-                    selected ? "border-brand bg-brand/10 shadow-[0_0_0_1px_rgb(var(--color-brand)/0.18)]" : "border-line bg-elevated hover:border-brand/50 hover:bg-brand/5"
+                  aria-disabled={unavailable}
+                  className={`relative flex rounded-lg border p-4 transition ${
+                    unavailable ? "cursor-not-allowed border-line bg-elevated/60 opacity-75" : selected ? "cursor-pointer border-brand bg-brand/10 shadow-[0_0_0_1px_rgb(var(--color-brand)/0.18)]" : "cursor-pointer border-line bg-elevated hover:border-brand/50 hover:bg-brand/5"
                   }`}
                   key={option.id}
                 >
                   <input
                     checked={selected}
                     className="peer sr-only"
+                    disabled={unavailable}
                     name="learning-mode"
                     onChange={() => {
+                      if (unavailable) return;
                       setMode(option.id);
                       setMessage(null);
                       setError(null);
@@ -110,8 +119,9 @@ function LearningPreferencesContent() {
                     <span>
                       <span className="block font-semibold text-slate-50">{option.label}</span>
                       <span className="mt-2 block text-sm leading-6 text-slate-400">{option.description}</span>
+                      {unavailable && <span className="mt-3 inline-flex rounded-full border border-line px-2 py-1 text-xs text-slate-500">Coming Soon</span>}
                     </span>
-                    <span className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${selected ? "border-brand bg-brand text-brand-foreground" : "border-line text-transparent"}`} aria-hidden="true">
+                    <span className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${selected && !unavailable ? "border-brand bg-brand text-brand-foreground" : "border-line text-transparent"}`} aria-hidden="true">
                       <Check size={14} />
                     </span>
                   </span>
@@ -130,23 +140,32 @@ function LearningPreferencesContent() {
 
         <div className="rounded-lg border border-line bg-elevated p-5">
           <p className="font-mono text-xs uppercase tracking-wider text-cyan">Your SQL Path</p>
-          <h2 className="mt-2 text-xl font-semibold text-slate-50">{selectedCourse.title}</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-300">{selectedCourse.description}</p>
-          <div className="mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
-            <span>{selectedCourse.moduleCountLabel}</span>
-            <span>{selectedCourse.lessonCountLabel}</span>
-            <span>{selectedCourse.questionCountLabel}</span>
-            <span>{selectedCourse.exerciseCountLabel}</span>
-            <span>{selectedCourse.projectCountLabel}</span>
-            <span>{selectedCourse.capstoneCountLabel}</span>
-            <span>{dailyCommitment} min/day</span>
-          </div>
+          {selectedCourse ? (
+            <>
+              <h2 className="mt-2 text-xl font-semibold text-slate-50">{selectedCourse.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{selectedCourse.description}</p>
+              <div className="mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
+                <span>{selectedCourse.moduleCountLabel}</span>
+                <span>{selectedCourse.lessonCountLabel}</span>
+                <span>{selectedCourse.questionCountLabel}</span>
+                <span>{selectedCourse.exerciseCountLabel}</span>
+                <span>{selectedCourse.projectCountLabel}</span>
+                <span>{selectedCourse.capstoneCountLabel}</span>
+                <span>{dailyCommitment} min/day</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="mt-2 text-xl font-semibold text-slate-50">Coming Soon</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-300">This learning mode is visible for the roadmap, but it does not contain active coursework yet.</p>
+            </>
+          )}
         </div>
 
         {message && <p className="text-sm text-success">{message}</p>}
         {error && <p className="status-error rounded border p-3 text-sm">{error}</p>}
         <div className="flex flex-wrap gap-3">
-          <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground" onClick={requestSave} type="button">
+          <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400" disabled={!selectedModeActive} onClick={requestSave} type="button">
             {hasExistingMode ? "Update Learning Mode" : "Save Learning Mode"}
           </button>
           <Link className="inline-flex items-center gap-2 rounded border border-line px-4 py-2 text-sm font-semibold text-slate-200 hover:border-brand-strong/50" href="/learn">
@@ -165,7 +184,7 @@ function LearningPreferencesContent() {
               QueryRight will recommend different upcoming lessons for this mode. Your completed lessons, attempts, SQL history, and analytics will stay saved.
             </p>
             <p className="mt-4 rounded border border-line bg-elevated p-3 text-sm font-semibold text-slate-50">
-              {selectedCourse.shortTitle}
+              {selectedCourse?.shortTitle ?? "Coming Soon"}
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button className="rounded border border-line px-4 py-2 text-sm text-slate-300 hover:border-brand-strong/50" onClick={() => setConfirmingModeChange(false)} type="button">Cancel</button>

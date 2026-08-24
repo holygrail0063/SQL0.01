@@ -191,6 +191,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const shouldShowReturnToFrontier = isReviewingPastStage;
   const progressionAction = position ? resolveProgressionAction(position, activeStageCompleted, courseCompleted, courseCompletionAcknowledged) : null;
   const courseCompletionKeyValue = user ? courseCompletionKey(user.id, course.id) : null;
+  const completionLabel = course.learningModeId === "quick-interview-prep" ? "Complete Interview Prep" : "Complete Course";
+  const completedLabel = course.learningModeId === "quick-interview-prep" ? "✓ Interview Prep Completed" : "✓ Course Completed";
 
   async function runQuery() {
     if (!activeChallenge || !activeStage) return;
@@ -396,9 +398,9 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               <p className="mt-1 text-xs text-slate-500">{course.shortTitle} • {stageTitle(activeStage)} • {questionContextLabel}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {activeChallenge && executionStatus(result, running, error, activeStageCompleted, courseCompleted && courseCompletionAcknowledged && Boolean(position?.isFinalCourseQuestion)) && (
+              {activeChallenge && executionStatus(result, running, error, activeStageCompleted, courseCompleted && courseCompletionAcknowledged && Boolean(position?.isFinalCourseQuestion), completedLabel) && (
                 <span className={`text-xs ${statusTone(result, running, error, activeStageCompleted)}`}>
-                  {executionStatus(result, running, error, activeStageCompleted, courseCompleted && courseCompletionAcknowledged && Boolean(position?.isFinalCourseQuestion))}
+                  {executionStatus(result, running, error, activeStageCompleted, courseCompleted && courseCompletionAcknowledged && Boolean(position?.isFinalCourseQuestion), completedLabel)}
                 </span>
               )}
               {shouldShowPreviousQuestion && (
@@ -438,7 +440,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               )}
               {!shouldShowReturnToFrontier && progressionAction?.type === "complete-course" && (
                 <button className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={completeCourse} type="button">
-                  Complete Course →
+                  {completionLabel} →
                 </button>
               )}
             </div>
@@ -509,10 +511,10 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                     <Link className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href={progressionAction.href}>Next Module →</Link>
                   ) : progressionAction?.type === "complete-course" ? (
                     <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={completeCourse} type="button">
-                      Complete Course →
+                      {completionLabel} →
                     </button>
                   ) : progressionAction?.type === "course-completed" ? (
-                    <span className="text-sm font-semibold text-success">✓ Course Completed</span>
+                    <span className="text-sm font-semibold text-success">{completedLabel}</span>
                   ) : null}
                 </div>
               </div>
@@ -692,10 +694,10 @@ function FeedbackPanel({ activeStage, lessonPrompt, result }: { activeStage: Les
   );
 }
 
-function executionStatus(result: QueryResult | null, running: boolean, error: string | null, completed: boolean, courseCompleted: boolean) {
+function executionStatus(result: QueryResult | null, running: boolean, error: string | null, completed: boolean, courseCompleted: boolean, completedLabel = "✓ Course Completed") {
   if (running) return "Running query...";
   if (error) return "Query error";
-  if (courseCompleted) return "✓ Course Completed";
+  if (courseCompleted) return completedLabel;
   if (completed && !result) return "✓ Question Completed";
   if (!result) return null;
   if (!result.success) return "Query error";
