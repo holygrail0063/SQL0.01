@@ -39,7 +39,7 @@ export function ProfileMorphMenu({ user, currentPath }: { user: User | null; cur
     function updateOpenSize() {
       setOpenSize({
         width: Math.max(240, Math.min(288, window.innerWidth - 24)),
-        height: Math.max(300, Math.min(340, window.innerHeight - 80)),
+        height: Math.max(280, Math.min(300, window.innerHeight - 80)),
       });
     }
 
@@ -134,7 +134,7 @@ export function ProfileMorphMenu({ user, currentPath }: { user: User | null; cur
           {isOpen && (
             <motion.div
               animate={{ opacity: 1 }}
-              className="relative z-0 flex h-full flex-col overflow-y-auto px-4 pb-4 pt-12"
+              className="relative z-0 flex h-full flex-col overflow-hidden px-4 pb-3 pt-6"
               exit={{ opacity: 0 }}
               id="profile-morph-menu"
               initial={{ opacity: 0 }}
@@ -143,7 +143,7 @@ export function ProfileMorphMenu({ user, currentPath }: { user: User | null; cur
             >
               <motion.div
                 animate={{ opacity: 1, y: 0 }}
-                className="pb-4"
+                className="pb-3"
                 exit={{ opacity: 0, y: reduceMotion ? 0 : -4 }}
                 initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
                 transition={{ duration: reduceMotion ? 0.08 : 0.24, ease }}
@@ -153,7 +153,7 @@ export function ProfileMorphMenu({ user, currentPath }: { user: User | null; cur
               </motion.div>
 
               <div className="h-px bg-line" />
-              <div className="py-2">
+              <div className="py-1">
                 {menuItems.map((item, index) => (
                   <MorphMenuLink
                     active={isActiveAccountPath(currentPath, item.href)}
@@ -167,10 +167,10 @@ export function ProfileMorphMenu({ user, currentPath }: { user: User | null; cur
                   />
                 ))}
               </div>
-              <div className="mt-auto h-px bg-line" />
+              <div className="h-px bg-line" />
               <motion.button
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-2 flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-slate-300 outline-none transition hover:bg-red-950/30 hover:text-red-100 focus-visible:ring-2 focus-visible:ring-brand"
+                className="mt-1 flex min-h-9 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-slate-300 outline-none transition hover:bg-red-950/30 hover:text-red-100 focus-visible:ring-2 focus-visible:ring-brand"
                 exit={{ opacity: 0, y: reduceMotion ? 0 : 4 }}
                 initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
                 onClick={logout}
@@ -178,6 +178,7 @@ export function ProfileMorphMenu({ user, currentPath }: { user: User | null; cur
                 transition={{ duration: reduceMotion ? 0.08 : 0.24, delay: reduceMotion ? 0 : 0.3, ease }}
                 type="button"
               >
+                <span className="h-1.5 w-1.5 rounded-full bg-transparent" />
                 <LogOut size={17} className="text-slate-500" />
                 <span>Log out</span>
               </motion.button>
@@ -214,7 +215,7 @@ function MorphMenuLink({
       transition={{ duration: reduceMotion ? 0.08 : 0.24, delay: reduceMotion ? 0 : delay, ease }}
     >
       <Link
-        className={`group relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-brand ${
+        className={`group relative flex min-h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-brand ${
           active ? "bg-brand/10 text-slate-50" : "text-slate-300 hover:bg-brand/10 hover:text-slate-50"
         }`}
         href={href}
