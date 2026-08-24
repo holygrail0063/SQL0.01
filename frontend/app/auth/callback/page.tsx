@@ -48,11 +48,11 @@ export default function AuthCallbackPage() {
   }, [router]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-ink px-5 py-12 text-slate-100">
-      <section className="w-full max-w-md rounded border border-line bg-panel p-8 text-center shadow-2xl shadow-black/30">
+    <main className="flex min-h-screen items-center justify-center bg-ink px-5 py-12 text-slate-950">
+      <section className="w-full max-w-md rounded-lg border border-line bg-panel p-8 text-center shadow-2xl shadow-slate-900/10">
         <BrandMark />
-        <h1 className="mt-7 text-2xl font-semibold text-white">Finishing sign in</h1>
-        <p className="mt-4 text-sm leading-6 text-slate-300">{message}</p>
+        <h1 className="mt-7 text-2xl font-semibold text-slate-950">Finishing sign in</h1>
+        <p className="mt-4 text-sm leading-6 text-slate-700">{message}</p>
       </section>
     </main>
   );

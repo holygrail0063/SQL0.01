@@ -110,14 +110,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const passwordChecks = getPasswordChecks(password);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-ink px-5 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-ink px-5 py-12 text-slate-950">
       {captchaRequired && (
         <Script src="https://js.hcaptcha.com/1/api.js" strategy="afterInteractive" />
       )}
-      <section className="w-full max-w-md rounded border border-line bg-panel p-8 shadow-2xl shadow-black/30">
+      <section className="w-full max-w-md rounded-lg border border-line bg-panel p-8 shadow-2xl shadow-slate-900/10">
         <div className="mb-8 text-center">
           <BrandMark />
-          <h1 className="mt-7 text-2xl font-semibold text-white">{title}</h1>
+          <h1 className="mt-7 text-2xl font-semibold text-slate-950">{title}</h1>
         </div>
 
         <form className="space-y-4" onSubmit={submit}>
@@ -133,20 +133,22 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
           {mode === "signup" && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm text-slate-300">
+              <label className="block text-sm text-slate-700">
                 First Name
                 <input
-                  className="mt-2 h-11 w-full rounded border border-line bg-[#090f1a] px-3 text-white outline-none focus:border-brand"
+                  autoComplete="given-name"
+                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-950 focus:border-brand-strong"
                   onChange={(event) => setFirstName(event.target.value)}
                   required
                   type="text"
                   value={firstName}
                 />
               </label>
-              <label className="block text-sm text-slate-300">
+              <label className="block text-sm text-slate-700">
                 Last Name
                 <input
-                  className="mt-2 h-11 w-full rounded border border-line bg-[#090f1a] px-3 text-white outline-none focus:border-brand"
+                  autoComplete="family-name"
+                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-950 focus:border-brand-strong"
                   onChange={(event) => setLastName(event.target.value)}
                   required
                   type="text"
@@ -156,10 +158,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
             </div>
           )}
 
-          <label className="block text-sm text-slate-300">
+          <label className="block text-sm text-slate-700">
             Email
             <input
-              className="mt-2 h-11 w-full rounded border border-line bg-[#090f1a] px-3 text-white outline-none focus:border-brand"
+              autoComplete="email"
+              className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-950 focus:border-brand-strong"
               onChange={(event) => setEmail(event.target.value)}
               required
               type="email"
@@ -168,10 +171,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </label>
 
           {mode !== "forgot" && (
-            <label className="block text-sm text-slate-300">
+            <label className="block text-sm text-slate-700">
               Password
               <input
-                className="mt-2 h-11 w-full rounded border border-line bg-[#090f1a] px-3 text-white outline-none focus:border-brand"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-950 focus:border-brand-strong"
                 minLength={mode === "signup" ? 10 : 6}
                 onChange={(event) => setPassword(event.target.value)}
                 required
@@ -183,10 +187,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
           {mode === "signup" && (
             <>
-              <label className="block text-sm text-slate-300">
+              <label className="block text-sm text-slate-700">
                 Confirm Password
                 <input
-                  className="mt-2 h-11 w-full rounded border border-line bg-[#090f1a] px-3 text-white outline-none focus:border-brand"
+                  autoComplete="new-password"
+                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-950 focus:border-brand-strong"
                   minLength={10}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   required
@@ -213,11 +218,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
             />
           )}
 
-          {error && <p className="rounded border border-red-900/70 bg-red-950/40 p-3 text-sm text-red-100">{error}</p>}
-          {message && <p className="rounded border border-success/40 bg-success/10 p-3 text-sm text-green-100">{message}</p>}
+          {error && <p className="status-error rounded border p-3 text-sm" role="alert">{error}</p>}
+          {message && <p className="status-success rounded border p-3 text-sm" role="status">{message}</p>}
 
           <button
-            className="h-11 w-full rounded bg-brand text-sm font-semibold text-white disabled:cursor-wait disabled:bg-slate-700"
+            className="h-11 w-full rounded bg-brand text-sm font-semibold text-slate-950 disabled:cursor-wait disabled:bg-slate-300"
             disabled={loading}
             type="submit"
           >
@@ -225,17 +230,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-slate-400">
+        <div className="mt-6 text-center text-sm text-slate-600">
           {mode === "login" && (
             <>
-              <Link href="/forgot-password" className="text-cyan hover:text-white">Forgot password?</Link>
-              <div className="mt-4">Don&apos;t have an account? <Link className="text-cyan hover:text-white" href="/signup">Create one</Link></div>
+              <Link href="/forgot-password" className="text-cyan hover:text-slate-950">Forgot password?</Link>
+              <div className="mt-4">Don&apos;t have an account? <Link className="text-cyan hover:text-slate-950" href="/signup">Create one</Link></div>
             </>
           )}
-          {mode === "signup" && <>Already have an account? <Link className="text-cyan hover:text-white" href="/login">Log in</Link></>}
-          {mode === "forgot" && <Link className="text-cyan hover:text-white" href="/login">Back to login</Link>}
+          {mode === "signup" && <>Already have an account? <Link className="text-cyan hover:text-slate-950" href="/login">Log in</Link></>}
+          {mode === "forgot" && <Link className="text-cyan hover:text-slate-950" href="/login">Back to login</Link>}
           <div className="mt-4">
-            <Link className="text-slate-500 hover:text-white" href="/">Back to home page</Link>
+            <Link className="text-slate-500 hover:text-slate-950" href="/">Back to home page</Link>
           </div>
         </div>
       </section>

@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "QueryRight — Practice SQL Like It's Your Job",
+  title: {
+    default: "QueryRight — Practice SQL Like It's Your Job",
+    template: "%s | QueryRight",
+  },
   description: "Build real SQL skills by solving realistic business problems against hands-on training databases directly in your browser.",
   openGraph: {
     title: "QueryRight — Practice SQL Like It's Your Job",

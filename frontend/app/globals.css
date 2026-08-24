@@ -3,14 +3,19 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  --color-bg: 9 13 20;
-  --color-panel: 17 24 39;
-  --color-line: 38 50 71;
-  --color-brand: 79 124 255;
-  --color-cyan: 34 211 238;
-  --color-success: 34 197 94;
-  --color-muted: 148 163 184;
+  color-scheme: light;
+  --color-bg: 247 249 244;
+  --color-panel: 255 255 255;
+  --color-surface-elevated: 250 252 246;
+  --color-line: 218 226 211;
+  --color-brand: 190 242 100;
+  --color-brand-strong: 77 124 15;
+  --color-cyan: 20 120 102;
+  --color-success: 22 163 74;
+  --color-warning: 180 83 9;
+  --color-danger: 185 28 28;
+  --color-muted: 100 116 139;
+  --color-editor: 9 13 20;
 }
 
 * {
@@ -20,12 +25,64 @@
 body {
   margin: 0;
   background: rgb(var(--color-bg));
-  color: #f8fafc;
+  color: #111827;
 }
 
 button,
-textarea {
+textarea,
+input,
+select {
   font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  outline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 3px solid rgb(var(--color-brand));
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-150%);
+  border-radius: 999px;
+  background: rgb(var(--color-brand));
+  color: #17210f;
+  padding: 0.65rem 1rem;
+  font-weight: 700;
+  transition: transform 150ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.status-success {
+  border-color: rgb(var(--color-success) / 0.32);
+  background: rgb(var(--color-success) / 0.1);
+  color: rgb(21 128 61);
+}
+
+.status-error {
+  border-color: rgb(var(--color-danger) / 0.32);
+  background: rgb(var(--color-danger) / 0.08);
+  color: rgb(var(--color-danger));
+}
+
+.status-warning {
+  border-color: rgb(var(--color-warning) / 0.32);
+  background: rgb(var(--color-warning) / 0.1);
+  color: rgb(var(--color-warning));
 }
 
 ::-webkit-scrollbar {

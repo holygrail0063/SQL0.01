@@ -222,8 +222,9 @@ export function getDataAnalystCourse(experienceLevel?: string | null) {
 }
 
 export function getCourseForSelection(learningGoal?: string | null, experienceLevel?: string | null) {
-  if (learningGoal === "Business Analyst") return getBusinessAnalystCourse(experienceLevel);
-  if (learningGoal === "Data Analyst") return getDataAnalystCourse(experienceLevel);
+  const safeExperience = experienceLevel === "Interview Preparation" ? "Completely New" : experienceLevel;
+  if (learningGoal === "Business Analyst") return getBusinessAnalystCourse(safeExperience);
+  if (learningGoal === "Data Analyst") return getDataAnalystCourse(safeExperience);
   return null;
 }
 
@@ -389,6 +390,10 @@ function course(
   lessons: LessonDefinition[],
 ): CourseDefinition {
   const modules = groupModules(lessons);
+  const lessonCount = modules.reduce((sum, module) => sum + module.lessons.length, 0);
+  const exerciseCount = lessons.filter((lesson) => lesson.type === "exercise" || lesson.type === "assignment" || lesson.type === "review").length;
+  const projectCount = lessons.filter((lesson) => lesson.type === "project").length;
+  const capstoneCount = lessons.filter((lesson) => lesson.title.toLowerCase().includes("capstone")).length;
   return {
     id,
     learningGoal,
@@ -397,14 +402,18 @@ function course(
     shortTitle,
     description,
     estimatedWeeks,
-    lessonCountLabel,
-    exerciseCountLabel,
-    projectCountLabel,
-    capstoneCountLabel,
+    lessonCountLabel: pluralize(lessonCount, "lesson"),
+    exerciseCountLabel: pluralize(exerciseCount, "exercise"),
+    projectCountLabel: pluralize(projectCount, "project"),
+    capstoneCountLabel: pluralize(capstoneCount, "capstone"),
     difficulty,
     skills: learningGoal === "Data Analyst" ? dataAnalystSkills : businessAnalystSkills,
     modules,
   };
+}
+
+function pluralize(count: number, label: string) {
+  return `${count} ${label}${count === 1 ? "" : "s"}`;
 }
 
 function groupModules(lessons: LessonDefinition[]): ModuleDefinition[] {

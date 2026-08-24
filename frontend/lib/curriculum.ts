@@ -12,6 +12,8 @@ export const roleOptions = [
   "Just learning SQL",
 ];
 
+export const activeRoleOptions = roleOptions.filter((role) => role === "Business Analyst" || role === "Data Analyst");
+
 export const sqlLevelOptions = [
   {
     value: "Completely New",
@@ -27,9 +29,11 @@ export const sqlLevelOptions = [
   },
   {
     value: "Interview Preparation",
-    description: "I'm mainly preparing for SQL interviews or job assessments.",
+    description: "Interview preparation is coming soon.",
   },
 ];
+
+export const activeSqlLevelOptions = sqlLevelOptions.filter((option) => option.value !== "Interview Preparation");
 
 export const challengeGroups = [
   { title: "Beginner Foundations", ids: [1, 2, 3, 4] },

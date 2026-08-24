@@ -1,6 +1,6 @@
 "use client";
 
-import { Play, RotateCcw, Wand2 } from "lucide-react";
+import { Play, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ChallengeNavigation } from "@/components/ChallengeNavigation";
@@ -84,7 +84,7 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
   const canMoveNext = useMemo(() => Boolean(result?.success && result.correct), [result]);
 
   if (loading) {
-    return <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-ink text-slate-300">Loading SQLBank workspace...</main>;
+    return <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-ink text-slate-700">Loading SQLBank workspace...</main>;
   }
 
   if (!challenge) {
@@ -96,12 +96,12 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
   }
 
   return (
-    <main className="grid min-h-[calc(100vh-4rem)] grid-cols-1 bg-ink text-slate-100 lg:grid-cols-[320px_1fr]">
+    <main className="grid min-h-[calc(100vh-4rem)] grid-cols-1 bg-ink text-slate-950 lg:grid-cols-[320px_1fr]">
       <SchemaExplorer schema={schema} />
       <div className="flex min-w-0 flex-col">
-        <header className="flex min-h-14 items-center justify-between gap-4 border-b border-line bg-[#0a1322] px-6 py-3">
+        <header className="flex min-h-14 items-center justify-between gap-4 border-b border-line bg-panel px-6 py-3">
           <div>
-            <div className="text-lg font-semibold text-white">SQLBank Analytics Team</div>
+            <div className="text-lg font-semibold text-slate-950">SQLBank Analytics Team</div>
             <div className="font-mono text-xs uppercase tracking-wider text-slate-500">SQLBankTraining</div>
           </div>
           <ChallengeNavigation
@@ -119,20 +119,12 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
         {progressMessage && <div className="border-b border-cyan/30 bg-cyan/10 px-6 py-3 text-sm text-cyan">{progressMessage}</div>}
 
         <section className="flex min-h-0 flex-1 flex-col">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-[#0b1525] px-6 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-elevated px-6 py-3">
             <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">SQL Editor</div>
             <div className="flex items-center gap-4">
               <QueryStatus result={result} />
               <button
-                className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-300 hover:border-cyan/70"
-                onClick={() => setQuery(formatSql(query))}
-                type="button"
-              >
-                <Wand2 size={15} />
-                Format
-              </button>
-              <button
-                className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-300 hover:border-cyan/70"
+                className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-700 hover:border-brand-strong/50"
                 onClick={() => setQuery("")}
                 type="button"
               >
@@ -140,7 +132,7 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
                 Reset
               </button>
               <button
-                className="inline-flex h-9 items-center gap-2 rounded bg-brand px-4 text-sm font-semibold text-white disabled:cursor-wait disabled:bg-slate-700 disabled:text-slate-400"
+                className="inline-flex h-9 items-center gap-2 rounded bg-brand px-4 text-sm font-semibold text-slate-950 disabled:cursor-wait disabled:bg-slate-300 disabled:text-slate-500"
                 disabled={running}
                 onClick={runQuery}
                 type="button"
@@ -161,7 +153,7 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
               {result.message}
             </div>
           )}
-          <div className="min-h-[320px] bg-[#091321]">
+          <div className="min-h-[320px] bg-editor text-slate-200">
             <div className="border-b border-line px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Results</div>
             <ResultsTable result={result} />
           </div>
@@ -173,11 +165,4 @@ export function ChallengeWorkspace({ challengeId }: { challengeId: number }) {
 
 function readableError(caught: unknown, fallback: string): string {
   return caught instanceof Error ? caught.message : fallback;
-}
-
-function formatSql(value: string) {
-  return value
-    .replace(/\s+/g, " ")
-    .replace(/\b(select|from|where|and|or|join|inner join|left join|group by|order by|having)\b/gi, (match) => `\n${match.toUpperCase()}`)
-    .trim();
 }
