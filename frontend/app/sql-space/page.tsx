@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, BriefcaseBusiness, Clock3, FlaskConical, RotateCcw, Target, TerminalSquare } from "lucide-react";
+import { BarChart3, BriefcaseBusiness, Clock3, Target } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -15,10 +14,8 @@ import {
   getLessonStages,
   lessonUrl,
   nextLesson,
-  readinessScore,
   reviewDue,
-  type CourseDefinition,
-  type LessonDefinition,
+  courseCompletionPercent,
 } from "@/lib/course";
 import { getProfile, getProgress, profileDisplayName, type Profile, type ProgressRow } from "@/lib/progress";
 
@@ -73,15 +70,16 @@ function SqlSpaceContent() {
   const course = getCourseForProfile(profile);
   const dailyCommitment = getDailyCommitment(profile);
   const currentLesson = course ? nextLesson(course, progress) : null;
+  const currentModule = course?.modules.find((module) => module.lessons.some((lesson) => lesson.id === currentLesson?.id)) ?? null;
   const currentChallenge = currentLesson ? challenges.find((challenge) => challenge.id === currentLesson.challengeId) : null;
   const reviews = course ? reviewDue(course, progress) : [];
-  const skillScore = course ? readinessScore(course, progress) : 0;
+  const topReview = reviews[0] ?? null;
+  const courseProgress = course ? courseCompletionPercent(course, progress) : 0;
   const learnerName = profileDisplayName(profile, user);
   const roleName = course?.learningGoal ?? profile?.selected_role ?? "SQL";
   const isDataAnalyst = roleName === "Data Analyst";
   const recommendedAssignment = course ? findRecommendedAssignment(challenges, completedIds, isDataAnalyst) : null;
-  const rotatingLesson = course ? rotatingPracticeLesson(course, progress) : null;
-  const reviewLesson = course && reviews[0] ? findLessonForSkill(course, progress, reviews[0].skill) : currentLesson;
+  const reviewLesson = course && topReview ? findLessonForSkill(course, progress, topReview.skill) : currentLesson;
   const lessonStages = currentLesson ? getLessonStages(currentLesson) : [];
 
   if (loading) return <main className="p-8 text-slate-400">Loading SQL Space...</main>;
@@ -116,17 +114,20 @@ function SqlSpaceContent() {
         </section>
       ) : (
         <>
-          <section className="mt-8 grid gap-5 lg:grid-cols-[1fr_360px]">
+          <section className="mt-8">
             <div className="rounded border border-line bg-panel p-6">
-              <p className="text-sm uppercase tracking-wider text-slate-500">{course.experienceLevel === "Interview Preparation" ? `${course.learningGoal} Interview Practice` : `Continue Your ${course.learningGoal} Path`}</p>
+              <p className="text-sm uppercase tracking-wider text-slate-500">Continue Learning</p>
               {currentLesson && currentChallenge ? (
                 <>
+                  <p className="mt-4 text-sm text-slate-400">{course.learningGoal} Path · {courseProgress}% complete</p>
                   <h2 className="mt-4 text-2xl font-semibold text-slate-50">{currentLesson.title}</h2>
-                  <p className="mt-2 text-sm text-slate-400">{currentLesson.difficulty} - {currentLesson.estimatedMinutes} minutes - {currentLesson.skills.slice(0, 3).join(", ")}</p>
+                  <p className="mt-2 text-sm text-slate-400">
+                    {currentModule ? `Module ${currentModule.sequence} · ` : ""}Lesson {currentLesson.sequence} · {currentLesson.estimatedMinutes} minutes · {currentLesson.skills.slice(0, 3).join(", ")}
+                  </p>
                   <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-300">{currentLesson.businessContext}</p>
                   <div className="mt-6 flex flex-wrap gap-3">
                     <Link className="inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href="/sql-editor">
-                      Continue in SQL Editor
+                      Continue in SQL Editor →
                     </Link>
                     <Link className="inline-flex rounded border border-line px-4 py-2 text-sm font-semibold text-slate-200 hover:border-brand-strong/50" href="/learn">View Curriculum</Link>
                   </div>
@@ -138,15 +139,6 @@ function SqlSpaceContent() {
                   <Link className="mt-6 inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href="/practice">Open Practice</Link>
                 </>
               )}
-            </div>
-
-            <div className="rounded border border-line bg-panel p-6">
-              <p className="text-sm uppercase tracking-wider text-slate-500">SQL Skill Score</p>
-              <div className="mt-4 text-5xl font-semibold text-slate-50">{skillScore}%</div>
-              <p className="mt-3 text-sm leading-6 text-slate-400">Calculated from completed lessons and skill coverage in your selected path.</p>
-              <div className="mt-6 h-3 rounded bg-slate-800">
-                <div className="h-3 rounded bg-brand-strong" style={{ width: `${skillScore}%` }} />
-              </div>
             </div>
           </section>
 
@@ -180,39 +172,12 @@ function SqlSpaceContent() {
                 <Target size={18} />
                 <p className="font-mono text-xs uppercase tracking-wider">Recommended Review</p>
               </div>
-              <h2 className="mt-4 text-xl font-semibold text-slate-50">{reviews.length} skills to practice</h2>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {reviews.map((skill) => <span className="rounded border border-line px-2 py-1 text-xs text-slate-300" key={skill.skill}>{skill.skill}</span>)}
-              </div>
-              {reviewLesson && <Link className="mt-6 inline-flex rounded border border-line px-4 py-2 text-sm font-semibold text-slate-200 hover:border-brand-strong/50" href={lessonUrl(reviewLesson)}>Open Review</Link>}
+              <h2 className="mt-4 text-xl font-semibold text-slate-50">{topReview?.skill ?? "Keep your SQL warm"}</h2>
+              <p className="mt-3 text-sm leading-6 text-slate-300">
+                {topReview ? `Recent practice suggests another ${topReview.skill} exercise would help before moving further.` : "You are ready for the next guided task in your current path."}
+              </p>
+              {reviewLesson && <Link className="mt-6 inline-flex rounded border border-line px-4 py-2 text-sm font-semibold text-slate-200 hover:border-brand-strong/50" href={lessonUrl(reviewLesson)}>Practice {topReview?.skill ?? "Next Lesson"} →</Link>}
             </div>
-          </section>
-
-          <section className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            <QuickAction
-              copy="Open the next lesson selected for your current role and SQL level."
-              href={currentLesson ? lessonUrl(currentLesson) : "/learn"}
-              icon={<Target size={18} />}
-              label="Daily SQL Challenge"
-            />
-            <QuickAction
-              copy="Practice the first skill currently marked for review."
-              href={reviewLesson ? lessonUrl(reviewLesson) : "/learn"}
-              icon={<RotateCcw size={18} />}
-              label="Practice Recommended Skills"
-            />
-            <QuickAction
-              copy="Try a rotating exercise from your active course path."
-              href={rotatingLesson ? lessonUrl(rotatingLesson) : "/learn"}
-              icon={<FlaskConical size={18} />}
-              label="Rotating Practice"
-            />
-            <QuickAction
-              copy="Explore the SQLBank database freely with read-only query protection."
-              href="/practice/sandbox"
-              icon={<TerminalSquare size={18} />}
-              label="SQL Sandbox"
-            />
           </section>
 
           <section className="mt-5 rounded border border-line bg-panel p-6">
@@ -220,15 +185,15 @@ function SqlSpaceContent() {
               <div>
                 <div className="flex items-center gap-2 text-cyan">
                   <BriefcaseBusiness size={18} />
-                  <p className="font-mono text-xs uppercase tracking-wider">Recommended Practice</p>
+                  <p className="font-mono text-xs uppercase tracking-wider">New Work Request</p>
                 </div>
                 <h2 className="mt-4 text-xl font-semibold text-slate-50">{recommendedAssignment?.title ?? "Open Practice"}</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-                  {recommendedAssignment?.description ?? "Pick a realistic workplace request when you are ready to test your SQL in a less guided setting."}
+                  {recommendedAssignment?.description ?? "Open a realistic workplace request when you are ready for less guided SQL practice."}
                 </p>
               </div>
               <Link className="inline-flex rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href={recommendedAssignment ? `/challenge/${recommendedAssignment.id}` : "/practice"}>
-                Open
+                Open Request →
               </Link>
             </div>
           </section>
@@ -238,30 +203,13 @@ function SqlSpaceContent() {
   );
 }
 
-function QuickAction({ copy, href, icon, label }: { copy: string; href: string; icon: ReactNode; label: string }) {
-  return (
-    <Link className="rounded border border-line bg-panel p-5 hover:border-cyan/60 hover:text-slate-50" href={href}>
-      <div className="text-cyan">{icon}</div>
-      <h3 className="mt-4 font-semibold text-slate-50">{label}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-400">{copy}</p>
-    </Link>
-  );
-}
-
 function findRecommendedAssignment(challenges: Challenge[], completedIds: Set<number>, isDataAnalyst: boolean) {
   const ids = isDataAnalyst ? [18, 20, 21, 22, 23, 24, 25] : [8, 10, 11, 13, 14, 15];
   const options = ids.map((id) => challenges.find((challenge) => challenge.id === id)).filter(Boolean) as Challenge[];
   return options.find((challenge) => !completedIds.has(challenge.id)) ?? options[0] ?? null;
 }
 
-function rotatingPracticeLesson(course: CourseDefinition, progressRows: ProgressRow[]) {
-  const completed = new Set(progressRows.filter((row) => row.status === "completed").map((row) => row.challenge_id));
-  const lessons = course.modules.flatMap((module) => module.lessons).filter((lesson) => !completed.has(lesson.challengeId));
-  if (!lessons.length) return course.modules[0]?.lessons[0] ?? null;
-  return lessons[new Date().getDate() % lessons.length];
-}
-
-function findLessonForSkill(course: CourseDefinition, progressRows: ProgressRow[], skill: string): LessonDefinition | null {
+function findLessonForSkill(course: NonNullable<ReturnType<typeof getCourseForProfile>>, progressRows: ProgressRow[], skill: string) {
   const completed = new Set(progressRows.filter((row) => row.status === "completed").map((row) => row.challenge_id));
   const lessons = course.modules.flatMap((module) => module.lessons).filter((lesson) => lesson.skills.includes(skill));
   return lessons.find((lesson) => !completed.has(lesson.challengeId)) ?? lessons[0] ?? nextLesson(course, progressRows);
