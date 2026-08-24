@@ -90,7 +90,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         });
         if (loginError) throw loginError;
         const nextPath = new URLSearchParams(window.location.search).get("next");
-        window.location.href = safeNextPath(nextPath) ?? "/sql-space";
+        window.location.href = safeNextPath(nextPath) ?? "/learn";
       } else {
         const { error: resetError } = await client.auth.resetPasswordForEmail(email, {
           redirectTo: authRedirectUrl("/login"),

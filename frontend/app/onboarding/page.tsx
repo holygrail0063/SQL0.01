@@ -54,7 +54,7 @@ function OnboardingContent() {
         daily_commitment_minutes: dailyCommitment,
         onboarding_completed: true,
       });
-      router.replace("/sql-space?welcome=1");
+      router.replace("/learn");
     } catch (caught) {
       setError(`Onboarding could not be saved. ${readableError(caught)}`);
     } finally {

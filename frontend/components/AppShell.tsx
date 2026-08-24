@@ -9,7 +9,6 @@ import { ProfileMorphMenu } from "@/components/ProfileMorphMenu";
 import { useAuth } from "@/lib/auth";
 
 const navItems: PrimaryNavItem[] = [
-  { href: "/sql-space", label: "SQL Space", mobileLabel: "Space" },
   { href: "/learn", label: "Learn" },
   { href: "/sql-editor", label: "SQL Editor", mobileLabel: "Editor" },
   { href: "/practice", label: "Practice" },
@@ -25,7 +24,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="sticky top-0 z-40 border-b border-line bg-panel/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
-          <Link href="/sql-space">
+          <Link href="/learn">
             <BrandMark />
           </Link>
           <AnimatedPrimaryNav isActive={isActiveNav} items={navItems} pathname={pathname} />
