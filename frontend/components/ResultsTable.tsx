@@ -2,7 +2,7 @@ import type { QueryResult } from "@/lib/api";
 
 export function ResultsTable({ result }: { result: QueryResult | null }) {
   if (!result) {
-    return <div className="p-5 text-sm text-slate-500">Run a query to see results.</div>;
+    return <div className="p-5 text-sm text-slate-500">Run your query to see results.</div>;
   }
 
   if (!result.success) {
@@ -17,14 +17,14 @@ export function ResultsTable({ result }: { result: QueryResult | null }) {
   }
 
   return (
-    <div className="p-5">
+    <div className="flex h-full min-h-0 flex-col p-5">
       <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-slate-400">
         <span>{result.rowCount} rows returned in {result.executionTimeMs} ms</span>
         {result.truncated && <span className="text-amber">Showing first {result.displayedRowCount ?? result.rows.length} rows.</span>}
       </div>
-      <div className="max-h-[260px] overflow-auto rounded border border-line">
+      <div className="min-h-0 flex-1 overflow-auto rounded border border-line">
         <table className="min-w-full border-collapse text-left text-sm">
-          <thead className="sticky top-0 bg-[#111c30] text-slate-300">
+          <thead className="sticky top-0 bg-elevated text-slate-300">
             <tr>
               {result.columns.map((column) => (
                 <th key={column} className="border-b border-line px-3 py-2 font-medium">
@@ -41,7 +41,7 @@ export function ResultsTable({ result }: { result: QueryResult | null }) {
                 </td>
               </tr>
             ) : result.rows.map((row, rowIndex) => (
-              <tr key={rowIndex} className="odd:bg-[#0c1626] even:bg-[#101b2d]">
+              <tr key={rowIndex} className="odd:bg-ink even:bg-panel">
                 {row.map((value, cellIndex) => (
                   <td key={`${rowIndex}-${cellIndex}`} className="whitespace-nowrap border-b border-line/70 px-3 py-2 text-slate-300">
                     {value === null ? <span className="text-slate-400">NULL</span> : String(value)}

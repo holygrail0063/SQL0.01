@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, CheckCircle2, Circle, Lightbulb, Play, RotateCcw } from "lucide-react";
+import { BookOpen, Lightbulb, PanelLeftClose, PanelLeftOpen, Play, RotateCcw } from "lucide-react";
+import type { CSSProperties, Dispatch, PointerEvent, ReactNode, SetStateAction } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { QueryStatus } from "@/components/QueryStatus";
 import { ResultsTable } from "@/components/ResultsTable";
 import { SchemaExplorer } from "@/components/SchemaExplorer";
 import { SqlEditor } from "@/components/SqlEditor";
@@ -25,12 +25,16 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [result, setResult] = useState<QueryResult | null>(null);
   const [hintCount, setHintCount] = useState(0);
   const [showTutor, setShowTutor] = useState(false);
-  const [showExplanation, setShowExplanation] = useState(false);
   const [completedConceptStages, setCompletedConceptStages] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progressMessage, setProgressMessage] = useState<string | null>(null);
+  const [sidebarTab, setSidebarTab] = useState<"task" | "database">("task");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [editorPercent, setEditorPercent] = useState(52);
+  const [resultTab, setResultTab] = useState<"results" | "feedback" | "breakdown">("results");
 
   useEffect(() => {
     if (!user) return;
@@ -64,8 +68,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     setResult(null);
     setHintCount(0);
     setShowTutor(false);
-    setShowExplanation(false);
     setProgressMessage(null);
+    setResultTab("results");
     if (activeStage && !activeStage.carryForwardQuery) {
       const draft = user ? window.localStorage.getItem(lessonDraftKey(user.id, lessonId, activeStage.id)) : null;
       setQuery(draft ?? activeStage.starterSql ?? "");
@@ -77,6 +81,24 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     if (!user || !activeStage || !activeStage.challengeId || result?.correct) return;
     window.localStorage.setItem(lessonDraftKey(user.id, lessonId, activeStage.id), query);
   }, [activeStageIndex, lessonId, query, result?.correct, stages, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const savedEditor = Number(window.localStorage.getItem(workspaceSplitKey(user.id)));
+    const savedSidebar = Number(window.localStorage.getItem(sidebarWidthKey(user.id)));
+    if (Number.isFinite(savedEditor)) setEditorPercent(clamp(savedEditor, 36, 68));
+    if (Number.isFinite(savedSidebar)) setSidebarWidth(clamp(savedSidebar, 260, 450));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    window.localStorage.setItem(workspaceSplitKey(user.id), String(editorPercent));
+  }, [editorPercent, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    window.localStorage.setItem(sidebarWidthKey(user.id), String(sidebarWidth));
+  }, [sidebarWidth, user]);
 
   if (loading) return <main className="p-8 text-slate-400">Preparing your lesson...</main>;
   if (!lessonBundle) return <main className="p-8 text-red-200">This lesson was not found.</main>;
@@ -96,6 +118,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     try {
       const queryResult = await api.runQuery(activeChallenge.id, query);
       setResult(queryResult);
+      setResultTab("results");
+      if (editorPercent > 64) setEditorPercent(56);
       if (user) {
         await recordAttempt(user, activeChallenge.id, query, queryResult);
         const progressData = await getProgress(user);
@@ -134,93 +158,138 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   }
 
   const canContinue = Boolean(activeStage && (!activeStage.challengeId || result?.correct));
+  const editorHeight = `${editorPercent}%`;
+  const resultsHeight = `${100 - editorPercent}%`;
+  const hasMultipleStages = stages.length > 1;
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-ink text-slate-50">
-      <header className="border-b border-line bg-panel px-5 py-5">
+    <main className="min-h-[calc(100dvh-4rem)] bg-ink text-slate-50 lg:flex lg:h-[calc(100dvh-4rem)] lg:min-h-[560px] lg:flex-col lg:overflow-hidden">
+      <header className="shrink-0 border-b border-line bg-panel px-5 py-3">
         <div className="mx-auto max-w-7xl">
           <p className="font-mono text-xs uppercase tracking-wider text-cyan">{course.learningGoal} Path / Module {module.sequence} / Lesson {lesson.sequence}</p>
-          <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="text-3xl font-semibold text-slate-50">{lesson.title}</h1>
-              <p className="mt-2 text-sm text-slate-400">{lesson.difficulty} • {lesson.estimatedMinutes} min • {lesson.skills.join(", ")}</p>
+              <h1 className="text-2xl font-semibold text-slate-50">{lesson.title}</h1>
+              <p className="mt-1 text-sm text-slate-400">{lesson.difficulty} • {lesson.estimatedMinutes} min • {lesson.skills.join(", ")}</p>
             </div>
             <Link className="rounded border border-line px-4 py-2 text-sm font-semibold text-slate-300 hover:border-brand-strong/50" href="/learn">Back to Course</Link>
           </div>
+          {hasMultipleStages && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {stages.map((stage, index) => {
+                const completed = isStageCompleted(stage, progress, completedConceptStages) || (stage.id === activeStage?.id && Boolean(result?.correct));
+                const current = index === activeStageIndex;
+                const previousStagesComplete = stages.slice(0, index).every((candidate) => isStageCompleted(candidate, progress, completedConceptStages));
+                return (
+                  <button
+                    className={`rounded-full border px-3 py-1 text-xs ${current ? "border-brand/40 bg-brand/15 text-brand" : completed ? "border-line text-success" : "border-line text-slate-500"}`}
+                    disabled={!previousStagesComplete}
+                    key={stage.id}
+                    onClick={() => moveToStage(index)}
+                    type="button"
+                  >
+                    {stageTitle(stage)} {completed ? "✓" : current ? "●" : "○"}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </header>
 
-      <div className="grid min-h-[calc(100vh-12rem)] grid-cols-1 lg:grid-cols-[360px_1fr]">
-        <aside className="border-b border-line bg-panel lg:border-b-0 lg:border-r">
-          <div className="space-y-5 p-5">
-            <section>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Stage Progress</p>
-              <div className="mt-3 space-y-2">
-                {stages.map((stage, index) => {
-                  const completed = isStageCompleted(stage, progress, completedConceptStages) || (stage.id === activeStage?.id && Boolean(result?.correct));
-                  const current = index === activeStageIndex;
-                  const previousStagesComplete = stages.slice(0, index).every((candidate) => isStageCompleted(candidate, progress, completedConceptStages));
-                  return (
-                    <button
-                      className={`flex w-full items-center gap-2 rounded border px-3 py-2 text-left text-sm ${current ? "border-brand-strong bg-brand/25 text-slate-50" : completed ? "border-line text-slate-300" : "border-transparent text-slate-500"}`}
-                      disabled={!previousStagesComplete}
-                      key={stage.id}
-                      onClick={() => moveToStage(index)}
-                      type="button"
-                    >
-                      {completed ? <CheckCircle2 size={16} className="text-success" /> : <Circle size={16} />}
-                      <span>{index + 1}. {stageTitle(stage)}</span>
-                    </button>
-                  );
-                })}
+      <div
+        className="grid grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-cols-[var(--sidebar-width)_1fr]"
+        style={{ "--sidebar-width": sidebarCollapsed ? "48px" : `${sidebarWidth}px` } as CSSProperties & Record<"--sidebar-width", string>}
+      >
+        <aside className="relative min-h-0 border-b border-line bg-panel lg:border-b-0 lg:border-r">
+          {sidebarCollapsed ? (
+            <button
+              aria-label="Expand task and database panel"
+              className="flex h-full w-full items-start justify-center pt-4 text-slate-400 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand"
+              onClick={() => setSidebarCollapsed(false)}
+              type="button"
+            >
+              <PanelLeftOpen size={20} />
+            </button>
+          ) : (
+            <div className="flex h-full min-h-0 flex-col">
+              <div className="flex items-center justify-between border-b border-line px-3 py-2">
+                <div className="grid flex-1 grid-cols-2 rounded-lg border border-line bg-ink p-1 text-xs">
+                  <button className={`rounded px-2 py-1.5 ${sidebarTab === "task" ? "bg-brand/15 text-brand" : "text-slate-400"}`} onClick={() => setSidebarTab("task")} type="button">Task</button>
+                  <button className={`rounded px-2 py-1.5 ${sidebarTab === "database" ? "bg-brand/15 text-brand" : "text-slate-400"}`} onClick={() => setSidebarTab("database")} type="button">Database</button>
+                </div>
+                <button
+                  aria-label="Collapse task and database panel"
+                  className="ml-2 rounded border border-line p-2 text-slate-400 hover:border-brand/40 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand"
+                  onClick={() => setSidebarCollapsed(true)}
+                  type="button"
+                >
+                  <PanelLeftClose size={16} />
+                </button>
               </div>
-            </section>
-
-            <section className="rounded-lg border border-line bg-elevated p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-cyan">Stage {activeStageIndex + 1} of {stages.length}</p>
-              <h2 className="mt-2 text-lg font-semibold text-slate-50">{activeStage.title}</h2>
-              <div className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</div>
-            </section>
-
-            <section className="rounded-lg border border-line bg-elevated p-4">
-              <button className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-50" onClick={() => setShowTutor((value) => !value)} type="button">
-                <span className="inline-flex items-center gap-2"><BookOpen size={16} /> Lesson Coach</span>
-                <span className="text-cyan">{showTutor ? "Hide" : "Open"}</span>
-              </button>
-              {showTutor && (
-                <p className="mt-3 text-sm leading-6 text-slate-300">
-                  You are working on {activeStage.title}. Focus only on this stage&apos;s request: {activeStage.instructions.split("\n")[0]} {activeChallenge ? "Run a query that returns the same business output, not necessarily the same formatting." : "Read the concept, then continue when it makes sense."}
-                </p>
-              )}
-            </section>
-
-            <section className="rounded-lg border border-line bg-elevated p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-50"><Lightbulb size={16} /> Hints</p>
-                {canRevealMoreHints && (
-                  <button className="rounded border border-line px-3 py-1 text-xs text-slate-300 hover:border-brand-strong/50" onClick={() => setHintCount((value) => value + 1)} type="button">
-                    Show Hint {hintCount + 1}
-                  </button>
+              <div className="min-h-0 flex-1 overflow-auto">
+                {sidebarTab === "task" ? (
+                  <div className="space-y-4 p-4">
+                    <section>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-cyan">Task</p>
+                      <h2 className="mt-2 text-lg font-semibold text-slate-50">{activeStage.title}</h2>
+                      <div className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</div>
+                      <p className="mt-3 text-xs text-slate-500">{lesson.difficulty} • ~{lesson.estimatedMinutes} min</p>
+                    </section>
+                    <section className="rounded-lg border border-line bg-elevated p-3">
+                      <button className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-50" onClick={() => setShowTutor((value) => !value)} type="button">
+                        <span className="inline-flex items-center gap-2"><BookOpen size={16} /> Lesson Coach</span>
+                        <span className="text-cyan">{showTutor ? "Hide" : "Open"}</span>
+                      </button>
+                      {showTutor && (
+                        <p className="mt-3 text-sm leading-6 text-slate-300">
+                          You are working on {activeStage.title}. Focus on this request: {activeStage.instructions.split("\n")[0]} {activeChallenge ? "Run a query that returns the requested business output." : "Read the concept, then continue when it makes sense."}
+                        </p>
+                      )}
+                    </section>
+                    <section className="rounded-lg border border-line bg-elevated p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-50"><Lightbulb size={16} /> Hints</p>
+                        {canRevealMoreHints && (
+                          <button className="rounded border border-line px-3 py-1 text-xs text-slate-300 hover:border-brand-strong/50" onClick={() => setHintCount((value) => value + 1)} type="button">
+                            Show Hint {hintCount + 1}
+                          </button>
+                        )}
+                      </div>
+                      <div className="mt-3 space-y-2 text-sm leading-6 text-slate-300">
+                        {visibleHints.length ? visibleHints.map((hint, index) => <p key={hint}>Hint {index + 1}: {hint}</p>) : <p className="text-slate-500">{activeChallenge ? "Need direction? Reveal one hint at a time." : "No SQL hints needed for this concept stage."}</p>}
+                      </div>
+                    </section>
+                  </div>
+                ) : (
+                  <SchemaExplorer className="h-full bg-panel p-4" schema={schema} />
                 )}
               </div>
-              <div className="mt-3 space-y-2 text-sm leading-6 text-slate-300">
-                {visibleHints.length ? visibleHints.map((hint, index) => <p key={hint}>Hint {index + 1}: {hint}</p>) : <p className="text-slate-500">{activeChallenge ? "Use hints only when you need direction." : "No SQL hints needed for this concept stage."}</p>}
-              </div>
-            </section>
-          </div>
-          <SchemaExplorer schema={schema} />
+              <div
+                aria-label="Resize task and database panel"
+                className="absolute bottom-0 right-[-3px] top-0 hidden w-1 cursor-col-resize bg-transparent hover:bg-brand/40 lg:block"
+                onPointerDown={(event) => startSidebarResize(event, setSidebarWidth)}
+                role="separator"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowLeft") setSidebarWidth((value) => clamp(value - 16, 260, 450));
+                  if (event.key === "ArrowRight") setSidebarWidth((value) => clamp(value + 16, 260, 450));
+                }}
+              />
+            </div>
+          )}
         </aside>
 
-        <section className="flex min-w-0 flex-col">
+        <section className="flex min-h-[640px] min-w-0 flex-col overflow-hidden lg:min-h-0">
           {error && <div className="border-b border-red-900/60 bg-red-950/40 px-6 py-3 text-sm text-red-100">{error}</div>}
           {progressMessage && <div className="border-b border-cyan/30 bg-cyan/10 px-6 py-3 text-sm text-cyan">{progressMessage}</div>}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-elevated px-6 py-3">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line bg-elevated px-5 py-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{activeChallenge ? "SQL Editor" : "Concept"}</p>
               <p className="mt-1 text-xs text-slate-500">{course.shortTitle} • {stageTitle(activeStage)}</p>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              {activeChallenge && <QueryStatus result={result} />}
+            <div className="flex flex-wrap items-center gap-2">
+              {activeChallenge && executionStatus(result, running, error) && <span className={`text-xs ${statusTone(result, running, error)}`}>{executionStatus(result, running, error)}</span>}
               {activeChallenge && (
                 <>
                   <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-300 hover:border-brand-strong/50" onClick={() => setQuery(activeStage.starterSql ?? "")} type="button">
@@ -246,21 +315,46 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
           </div>
 
           {activeChallenge ? (
-            <>
-          <SqlEditor value={query} onChange={setQuery} onRun={runQuery} />
-              {result?.success && result.correct && (
-                <div className="border-b border-success/40 bg-success/10 px-6 py-3 text-sm text-green-100">
-                  Correct. {activeStage.title} is complete. {activeStageIndex < stages.length - 1 ? "Continue when you are ready for the next stage." : lesson.interpretationPrompt}
+            <div className="flex min-h-0 flex-1 flex-col bg-editor">
+              <SqlEditor className="min-h-[180px] shrink-0 border-b border-line" style={{ height: editorHeight }} value={query} onChange={setQuery} onRun={runQuery} />
+              <div
+                aria-label="Resize SQL editor and results"
+                className="h-2 shrink-0 cursor-row-resize border-y border-line bg-panel hover:bg-brand/20 focus-visible:ring-2 focus-visible:ring-brand"
+                onDoubleClick={() => setEditorPercent(52)}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowUp") setEditorPercent((value) => clamp(value - 5, 36, 68));
+                  if (event.key === "ArrowDown") setEditorPercent((value) => clamp(value + 5, 36, 68));
+                  if (event.key === "Home") setEditorPercent(36);
+                  if (event.key === "End") setEditorPercent(68);
+                }}
+                onPointerDown={(event) => startEditorResize(event, setEditorPercent)}
+                role="separator"
+                tabIndex={0}
+              />
+              <div className="min-h-[180px] flex-1 overflow-hidden" style={{ height: resultsHeight }}>
+                <div className="flex h-full min-h-0 flex-col bg-editor text-slate-200">
+                  <div className="flex shrink-0 items-center justify-between border-b border-line px-5 py-2">
+                    <div className="flex gap-1 text-xs font-semibold uppercase tracking-wider">
+                      <ResultTab active={resultTab === "results"} onClick={() => setResultTab("results")}>Results</ResultTab>
+                      <ResultTab active={resultTab === "feedback"} onClick={() => setResultTab("feedback")}>Feedback</ResultTab>
+                      <ResultTab active={resultTab === "breakdown"} disabled={!result?.success} onClick={() => setResultTab("breakdown")}>Query Breakdown</ResultTab>
+                    </div>
+                    {result?.success && <span className="text-xs text-slate-500">{result.rowCount} rows</span>}
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-auto">
+                    {resultTab === "results" && <ResultsTable result={result} />}
+                    {resultTab === "feedback" && <FeedbackPanel activeStage={activeStage} lessonPrompt={lesson.interpretationPrompt} result={result} />}
+                    {resultTab === "breakdown" && (
+                      <ol className="space-y-2 p-5 text-sm leading-6 text-slate-300">
+                        {explainQuery(query, result, activeStage, activeChallenge).map((line) => <li key={line}>{line}</li>)}
+                      </ol>
+                    )}
+                  </div>
                 </div>
-              )}
-              {result?.success && !result.correct && (
-                <div className="border-b border-amber/30 bg-amber/10 px-6 py-3 text-sm text-amber">
-                  {result.message ?? "Your SQL ran, but it does not match the active exercise yet."}
-                </div>
-              )}
-            </>
+              </div>
+            </div>
           ) : (
-            <div className="flex min-h-[320px] items-center justify-center bg-editor px-6 py-10 text-center">
+            <div className="flex min-h-0 flex-1 items-center justify-center bg-editor px-6 py-10 text-center">
               <div className="max-w-xl">
                 <p className="font-mono text-xs uppercase tracking-wider text-cyan">Concept Stage</p>
                 <h2 className="mt-3 text-2xl font-semibold text-white">{activeStage.title}</h2>
@@ -273,23 +367,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               </div>
             </div>
           )}
-
-          <div className="grid min-h-[320px] grid-cols-1 bg-editor text-slate-200 xl:grid-cols-[1fr_360px]">
-            <div className="min-w-0">
-              <div className="border-b border-line px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Results</div>
-              <ResultsTable result={activeChallenge ? result : null} />
-            </div>
-            <aside className="border-t border-line p-5 xl:border-l xl:border-t-0">
-              <button className="text-sm font-semibold text-cyan hover:text-white disabled:text-slate-400" disabled={!result?.success} onClick={() => setShowExplanation((value) => !value)} type="button">
-                Query Breakdown
-              </button>
-              {showExplanation && (
-                <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-300">
-                  {explainQuery(query, result, activeStage, activeChallenge).map((line) => <li key={line}>{line}</li>)}
-                </ol>
-              )}
-            </aside>
-          </div>
         </section>
       </div>
     </main>
@@ -307,6 +384,129 @@ function storageKey(userId: string, lessonId: string) {
 
 function conceptStorageKey(userId: string) {
   return `queryright:lesson:${userId}:completed-concepts`;
+}
+
+function workspaceSplitKey(userId: string) {
+  return `queryright:workspace:${userId}:editor-results-split`;
+}
+
+function sidebarWidthKey(userId: string) {
+  return `queryright:workspace:${userId}:sidebar-width`;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function startSidebarResize(event: PointerEvent<HTMLDivElement>, setSidebarWidth: Dispatch<SetStateAction<number>>) {
+  event.preventDefault();
+  const startX = event.clientX;
+  setSidebarWidth((initialWidth) => {
+    function handleMove(moveEvent: globalThis.PointerEvent) {
+      setSidebarWidth(clamp(initialWidth + moveEvent.clientX - startX, 260, 450));
+    }
+
+    function handleUp() {
+      document.removeEventListener("pointermove", handleMove);
+      document.removeEventListener("pointerup", handleUp);
+    }
+
+    document.addEventListener("pointermove", handleMove);
+    document.addEventListener("pointerup", handleUp);
+    return initialWidth;
+  });
+}
+
+function startEditorResize(event: PointerEvent<HTMLDivElement>, setEditorPercent: Dispatch<SetStateAction<number>>) {
+  event.preventDefault();
+  const container = event.currentTarget.parentElement;
+  if (!container) return;
+  const rect = container.getBoundingClientRect();
+
+  function handleMove(moveEvent: globalThis.PointerEvent) {
+    const next = ((moveEvent.clientY - rect.top) / rect.height) * 100;
+    setEditorPercent(clamp(next, 36, 68));
+  }
+
+  function handleUp() {
+    document.removeEventListener("pointermove", handleMove);
+    document.removeEventListener("pointerup", handleUp);
+  }
+
+  document.addEventListener("pointermove", handleMove);
+  document.addEventListener("pointerup", handleUp);
+}
+
+function ResultTab({
+  active,
+  children,
+  disabled = false,
+  onClick,
+}: {
+  active: boolean;
+  children: ReactNode;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={`rounded px-3 py-1.5 text-xs ${active ? "bg-brand/15 text-brand" : "text-slate-400 hover:bg-elevated hover:text-slate-50"} disabled:cursor-not-allowed disabled:text-slate-600`}
+      disabled={disabled}
+      onClick={onClick}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
+function FeedbackPanel({ activeStage, lessonPrompt, result }: { activeStage: LessonStageDefinition; lessonPrompt: string; result: QueryResult | null }) {
+  if (!result) {
+    return <div className="p-5 text-sm text-slate-500">Run your query to see feedback.</div>;
+  }
+
+  if (!result.success) {
+    return (
+      <div className="p-5">
+        <div className="mb-2 text-sm font-semibold text-red-300">Query error</div>
+        <div className="rounded border border-red-900/60 bg-red-950/30 p-3 text-sm text-red-100">{result.message ?? "The query could not be completed."}</div>
+      </div>
+    );
+  }
+
+  if (result.correct) {
+    return (
+      <div className="p-5 text-sm leading-6 text-green-100">
+        <p className="font-semibold text-success">Correct.</p>
+        <p className="mt-2">{activeStage.title} is complete.</p>
+        <p className="mt-2 text-slate-300">{lessonPrompt}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-5 text-sm leading-6 text-amber">
+      <p className="font-semibold">Almost there.</p>
+      <p className="mt-2">{result.message ?? "Your SQL ran, but it does not match the active exercise yet."}</p>
+    </div>
+  );
+}
+
+function executionStatus(result: QueryResult | null, running: boolean, error: string | null) {
+  if (running) return "Running query...";
+  if (error) return "Query error";
+  if (!result) return null;
+  if (!result.success) return "Query error";
+  if (result.correct) return `Correct · ${result.rowCount} rows`;
+  return `Executed · ${result.rowCount} rows`;
+}
+
+function statusTone(result: QueryResult | null, running: boolean, error: string | null) {
+  if (running) return "text-cyan";
+  if (error || result?.success === false) return "text-red-300";
+  if (result?.correct) return "text-success";
+  if (result?.success) return "text-amber";
+  return "text-slate-500";
 }
 
 function stageTitle(stage: LessonStageDefinition) {
