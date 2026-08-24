@@ -11,7 +11,9 @@ import { api, type Challenge, type QueryResult, type SchemaTable } from "@/lib/a
 import { useAuth } from "@/lib/auth";
 import { getLessonById, getLessonStages, type LessonStageDefinition } from "@/lib/course";
 import { getProgress, recordAttempt, type ProgressRow } from "@/lib/progress";
-import { lastSqlWorkspaceKey, lessonDraftKey } from "@/lib/sql-editor-state";
+import { lastSqlWorkspaceKey, lessonDraftKey, lessonHintKey, lessonResultKey, lessonResultTabKey, lessonTutorKey } from "@/lib/sql-editor-state";
+
+type ResultTabId = "results" | "feedback" | "breakdown";
 
 export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const { user } = useAuth();
@@ -21,6 +23,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [schema, setSchema] = useState<SchemaTable[]>([]);
   const [progress, setProgress] = useState<ProgressRow[]>([]);
   const [activeStageIndex, setActiveStageIndex] = useState(0);
+  const [frontierStageIndex, setFrontierStageIndex] = useState(0);
+  const [initializedFrontierKey, setInitializedFrontierKey] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<QueryResult | null>(null);
   const [hintCount, setHintCount] = useState(0);
@@ -34,7 +38,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [editorPercent, setEditorPercent] = useState(52);
-  const [resultTab, setResultTab] = useState<"results" | "feedback" | "breakdown">("results");
+  const [resultTab, setResultTab] = useState<ResultTabId>("results");
+  const [completionReadyStageId, setCompletionReadyStageId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -49,30 +54,50 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   }, [user]);
 
   useEffect(() => {
-    if (!lessonBundle || !user) return;
+    if (!lessonBundle || !user || loading || !stages.length) return;
+    const initializationKey = `${user.id}:${lessonId}`;
+    if (initializedFrontierKey === initializationKey) return;
     window.localStorage.setItem(lastSqlWorkspaceKey(user.id), `/learn/lesson/${lessonId}`);
-    const saved = window.localStorage.getItem(storageKey(user.id, lessonId));
+    const saved = window.localStorage.getItem(frontierStorageKey(user.id, lessonId));
     const savedConcepts = JSON.parse(window.localStorage.getItem(conceptStorageKey(user.id)) ?? "[]") as string[];
-    setCompletedConceptStages(new Set(savedConcepts));
+    const completedConceptSet = new Set(savedConcepts);
+    setCompletedConceptStages(completedConceptSet);
     const savedIndex = saved ? Number(saved) : Number.NaN;
-    if (Number.isInteger(savedIndex) && savedIndex >= 0 && savedIndex < stages.length) {
-      setActiveStageIndex(savedIndex);
-      return;
-    }
-    const nextIndex = stages.findIndex((stage) => !isStageCompleted(stage, progress, new Set(savedConcepts)));
-    setActiveStageIndex(nextIndex >= 0 ? nextIndex : Math.max(0, stages.length - 1));
-  }, [lessonBundle, lessonId, progress, stages, user]);
+    const progressFrontierIndex = findFrontierStageIndex(stages, progress, completedConceptSet);
+    const savedFrontierIndex =
+      Number.isInteger(savedIndex) && savedIndex >= 0 && savedIndex < stages.length && isStageUnlocked(savedIndex, stages, progress, completedConceptSet, progressFrontierIndex)
+        ? savedIndex
+        : progressFrontierIndex;
+    const nextFrontierIndex = Math.max(progressFrontierIndex, savedFrontierIndex);
+    setFrontierStageIndex(nextFrontierIndex);
+    setActiveStageIndex(nextFrontierIndex);
+    window.localStorage.setItem(frontierStorageKey(user.id, lessonId), String(nextFrontierIndex));
+    setInitializedFrontierKey(initializationKey);
+  }, [initializedFrontierKey, lessonBundle, lessonId, loading, progress, stages, user]);
 
   useEffect(() => {
     const activeStage = stages[activeStageIndex];
+    setProgressMessage(null);
+    setCompletionReadyStageId(null);
+    if (activeStage && user) {
+      const restoredResult = parseStoredResult(window.localStorage.getItem(lessonResultKey(user.id, lessonId, activeStage.id)));
+      const restoredHints = Number(window.localStorage.getItem(lessonHintKey(user.id, lessonId, activeStage.id)));
+      const restoredResultTab = parseStoredResultTab(window.localStorage.getItem(lessonResultTabKey(user.id, lessonId, activeStage.id)), restoredResult);
+      setResult(restoredResult);
+      setHintCount(Number.isFinite(restoredHints) ? clamp(restoredHints, 0, activeStage.hints.length) : 0);
+      setShowTutor(window.localStorage.getItem(lessonTutorKey(user.id, lessonId, activeStage.id)) === "true");
+      setResultTab(restoredResultTab);
+      const draft = window.localStorage.getItem(lessonDraftKey(user.id, lessonId, activeStage.id));
+      if (draft !== null) setQuery(draft);
+      else if (!activeStage.carryForwardQuery) setQuery(activeStage.starterSql ?? "");
+      return;
+    }
     setResult(null);
     setHintCount(0);
     setShowTutor(false);
-    setProgressMessage(null);
     setResultTab("results");
     if (activeStage && !activeStage.carryForwardQuery) {
-      const draft = user ? window.localStorage.getItem(lessonDraftKey(user.id, lessonId, activeStage.id)) : null;
-      setQuery(draft ?? activeStage.starterSql ?? "");
+      setQuery(activeStage.starterSql ?? "");
     }
   }, [activeStageIndex, lessonId, stages, user]);
 
@@ -81,6 +106,30 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     if (!user || !activeStage || !activeStage.challengeId || result?.correct) return;
     window.localStorage.setItem(lessonDraftKey(user.id, lessonId, activeStage.id), query);
   }, [activeStageIndex, lessonId, query, result?.correct, stages, user]);
+
+  useEffect(() => {
+    const activeStage = stages[activeStageIndex];
+    if (!user || !activeStage) return;
+    window.localStorage.setItem(lessonHintKey(user.id, lessonId, activeStage.id), String(hintCount));
+  }, [activeStageIndex, hintCount, lessonId, stages, user]);
+
+  useEffect(() => {
+    const activeStage = stages[activeStageIndex];
+    if (!user || !activeStage) return;
+    window.localStorage.setItem(lessonTutorKey(user.id, lessonId, activeStage.id), String(showTutor));
+  }, [activeStageIndex, lessonId, showTutor, stages, user]);
+
+  useEffect(() => {
+    const activeStage = stages[activeStageIndex];
+    if (!user || !activeStage) return;
+    window.localStorage.setItem(lessonResultTabKey(user.id, lessonId, activeStage.id), resultTab);
+  }, [activeStageIndex, lessonId, resultTab, stages, user]);
+
+  useEffect(() => {
+    const activeStage = stages[activeStageIndex];
+    if (!user || !activeStage || !activeStage.challengeId || !result) return;
+    window.localStorage.setItem(lessonResultKey(user.id, lessonId, activeStage.id), JSON.stringify(result));
+  }, [activeStageIndex, lessonId, result, stages, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -108,7 +157,17 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const activeChallenge = activeStage?.challengeId ? challenges.find((challenge) => challenge.id === activeStage.challengeId) ?? null : null;
   const visibleHints = activeStage?.hints.slice(0, hintCount) ?? [];
   const canRevealMoreHints = Boolean(activeStage && hintCount < activeStage.hints.length);
-  const allStagesCompleted = stages.every((stage) => isStageCompleted(stage, progress, completedConceptStages) || (stage.id === activeStage?.id && result?.correct));
+  const activeStageStoredCompleted = Boolean(activeStage && isStageCompleted(activeStage, progress, completedConceptStages));
+  const activeStageCompleted = activeStageStoredCompleted || Boolean(result?.correct);
+  const lessonCompletedFromHistory = stages.length > 0 && stages.every((stage) => isStageCompleted(stage, progress, completedConceptStages));
+  const isFinalStage = activeStageIndex === stages.length - 1;
+  const isReviewingPastStage = activeStageIndex < frontierStageIndex && !lessonCompletedFromHistory;
+  const taskContextLabel = stages.length ? `Task ${activeStageIndex + 1} of ${stages.length}` : "Task";
+  const frontierTaskLabel = `Task ${frontierStageIndex + 1}`;
+  const shouldShowPreviousTask = activeStageIndex > 0;
+  const shouldShowReturnToFrontier = isReviewingPastStage;
+  const shouldShowCompleteLesson = Boolean(completionReadyStageId && completionReadyStageId === activeStage?.id && isFinalStage);
+  const shouldShowLessonCompleted = isFinalStage && lessonCompletedFromHistory && !shouldShowCompleteLesson;
 
   async function runQuery() {
     if (!activeChallenge || !activeStage) return;
@@ -121,10 +180,13 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
       setResultTab("results");
       if (editorPercent > 64) setEditorPercent(56);
       if (user) {
+        window.localStorage.setItem(lessonDraftKey(user.id, lessonId, activeStage.id), query);
+        window.localStorage.setItem(lessonResultKey(user.id, lessonId, activeStage.id), JSON.stringify(queryResult));
         await recordAttempt(user, activeChallenge.id, query, queryResult);
         const progressData = await getProgress(user);
         setProgress(progressData);
         if (queryResult.correct) setProgressMessage(`${activeStage.title} complete.`);
+        if (queryResult.correct && isFinalStage && !lessonCompletedFromHistory && !isReviewingPastStage) setCompletionReadyStageId(activeStage.id);
       }
     } catch (caught) {
       setResult(null);
@@ -136,6 +198,10 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
 
   function continueToNextStage() {
     if (!activeStage || !user) return;
+    if (isReviewingPastStage) {
+      setActiveStageIndex(frontierStageIndex);
+      return;
+    }
     if (!activeStage.challengeId) {
       const nextConcepts = new Set(completedConceptStages);
       nextConcepts.add(activeStage.id);
@@ -143,21 +209,32 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
       window.localStorage.setItem(conceptStorageKey(user.id), JSON.stringify([...nextConcepts]));
     }
     const nextIndex = Math.min(activeStageIndex + 1, stages.length - 1);
-    window.localStorage.setItem(storageKey(user.id, lessonId), String(nextIndex));
+    setFrontierStageIndex(nextIndex);
+    window.localStorage.setItem(frontierStorageKey(user.id, lessonId), String(nextIndex));
     setActiveStageIndex(nextIndex);
   }
 
   function moveToStage(index: number) {
-    if (!user) return;
+    if (!user || !isStageUnlocked(index, stages, progress, completedConceptStages, frontierStageIndex)) return;
     const stage = stages[index];
     if (!stage) return;
-    const previousStagesComplete = stages.slice(0, index).every((candidate) => isStageCompleted(candidate, progress, completedConceptStages));
-    if (!previousStagesComplete) return;
-    window.localStorage.setItem(storageKey(user.id, lessonId), String(index));
+    if (index > frontierStageIndex) {
+      setFrontierStageIndex(index);
+      window.localStorage.setItem(frontierStorageKey(user.id, lessonId), String(index));
+    }
     setActiveStageIndex(index);
   }
 
-  const canContinue = Boolean(activeStage && (!activeStage.challengeId || result?.correct));
+  function moveToPreviousStage() {
+    if (activeStageIndex <= 0) return;
+    setActiveStageIndex(activeStageIndex - 1);
+  }
+
+  function returnToFrontierStage() {
+    setActiveStageIndex(frontierStageIndex);
+  }
+
+  const canContinue = Boolean(activeStage && (!activeStage.challengeId || result?.correct || (lessonCompletedFromHistory && activeStageStoredCompleted)));
   const editorHeight = `${editorPercent}%`;
   const resultsHeight = `${100 - editorPercent}%`;
   const hasMultipleStages = stages.length > 1;
@@ -179,11 +256,11 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               {stages.map((stage, index) => {
                 const completed = isStageCompleted(stage, progress, completedConceptStages) || (stage.id === activeStage?.id && Boolean(result?.correct));
                 const current = index === activeStageIndex;
-                const previousStagesComplete = stages.slice(0, index).every((candidate) => isStageCompleted(candidate, progress, completedConceptStages));
+                const unlocked = isStageUnlocked(index, stages, progress, completedConceptStages, frontierStageIndex);
                 return (
                   <button
                     className={`rounded-full border px-3 py-1 text-xs ${current ? "border-brand/40 bg-brand/15 text-brand" : completed ? "border-line text-success" : "border-line text-slate-500"}`}
-                    disabled={!previousStagesComplete}
+                    disabled={!unlocked}
                     key={stage.id}
                     onClick={() => moveToStage(index)}
                     type="button"
@@ -286,28 +363,41 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line bg-elevated px-5 py-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{activeChallenge ? "SQL Editor" : "Concept"}</p>
-              <p className="mt-1 text-xs text-slate-500">{course.shortTitle} • {stageTitle(activeStage)}</p>
+              <p className="mt-1 text-xs text-slate-500">{course.shortTitle} • {stageTitle(activeStage)} • {taskContextLabel}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {activeChallenge && executionStatus(result, running, error) && <span className={`text-xs ${statusTone(result, running, error)}`}>{executionStatus(result, running, error)}</span>}
+              {activeChallenge && !shouldShowLessonCompleted && executionStatus(result, running, error, activeStageStoredCompleted) && <span className={`text-xs ${statusTone(result, running, error, activeStageStoredCompleted)}`}>{executionStatus(result, running, error, activeStageStoredCompleted)}</span>}
+              {shouldShowLessonCompleted && <span className="text-xs text-success">✓ Lesson Completed</span>}
+              {shouldShowPreviousTask && (
+                <button aria-label="Previous task" className="inline-flex h-9 items-center rounded border border-transparent px-3 text-sm text-slate-400 hover:border-line hover:text-slate-100 focus-visible:ring-2 focus-visible:ring-brand" onClick={moveToPreviousStage} type="button">
+                  ← Previous Task
+                </button>
+              )}
               {activeChallenge && (
                 <>
-                  <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-300 hover:border-brand-strong/50" onClick={() => setQuery(activeStage.starterSql ?? "")} type="button">
-                    <RotateCcw size={15} />
-                    Reset
-                  </button>
-                  <button className="inline-flex h-9 items-center gap-2 rounded bg-brand px-4 text-sm font-semibold text-slate-950 disabled:cursor-wait disabled:bg-slate-700 disabled:text-slate-400" disabled={running} onClick={runQuery} type="button">
+                  {!isReviewingPastStage && (
+                    <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-300 hover:border-brand-strong/50" onClick={() => setQuery(activeStage.starterSql ?? "")} type="button">
+                      <RotateCcw size={15} />
+                      Reset
+                    </button>
+                  )}
+                  <button className={`inline-flex h-9 items-center gap-2 rounded px-4 text-sm font-semibold disabled:cursor-wait disabled:bg-slate-700 disabled:text-slate-400 ${activeStageCompleted ? "border border-line text-slate-200 hover:border-brand-strong/50" : "bg-brand text-slate-950"}`} disabled={running} onClick={runQuery} type="button">
                     <Play size={16} fill="currentColor" />
-                    {running ? "Running..." : result?.correct ? "Run Again" : "Run Query"}
+                    {running ? "Running..." : activeStageCompleted ? "Run Again" : "Run Query"}
                   </button>
                 </>
               )}
-              {canContinue && activeStageIndex < stages.length - 1 && (
+              {shouldShowReturnToFrontier && (
+                <button aria-label={`Return to ${frontierTaskLabel.toLowerCase()}`} className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={returnToFrontierStage} type="button">
+                  Return to {frontierTaskLabel} →
+                </button>
+              )}
+              {!shouldShowReturnToFrontier && canContinue && activeStageIndex < stages.length - 1 && (
                 <button className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={continueToNextStage} type="button">
                   Next Task →
                 </button>
               )}
-              {allStagesCompleted && activeStageIndex === stages.length - 1 && (
+              {shouldShowCompleteLesson && (
                 <Link className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" href="/learn">Complete Lesson →</Link>
               )}
             </div>
@@ -358,11 +448,24 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                 <p className="font-mono text-xs uppercase tracking-wider text-cyan">Concept Stage</p>
                 <h2 className="mt-3 text-2xl font-semibold text-white">{activeStage.title}</h2>
                 <p className="mt-4 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</p>
-                {activeStageIndex < stages.length - 1 && (
-                  <button className="mt-6 rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={continueToNextStage} type="button">
-                    Continue to {stageTitle(stages[activeStageIndex + 1])}
-                  </button>
-                )}
+                <div className="mt-6 flex flex-wrap justify-center gap-2">
+                  {shouldShowPreviousTask && (
+                    <button aria-label="Previous task" className="rounded border border-line px-4 py-2 text-sm font-semibold text-slate-300 hover:border-brand-strong/50" onClick={moveToPreviousStage} type="button">
+                      ← Previous Task
+                    </button>
+                  )}
+                  {shouldShowReturnToFrontier ? (
+                    <button aria-label={`Return to ${frontierTaskLabel.toLowerCase()}`} className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={returnToFrontierStage} type="button">
+                      Return to {frontierTaskLabel} →
+                    </button>
+                  ) : activeStageIndex < stages.length - 1 ? (
+                    <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={continueToNextStage} type="button">
+                      Continue to {stageTitle(stages[activeStageIndex + 1])}
+                    </button>
+                  ) : shouldShowLessonCompleted ? (
+                    <span className="text-sm font-semibold text-success">✓ Lesson Completed</span>
+                  ) : null}
+                </div>
               </div>
             </div>
           )}
@@ -377,7 +480,18 @@ function isStageCompleted(stage: LessonStageDefinition, progress: ProgressRow[],
   return progress.some((row) => row.challenge_id === stage.challengeId && row.status === "completed");
 }
 
-function storageKey(userId: string, lessonId: string) {
+function isStageUnlocked(index: number, stages: LessonStageDefinition[], progress: ProgressRow[], completedConceptStages: Set<string>, frontierStageIndex: number) {
+  if (index <= frontierStageIndex) return true;
+  return stages.slice(0, index).every((stage) => isStageCompleted(stage, progress, completedConceptStages));
+}
+
+function findFrontierStageIndex(stages: LessonStageDefinition[], progress: ProgressRow[], completedConceptStages: Set<string>) {
+  const nextIndex = stages.findIndex((stage) => !isStageCompleted(stage, progress, completedConceptStages));
+  return nextIndex >= 0 ? nextIndex : Math.max(0, stages.length - 1);
+}
+
+function frontierStorageKey(userId: string, lessonId: string) {
+  // Preserve the existing key while treating its value as the resume frontier.
   return `queryright:lesson:${userId}:${lessonId}:active-stage`;
 }
 
@@ -391,6 +505,23 @@ function workspaceSplitKey(userId: string) {
 
 function sidebarWidthKey(userId: string) {
   return `queryright:workspace:${userId}:sidebar-width`;
+}
+
+function parseStoredResult(value: string | null): QueryResult | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value) as Partial<QueryResult>;
+    if (typeof parsed.success !== "boolean" || typeof parsed.correct !== "boolean" || !Array.isArray(parsed.columns) || !Array.isArray(parsed.rows)) return null;
+    return parsed as QueryResult;
+  } catch {
+    return null;
+  }
+}
+
+function parseStoredResultTab(value: string | null, result: QueryResult | null): ResultTabId {
+  if (value === "breakdown" && result?.success) return value;
+  if (value === "feedback" || value === "results") return value;
+  return "results";
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -491,19 +622,21 @@ function FeedbackPanel({ activeStage, lessonPrompt, result }: { activeStage: Les
   );
 }
 
-function executionStatus(result: QueryResult | null, running: boolean, error: string | null) {
+function executionStatus(result: QueryResult | null, running: boolean, error: string | null, completed: boolean) {
   if (running) return "Running query...";
   if (error) return "Query error";
+  if (completed && !result) return "✓ Completed";
   if (!result) return null;
   if (!result.success) return "Query error";
   if (result.correct) return `Correct · ${result.rowCount} rows`;
+  if (completed) return "✓ Completed";
   return `Executed · ${result.rowCount} rows`;
 }
 
-function statusTone(result: QueryResult | null, running: boolean, error: string | null) {
+function statusTone(result: QueryResult | null, running: boolean, error: string | null, completed: boolean) {
   if (running) return "text-cyan";
   if (error || result?.success === false) return "text-red-300";
-  if (result?.correct) return "text-success";
+  if (result?.correct || completed) return "text-success";
   if (result?.success) return "text-amber";
   return "text-slate-500";
 }
