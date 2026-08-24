@@ -2,6 +2,9 @@ import Link from "next/link";
 import { ArrowRight, BarChart3, Database, ShieldCheck, TerminalSquare } from "lucide-react";
 import { AuthHashRedirect } from "@/components/AuthHashRedirect";
 import { SqlTypewriter } from "@/components/animations/SqlTypewriter";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { LandingAuthModal } from "@/components/landing/LandingAuthModal";
+import { LandingAuthTrigger } from "@/components/landing/LandingAuthTrigger";
 import { PublicHeader } from "@/components/PublicHeader";
 
 const roleCards = [
@@ -14,6 +17,7 @@ export default function LandingPage() {
     <main className="min-h-screen bg-ink text-slate-50" id="main-content">
       <AuthHashRedirect />
       <PublicHeader />
+      <LandingAuthModal />
 
       <section className="mx-auto grid max-w-7xl gap-10 px-5 pb-20 pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
         <div>
@@ -23,10 +27,10 @@ export default function LandingPage() {
             Build real SQL skills by solving realistic business problems against a hands-on SQLBank training database directly in your browser.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-brand/80" href="/signup">
+            <LandingAuthTrigger className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-brand/80" mode="signup" testId="landing-hero-start-learning-trigger">
               Start Learning Free
               <ArrowRight size={17} />
-            </Link>
+            </LandingAuthTrigger>
             <a className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-3 text-sm font-semibold text-slate-300 hover:border-brand-strong/50" href="#product">
               See How It Works
             </a>
@@ -89,26 +93,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20" id="how-it-works">
-        <h2 className="text-3xl font-semibold text-slate-50">How it works</h2>
-        <div className="mt-8 grid gap-4 md:grid-cols-5">
-          {["Choose your goal", "Solve SQL challenges", "Query real databases", "Get immediate feedback", "Build real-world ability"].map((step, index) => (
-            <div className="rounded border border-line bg-panel p-5" key={step}>
-              <p className="font-mono text-sm text-cyan">0{index + 1}</p>
-              <p className="mt-4 font-semibold text-slate-50">{step}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <HowItWorks />
 
       <section className="mx-auto max-w-4xl px-5 py-20 text-center">
         <TerminalSquare className="mx-auto text-cyan" size={30} />
         <h2 className="mt-5 text-4xl font-semibold text-slate-50">Stop watching SQL. Start writing it.</h2>
         <p className="mt-4 text-slate-300">Your first SQL challenge is ready.</p>
-        <Link className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-slate-950" href="/signup">
+        <LandingAuthTrigger className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-slate-950" mode="signup" testId="landing-final-start-learning-trigger">
           Start Learning Free
           <ArrowRight size={17} />
-        </Link>
+        </LandingAuthTrigger>
       </section>
 
       <footer className="border-t border-line px-5 py-8 text-sm text-slate-500">
@@ -118,8 +112,8 @@ export default function LandingPage() {
             <a href="/#product">Product</a>
             <a href="/#how-it-works">How It Works</a>
             <a href="/#paths">Learning Paths</a>
-            <Link href="/login">Login</Link>
-            <Link href="/signup">Sign Up</Link>
+            <LandingAuthTrigger className="text-left" mode="login" testId="landing-footer-login-trigger">Login</LandingAuthTrigger>
+            <LandingAuthTrigger className="text-left" mode="signup" testId="landing-footer-signup-trigger">Sign Up</LandingAuthTrigger>
           </div>
         </div>
       </footer>

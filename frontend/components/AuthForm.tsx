@@ -8,7 +8,17 @@ import { authRedirectUrl, isSupabaseConfigured, requireSupabase } from "@/lib/su
 
 type Mode = "login" | "signup" | "forgot";
 
-export function AuthForm({ mode }: { mode: Mode }) {
+type AuthFormVariant = "page" | "modal";
+
+export function AuthForm({
+  mode,
+  onModeChange,
+  variant = "page",
+}: {
+  mode: Mode;
+  onModeChange?: (mode: "login" | "signup") => void;
+  variant?: AuthFormVariant;
+}) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -109,12 +119,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const title = mode === "signup" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Welcome back";
   const passwordChecks = getPasswordChecks(password);
 
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-ink px-5 py-12 text-slate-50">
+  const authContent = (
+    <>
       {captchaRequired && (
         <Script src="https://js.hcaptcha.com/1/api.js" strategy="afterInteractive" />
       )}
-      <section className="w-full max-w-md rounded-lg border border-line bg-panel p-8 shadow-2xl shadow-slate-900/10">
+      <section className={variant === "page" ? "w-full max-w-md rounded-lg border border-line bg-panel p-8 shadow-2xl shadow-slate-900/10" : "w-full"}>
         <div className="mb-8 text-center">
           <BrandMark />
           <h1 className="mt-7 text-2xl font-semibold text-slate-50">{title}</h1>
@@ -137,7 +147,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 First Name
                 <input
                   autoComplete="given-name"
-                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-50 focus:border-brand-strong"
+                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-base text-slate-50 focus:border-brand-strong sm:text-sm"
                   onChange={(event) => setFirstName(event.target.value)}
                   required
                   type="text"
@@ -148,7 +158,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 Last Name
                 <input
                   autoComplete="family-name"
-                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-50 focus:border-brand-strong"
+                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-base text-slate-50 focus:border-brand-strong sm:text-sm"
                   onChange={(event) => setLastName(event.target.value)}
                   required
                   type="text"
@@ -162,7 +172,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             Email
             <input
               autoComplete="email"
-              className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-50 focus:border-brand-strong"
+              className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-base text-slate-50 focus:border-brand-strong sm:text-sm"
               onChange={(event) => setEmail(event.target.value)}
               required
               type="email"
@@ -175,7 +185,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
               Password
               <input
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-50 focus:border-brand-strong"
+                className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-base text-slate-50 focus:border-brand-strong sm:text-sm"
                 minLength={mode === "signup" ? 10 : 6}
                 onChange={(event) => setPassword(event.target.value)}
                 required
@@ -191,7 +201,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 Confirm Password
                 <input
                   autoComplete="new-password"
-                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-slate-50 focus:border-brand-strong"
+                  className="mt-2 h-11 w-full rounded border border-line bg-elevated px-3 text-base text-slate-50 focus:border-brand-strong sm:text-sm"
                   minLength={10}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   required
@@ -234,16 +244,44 @@ export function AuthForm({ mode }: { mode: Mode }) {
           {mode === "login" && (
             <>
               <Link href="/forgot-password" className="text-cyan hover:text-slate-50">Forgot password?</Link>
-              <div className="mt-4">Don&apos;t have an account? <Link className="text-cyan hover:text-slate-50" href="/signup">Create one</Link></div>
+              <div className="mt-4">
+                Don&apos;t have an account?{" "}
+                {onModeChange ? (
+                  <button className="text-cyan hover:text-slate-50" onClick={() => onModeChange("signup")} type="button">Create one</button>
+                ) : (
+                  <Link className="text-cyan hover:text-slate-50" href="/signup">Create one</Link>
+                )}
+              </div>
             </>
           )}
-          {mode === "signup" && <>Already have an account? <Link className="text-cyan hover:text-slate-50" href="/login">Log in</Link></>}
+          {mode === "signup" && (
+            <>
+              Already have an account?{" "}
+              {onModeChange ? (
+                <button className="text-cyan hover:text-slate-50" onClick={() => onModeChange("login")} type="button">Log in</button>
+              ) : (
+                <Link className="text-cyan hover:text-slate-50" href="/login">Log in</Link>
+              )}
+            </>
+          )}
           {mode === "forgot" && <Link className="text-cyan hover:text-slate-50" href="/login">Back to login</Link>}
-          <div className="mt-4">
-            <Link className="text-slate-500 hover:text-slate-50" href="/">Back to home page</Link>
-          </div>
+          {variant === "page" && (
+            <div className="mt-4">
+              <Link className="text-slate-500 hover:text-slate-50" href="/">Back to home page</Link>
+            </div>
+          )}
         </div>
       </section>
+    </>
+  );
+
+  if (variant === "modal") {
+    return authContent;
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-ink px-5 py-12 text-slate-50">
+      {authContent}
     </main>
   );
 }

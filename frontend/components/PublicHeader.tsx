@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
+import { LandingAuthTrigger } from "@/components/landing/LandingAuthTrigger";
 
 export function PublicHeader() {
   return (
@@ -18,13 +19,15 @@ export function PublicHeader() {
           <a href="/#about" className="hover:text-slate-50">About</a>
         </nav>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="hidden text-sm text-slate-400 hover:text-slate-50 sm:block">Log in</Link>
-          <Link href="/signup" className="hidden rounded-full border border-line px-4 py-2 text-sm font-semibold text-slate-300 hover:border-brand-strong/50 hover:text-slate-50 sm:inline-flex">
+          <LandingAuthTrigger className="hidden text-sm text-slate-400 hover:text-slate-50 sm:block" mode="login" testId="landing-login-trigger">
+            Log in
+          </LandingAuthTrigger>
+          <LandingAuthTrigger className="hidden rounded-full border border-line px-4 py-2 text-sm font-semibold text-slate-300 hover:border-brand-strong/50 hover:text-slate-50 sm:inline-flex" mode="signup" testId="landing-signup-trigger">
             Sign Up
-          </Link>
-          <Link href="/signup" className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-brand/80">
+          </LandingAuthTrigger>
+          <LandingAuthTrigger className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-brand/80" mode="signup" testId="landing-start-learning-trigger">
             Start Learning
-          </Link>
+          </LandingAuthTrigger>
         </div>
       </div>
     </header>
