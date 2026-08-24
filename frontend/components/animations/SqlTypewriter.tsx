@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import type { RefObject } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Phase = "typing" | "waiting" | "results" | "holding" | "erasing";
 
@@ -60,12 +61,15 @@ const keywordPattern = /^(SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|ON|GROUP
 
 export function SqlTypewriter() {
   const reducedMotion = useReducedMotion();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const isInView = useElementInView(containerRef);
   const [demoIndex, setDemoIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(0);
   const [phase, setPhase] = useState<Phase>("typing");
   const demo = demos[demoIndex];
   const visibleSql = demo.query.slice(0, visibleCount);
   const showResults = phase === "results" || phase === "holding" || Boolean(reducedMotion);
+  const shouldAnimate = Boolean(!reducedMotion && isInView);
 
   useEffect(() => {
     if (!reducedMotion) return;
@@ -75,7 +79,7 @@ export function SqlTypewriter() {
   }, [reducedMotion]);
 
   useEffect(() => {
-    if (reducedMotion) return;
+    if (!shouldAnimate) return;
 
     let timeout: ReturnType<typeof setTimeout> | undefined;
 
@@ -111,7 +115,7 @@ export function SqlTypewriter() {
     return () => {
       if (timeout) clearTimeout(timeout);
     };
-  }, [demo.query.length, demo.rows.length, phase, reducedMotion, visibleCount]);
+  }, [demo.query.length, demo.rows.length, phase, shouldAnimate, visibleCount]);
 
   const rowLabel = `${demo.rows.length} ${demo.rows.length === 1 ? "ROW" : "ROWS"}`;
 
@@ -122,6 +126,7 @@ export function SqlTypewriter() {
       className="overflow-hidden rounded-2xl border border-line bg-panel/90 shadow-2xl shadow-black/40 backdrop-blur"
       data-testid="sql-typewriter"
       initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 30, scale: 0.98 }}
+      ref={containerRef}
       transition={{ delay: reducedMotion ? 0 : 0.3, duration: reducedMotion ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3" data-testid="sql-typewriter-topbar">
@@ -143,7 +148,7 @@ export function SqlTypewriter() {
           data-testid="sql-typewriter-query"
         >
           <HighlightedSql sql={visibleSql} />
-          {!reducedMotion && (
+          {shouldAnimate && (
             <motion.span
               animate={{ opacity: [1, 0, 1] }}
               aria-hidden="true"
@@ -159,18 +164,17 @@ export function SqlTypewriter() {
         <span className="text-success" aria-hidden="true">●</span> connected — sqlbank_learner (read-only)
       </div>
 
-      <AnimatePresence mode="wait">
-        {showResults && (
-          <motion.div
-            animate={reducedMotion ? { height: "auto", opacity: 1 } : { height: "auto", opacity: 1 }}
-            className="overflow-hidden border-t border-line bg-panel"
-            data-testid="sql-typewriter-results"
-            exit={{ height: 0, opacity: 0 }}
-            initial={reducedMotion ? { height: "auto", opacity: 1 } : { height: 0, opacity: 0 }}
-            key={demoIndex}
-            transition={{ duration: reducedMotion ? 0 : 0.4, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="px-4 py-3 sm:px-6">
+      <div className="h-[252px] overflow-hidden border-t border-line bg-panel" data-testid="sql-typewriter-results">
+        <AnimatePresence mode="wait">
+          {showResults ? (
+            <motion.div
+              animate={{ opacity: 1 }}
+              className="h-full overflow-hidden px-4 py-3 sm:px-6"
+              exit={{ opacity: 0 }}
+              initial={{ opacity: reducedMotion ? 1 : 0 }}
+              key={demoIndex}
+              transition={{ duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+            >
               <div className="font-mono text-[10px] uppercase tracking-wider text-slate-500" data-testid="sql-typewriter-result-header">
                 <span className="text-success" aria-hidden="true">●</span> {rowLabel} · {demo.durationMs}MS
               </div>
@@ -186,12 +190,12 @@ export function SqlTypewriter() {
                   <tbody>
                     {demo.rows.map((row, rowIndex) => (
                       <motion.tr
-                        animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+                        animate={{ opacity: 1, y: 0 }}
                         className="border-b border-white/[0.05] text-slate-300"
                         data-testid={`sql-result-row-${rowIndex}`}
-                        initial={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 7 }}
+                        initial={reducedMotion || !isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 7 }}
                         key={`${demoIndex}-${rowIndex}`}
-                        transition={{ delay: reducedMotion ? 0 : rowIndex * 0.05, duration: reducedMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+                        transition={{ delay: reducedMotion || !isInView ? 0 : rowIndex * 0.05, duration: reducedMotion || !isInView ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
                       >
                         {row.map((cell, cellIndex) => (
                           <td className="whitespace-nowrap px-3 py-2" key={`${rowIndex}-${cellIndex}`}>{cell}</td>
@@ -201,10 +205,21 @@ export function SqlTypewriter() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          ) : (
+            <motion.div
+              animate={{ opacity: 1 }}
+              className="flex h-full items-end px-4 py-3 font-mono text-[11px] text-success sm:px-6"
+              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              key="placeholder"
+              transition={{ duration: 0.18 }}
+            >
+              Correct output appears here instantly.
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
@@ -228,4 +243,33 @@ function tokenizeSql(sql: string) {
     if (keywordPattern.test(part)) return { text: part, className: "text-brand" };
     return { text: part, className: "text-slate-300" };
   });
+}
+
+function useElementInView(ref: RefObject<Element | null>) {
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setIsInView(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      {
+        root: null,
+        rootMargin: "80px 0px",
+        threshold: 0.15,
+      },
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+
+  return isInView;
 }
