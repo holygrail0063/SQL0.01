@@ -203,525 +203,2313 @@ const schema = [
 
 const challenges: Challenge[] = [
   {
-    id: 1,
-    title: "Read A Table With SELECT",
-    description: "Your team lead asks for a first look at the customer file before tomorrow's portfolio review. Return every column and every row from the Customers table.",
-    difficulty: "Beginner",
-    topic: "SELECT",
-    starter_sql: "",
-    concept: "SELECT is how you ask a database to return data. The star (*) means every available column. FROM tells SQL which table to read.",
-    lesson: "A basic query has two jobs: choose columns with SELECT, then choose the table with FROM. SELECT * is useful while exploring, but in real reporting you usually name only the columns you need.",
-    example_sql: "SELECT *\nFROM TableName;",
-    success_criteria: ["Return all rows from Customers.", "Return every column.", "Use SELECT and FROM together."],
-    guidance: {
-      "Completely New": "Start with SELECT *, then add FROM Customers. Think of FROM as the source drawer where the data lives.",
-      "Know the Basics": "Use the simplest full-table query. Do not filter or sort yet.",
-      "Comfortable With SQL": "Keep it intentionally broad; this task checks your baseline table-read syntax.",
-      "Interview Preparation": "Interviewers expect you to explain that SELECT chooses columns and FROM chooses the table.",
+    "id": 1,
+    "title": "Open the customer file",
+    "description": "Return every column and every row from Customers.",
+    "difficulty": "Beginner",
+    "topic": "SELECT",
+    "starter_sql": "",
+    "concept": "This question builds the first SQL habits: choose the correct table, return the requested columns, and add simple filters only when the business request asks for them.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return every column and every row from Customers."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use SELECT for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how SELECT, FROM answers the business request before you run the query."
     },
-    reference_sql: "SELECT * FROM Customers;",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT *\nFROM Customers;",
+    "comparison_mode": "unordered"
   },
   {
-    id: 2,
-    title: "Choose Specific Columns",
-    description: "Your manager wants a customer contact extract for a slide deck. Return only CustomerID, FirstName, LastName, Province, and City from Customers.",
-    difficulty: "Beginner",
-    topic: "Columns",
-    starter_sql: "",
-    concept: "Instead of SELECT *, you can list exact columns. This makes reports easier to read and avoids moving unnecessary data.",
-    lesson: "Column order matters in a result set. When a stakeholder asks for specific fields, put those fields after SELECT in the same order they requested.",
-    example_sql: "SELECT ColumnA, ColumnB\nFROM TableName;",
-    success_criteria: ["Return CustomerID, FirstName, LastName, Province, and City.", "Do not return extra columns.", "Read from Customers."],
-    guidance: {
-      "Completely New": "Replace the star with a comma-separated column list.",
-      "Know the Basics": "Focus on exact column names and order.",
-      "Comfortable With SQL": "Treat this as a projection task: fewer columns, same rows.",
-      "Interview Preparation": "Be ready to explain why SELECT * can be risky in production reports.",
+    "id": 2,
+    "title": "Choose customer fields",
+    "description": "Return CustomerID, FirstName, LastName, Province, and City from Customers.",
+    "difficulty": "Beginner",
+    "topic": "Column selection",
+    "starter_sql": "",
+    "concept": "This question builds the first SQL habits: choose the correct table, return the requested columns, and add simple filters only when the business request asks for them.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, Province, and City from Customers."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use Column selection for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how Column selection answers the business request before you run the query."
     },
-    reference_sql: "SELECT CustomerID, FirstName, LastName, Province, City FROM Customers;",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT CustomerID, FirstName, LastName, Province, City\nFROM Customers;",
+    "comparison_mode": "unordered"
   },
   {
-    id: 26,
-    title: "Select Identity and Location",
-    description: "Return only CustomerID, Province, and City from Customers.",
-    difficulty: "Beginner",
-    topic: "Columns",
-    starter_sql: "SELECT \nFROM Customers;",
-    concept: "This guided exercise checks one narrow skill: choosing only the columns requested for the active stage.",
-    lesson: "The active stage asks for three fields. Selecting extra fields, even useful ones, does not match the stage request.",
-    example_sql: "SELECT ColumnA, ColumnB\nFROM TableName;",
-    success_criteria: ["Return CustomerID, Province, and City.", "Do not return FirstName, LastName, or extra columns.", "Read from Customers."],
-    guidance: {
-      "Completely New": "Put CustomerID, Province, and City after SELECT, separated by commas.",
-      "Know the Basics": "This stage is strict about columns because the request says return only those fields.",
-      "Comfortable With SQL": "Preserve customer grain and avoid SELECT *.",
-      "Interview Preparation": "Explain that selecting only requested columns keeps outputs focused and safe to share.",
+    "id": 3,
+    "title": "Find Ontario customers",
+    "description": "Return every column for customers whose Province is Ontario.",
+    "difficulty": "Beginner",
+    "topic": "WHERE",
+    "starter_sql": "",
+    "concept": "This question builds the first SQL habits: choose the correct table, return the requested columns, and add simple filters only when the business request asks for them.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return every column for customers whose Province is Ontario.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use WHERE for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how WHERE answers the business request before you run the query."
     },
-    reference_sql: "SELECT CustomerID, Province, City FROM Customers;",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT *\nFROM Customers\nWHERE Province = 'Ontario';",
+    "comparison_mode": "unordered"
   },
   {
-    id: 3,
-    title: "Filter Rows With WHERE",
-    description: "Your analytics lead is checking regional customer coverage. Return all Customers who live in Ontario.",
-    difficulty: "Beginner",
-    topic: "WHERE",
-    starter_sql: "",
-    concept: "WHERE filters rows. It keeps only records where a condition is true.",
-    lesson: "Text values need quotes in SQL. A condition like Province = 'Ontario' keeps Ontario rows and removes the rest from the result.",
-    example_sql: "SELECT *\nFROM TableName\nWHERE ColumnName = 'Value';",
-    success_criteria: ["Return Customers rows only.", "Keep only Province equal to Ontario.", "Return every customer column."],
-    guidance: {
-      "Completely New": "Write a normal SELECT * query, then add WHERE Province = 'Ontario'.",
-      "Know the Basics": "Remember quotes around Ontario because it is text.",
-      "Comfortable With SQL": "This is a simple equality predicate.",
-      "Interview Preparation": "Mention that WHERE runs before sorting and grouping in logical query processing.",
+    "id": 4,
+    "title": "Active Ontario customers",
+    "description": "Customer Operations needs active Ontario customers for a regional outreach list.\r\nReturn CustomerID, FirstName, LastName, City, CustomerSegment, and AcquisitionChannel.\r\nOnly include customers whose Province is Ontario and CustomerStatus is Active.\r\nOrder the results by CustomerID.",
+    "difficulty": "Beginner",
+    "topic": "WHERE",
+    "starter_sql": "",
+    "concept": "This question builds the first SQL habits: choose the correct table, return the requested columns, and add simple filters only when the business request asks for them.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, City, CustomerSegment, and AcquisitionChannel.",
+      "Apply every requested filter.",
+      "Return rows in the requested order."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use WHERE for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how WHERE, AND, ORDER BY answers the business request before you run the query."
     },
-    reference_sql: "SELECT * FROM Customers WHERE Province = 'Ontario';",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT CustomerID,\n       FirstName,\n       LastName,\n       City,\n       CustomerSegment,\n       AcquisitionChannel\nFROM Customers\nWHERE Province = 'Ontario'\n  AND CustomerStatus = 'Active'\nORDER BY CustomerID;",
+    "comparison_mode": "ordered"
   },
   {
-    id: 4,
-    title: "Combine Conditions",
-    description: "Your team lead needs a Toronto-only subset for an Ontario branch analysis. Return Ontario customers whose City is Toronto.",
-    difficulty: "Beginner",
-    topic: "AND",
-    starter_sql: "",
-    concept: "AND combines conditions. A row must satisfy every AND condition to appear.",
-    lesson: "Use AND when a business request narrows the data in more than one way, such as Province and City at the same time.",
-    example_sql: "SELECT *\nFROM TableName\nWHERE ColumnA = 'Value'\n  AND ColumnB = 'Value';",
-    success_criteria: ["Read from Customers.", "Keep Province equal to Ontario.", "Keep City equal to Toronto."],
-    guidance: {
-      "Completely New": "Add one condition for Province and one for City. Put AND between them.",
-      "Know the Basics": "Both text comparisons need quoted values.",
-      "Comfortable With SQL": "This is a conjunctive filter.",
-      "Interview Preparation": "Practice saying AND narrows the result because both predicates must be true.",
+    "id": 5,
+    "title": "Inspect the branch network",
+    "description": "Return BranchID, BranchName, Province, and City for every branch.",
+    "difficulty": "Beginner",
+    "topic": "SELECT columns",
+    "starter_sql": "",
+    "concept": "This question builds the first SQL habits: choose the correct table, return the requested columns, and add simple filters only when the business request asks for them.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return BranchID, BranchName, Province, and City for every branch."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use SELECT columns for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how SELECT columns answers the business request before you run the query."
     },
-    reference_sql: "SELECT * FROM Customers WHERE Province = 'Ontario' AND City = 'Toronto';",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT BranchID, BranchName, Province, City\nFROM Branches;",
+    "comparison_mode": "unordered"
   },
   {
-    id: 5,
-    title: "Sort Results With ORDER BY",
-    description: "Your lending manager wants to review the largest exposures first. Return all Loans sorted from highest LoanAmount to lowest.",
-    difficulty: "Beginner",
-    topic: "ORDER BY",
-    starter_sql: "",
-    concept: "ORDER BY controls result order. DESC means descending, or largest to smallest for numbers.",
-    lesson: "Without ORDER BY, databases do not promise row order. Use it whenever the sequence of rows matters to the user.",
-    example_sql: "SELECT *\nFROM TableName\nORDER BY NumericColumn DESC;",
-    success_criteria: ["Return all columns from Loans.", "Sort by LoanAmount.", "Largest loans must appear first."],
-    guidance: {
-      "Completely New": "Write SELECT * FROM Loans, then add ORDER BY LoanAmount DESC.",
-      "Know the Basics": "DESC is the key word for highest to lowest.",
-      "Comfortable With SQL": "Do not aggregate here; this is row-level sorting.",
-      "Interview Preparation": "Remember ORDER BY is evaluated near the end of a SELECT query.",
+    "id": 6,
+    "title": "Inspect account balances",
+    "description": "Return AccountID, CustomerID, AccountType, Balance, and AccountStatus from Accounts.",
+    "difficulty": "Beginner",
+    "topic": "SELECT columns",
+    "starter_sql": "",
+    "concept": "This question builds the first SQL habits: choose the correct table, return the requested columns, and add simple filters only when the business request asks for them.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return AccountID, CustomerID, AccountType, Balance, and AccountStatus from Accounts."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use SELECT columns for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how SELECT columns answers the business request before you run the query."
     },
-    reference_sql: "SELECT * FROM Loans ORDER BY LoanAmount DESC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT AccountID, CustomerID, AccountType, Balance, AccountStatus\nFROM Accounts;",
+    "comparison_mode": "unordered"
   },
   {
-    id: 6,
-    title: "Limit A Ranked List",
-    description: "Your manager only has time to inspect the ten largest loans. Return LoanID, LoanAmount, and InterestRate for the top 10 loans by LoanAmount.",
-    difficulty: "Beginner",
-    topic: "TOP",
-    starter_sql: "",
-    concept: "TOP limits how many rows come back. It is often paired with ORDER BY to create a ranked list.",
-    lesson: "TOP without ORDER BY can be misleading because the database may choose any matching rows. For a top-10 business question, always define top by sorting.",
-    example_sql: "SELECT TOP 10 ColumnA, ColumnB\nFROM TableName\nORDER BY NumericColumn DESC;",
-    success_criteria: ["Return only 10 rows.", "Return LoanID, LoanAmount, and InterestRate.", "Sort by LoanAmount descending."],
-    guidance: {
-      "Completely New": "Put TOP 10 right after SELECT.",
-      "Know the Basics": "The ORDER BY creates the ranking; TOP cuts it to 10 rows.",
-      "Comfortable With SQL": "This is a common ranked-list report pattern.",
-      "Interview Preparation": "Be ready to explain why TOP must be paired with ORDER BY for deterministic results.",
+    "id": 7,
+    "title": "Toronto customers",
+    "description": "Return CustomerID, FirstName, LastName, and CustomerStatus for customers in Toronto.",
+    "difficulty": "Beginner",
+    "topic": "WHERE",
+    "starter_sql": "",
+    "concept": "This question builds the first SQL habits: choose the correct table, return the requested columns, and add simple filters only when the business request asks for them.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, and CustomerStatus for customers in Toronto."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use WHERE for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how WHERE answers the business request before you run the query."
     },
-    reference_sql: "SELECT TOP 10 LoanID, LoanAmount, InterestRate FROM Loans ORDER BY LoanAmount DESC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT CustomerID, FirstName, LastName, CustomerStatus\nFROM Customers\nWHERE City = 'Toronto';",
+    "comparison_mode": "unordered"
   },
   {
-    id: 7,
-    title: "Count Records",
-    description: "Your operations manager asks how many loan applications SQLBank has received in the training data. Return one row with ApplicationCount.",
-    difficulty: "Beginner",
-    topic: "COUNT",
-    starter_sql: "",
-    concept: "COUNT(*) counts rows. It is the simplest aggregate because it turns many records into one number.",
-    lesson: "Use aliases with AS to give calculated columns business-friendly names. ApplicationCount is easier to read than an unnamed count expression.",
-    example_sql: "SELECT COUNT(*) AS RowCount\nFROM TableName;",
-    success_criteria: ["Return a single value.", "Use COUNT(*).", "Name the output column ApplicationCount."],
-    guidance: {
-      "Completely New": "COUNT(*) means count all rows in the table.",
-      "Know the Basics": "Use AS ApplicationCount to label the result.",
-      "Comfortable With SQL": "No GROUP BY is needed because you want one total.",
-      "Interview Preparation": "Know the difference between COUNT(*) and COUNT(ColumnName) when nulls are involved.",
+    "id": 8,
+    "title": "Active loans",
+    "description": "Return LoanID, CustomerID, LoanAmount, and InterestRate for loans whose LoanStatus is Active.",
+    "difficulty": "Beginner",
+    "topic": "WHERE",
+    "starter_sql": "",
+    "concept": "This question builds the first SQL habits: choose the correct table, return the requested columns, and add simple filters only when the business request asks for them.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return LoanID, CustomerID, LoanAmount, and InterestRate for loans whose LoanStatus is Active.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use WHERE for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how WHERE answers the business request before you run the query."
     },
-    reference_sql: "SELECT COUNT(*) AS ApplicationCount FROM Applications;",
-    comparison_mode: "single_value",
+    "reference_sql": "SELECT LoanID, CustomerID, LoanAmount, InterestRate\nFROM Loans\nWHERE LoanStatus = 'Active';",
+    "comparison_mode": "unordered"
   },
   {
-    id: 8,
-    title: "Group Rows Into Categories",
-    description: "Your team lead wants a status breakdown for the application funnel. Return each Status with its application count.",
-    difficulty: "Beginner",
-    topic: "GROUP BY",
-    starter_sql: "",
-    concept: "GROUP BY creates one result row per category. Aggregates like COUNT(*) then calculate within each category.",
-    lesson: "Every non-aggregated column in SELECT should appear in GROUP BY. Here, Status is the category and COUNT(*) is the metric.",
-    example_sql: "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
-    success_criteria: ["Return one row per Status.", "Count applications in each Status.", "Name the count ApplicationCount."],
-    guidance: {
-      "Completely New": "Put Status in SELECT and GROUP BY. Put COUNT(*) beside it.",
-      "Know the Basics": "GROUP BY answers 'how many per category?' questions.",
-      "Comfortable With SQL": "This is a dimensional aggregation.",
-      "Interview Preparation": "Explain why Status must be grouped because it is not inside an aggregate.",
+    "id": 9,
+    "title": "Large application requests",
+    "description": "Return applications where RequestedAmount is at least 25000.",
+    "difficulty": "Beginner",
+    "topic": "Numeric comparison",
+    "starter_sql": "",
+    "concept": "This question builds the first SQL habits: choose the correct table, return the requested columns, and add simple filters only when the business request asks for them.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return applications where RequestedAmount is at least 25000.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use Numeric comparison for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how Numeric comparison answers the business request before you run the query."
     },
-    reference_sql: "SELECT Status, COUNT(*) AS ApplicationCount FROM Applications GROUP BY Status;",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT *\nFROM Applications\nWHERE RequestedAmount >= 25000;",
+    "comparison_mode": "unordered"
   },
   {
-    id: 9,
-    title: "Summarize Numeric Columns",
-    description: "Your branch performance manager needs lending totals and average rates by branch. Return BranchID, TotalLoanAmount, and AverageInterestRate from Loans.",
-    difficulty: "Intermediate",
-    topic: "SUM / AVG",
-    starter_sql: "",
-    concept: "SUM adds numeric values and AVG calculates the average. Both are aggregates and usually pair with GROUP BY.",
-    lesson: "A branch-level metric requires grouping by BranchID. Then each branch receives its own total loan amount and average interest rate.",
-    example_sql: "SELECT GroupColumn, SUM(NumberColumn) AS TotalValue, AVG(NumberColumn) AS AverageValue\nFROM TableName\nGROUP BY GroupColumn;",
-    success_criteria: ["Group by BranchID.", "Calculate SUM(LoanAmount) as TotalLoanAmount.", "Calculate AVG(InterestRate) as AverageInterestRate."],
-    guidance: {
-      "Completely New": "Think 'one row per BranchID'. Everything else should be a calculation.",
-      "Know the Basics": "Use two aggregate expressions in the same SELECT.",
-      "Comfortable With SQL": "Watch your aliases; the checker expects the requested metric names.",
-      "Interview Preparation": "This is a classic GROUP BY plus multiple aggregates question.",
+    "id": 10,
+    "title": "Higher risk-score applications",
+    "description": "Return ApplicationID, RequestedAmount, Status, and RiskScore for applications whose RiskScore is at least 700.",
+    "difficulty": "Beginner",
+    "topic": "Numeric comparison",
+    "starter_sql": "",
+    "concept": "This question builds the first SQL habits: choose the correct table, return the requested columns, and add simple filters only when the business request asks for them.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return ApplicationID, RequestedAmount, Status, and RiskScore for applications whose RiskScore is at least 700.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use Numeric comparison for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how Numeric comparison answers the business request before you run the query."
     },
-    reference_sql: "SELECT BranchID, SUM(LoanAmount) AS TotalLoanAmount, AVG(InterestRate) AS AverageInterestRate FROM Loans GROUP BY BranchID;",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT ApplicationID, RequestedAmount, Status, RiskScore\nFROM Applications\nWHERE RiskScore >= 700;",
+    "comparison_mode": "unordered"
   },
   {
-    id: 10,
-    title: "Join Loans To Customers",
-    description: "Your servicing team lead needs customer names attached to loan records. Return LoanID, FirstName, LastName, and LoanAmount for every loan.",
-    difficulty: "Intermediate",
-    topic: "INNER JOIN",
-    starter_sql: "",
-    concept: "JOIN combines related tables. INNER JOIN keeps only records where the join condition matches on both sides.",
-    lesson: "Loans has CustomerID, but names live in Customers. Join the tables on CustomerID to answer a question that needs columns from both tables.",
-    example_sql: "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA a\nINNER JOIN TableB b ON a.SharedID = b.SharedID;",
-    success_criteria: ["Use Loans and Customers.", "Join on CustomerID.", "Return LoanID, FirstName, LastName, and LoanAmount."],
-    guidance: {
-      "Completely New": "Use table aliases like l for Loans and c for Customers to keep the query readable.",
-      "Know the Basics": "The ON clause explains how rows match between tables.",
-      "Comfortable With SQL": "Select columns from both aliases after joining.",
-      "Interview Preparation": "Be ready to define INNER JOIN as returning only matched rows.",
+    "id": 11,
+    "title": "Mobile transactions",
+    "description": "Return TransactionID, AccountID, TransactionType, Amount, and MerchantCategory for transactions where Channel is Mobile.",
+    "difficulty": "Beginner",
+    "topic": "WHERE",
+    "starter_sql": "",
+    "concept": "Filtering turns broad SQLBank tables into focused business lists. Each condition should match a phrase in the request.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return TransactionID, AccountID, TransactionType, Amount, and MerchantCategory for transactions where Channel is Mobile.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use WHERE for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how WHERE answers the business request before you run the query."
     },
-    reference_sql: "SELECT l.LoanID, c.FirstName, c.LastName, l.LoanAmount FROM Loans l INNER JOIN Customers c ON l.CustomerID = c.CustomerID;",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT TransactionID,\n       AccountID,\n       TransactionType,\n       Amount,\n       MerchantCategory\nFROM Transactions\nWHERE Channel = 'Mobile';",
+    "comparison_mode": "unordered"
   },
   {
-    id: 11,
-    title: "Join Before Grouping",
-    description: "Your analytics manager wants provincial lending totals. Return Province and TotalLoanAmount by joining Loans to Branches.",
-    difficulty: "Intermediate",
-    topic: "JOIN + GROUP BY",
-    starter_sql: "",
-    concept: "Many real reports join tables first, then aggregate. The join adds the category you want to group by.",
-    lesson: "Loan amounts live in Loans, while Province lives in Branches. Join on BranchID, then group by Province and sum LoanAmount.",
-    example_sql: "SELECT b.Category, SUM(a.Amount) AS TotalAmount\nFROM FactTable a\nINNER JOIN LookupTable b ON a.LookupID = b.LookupID\nGROUP BY b.Category;",
-    success_criteria: ["Join Loans to Branches on BranchID.", "Group by Branches.Province.", "Return SUM(LoanAmount) as TotalLoanAmount."],
-    guidance: {
-      "Completely New": "The join brings Province onto each loan row before you add totals.",
-      "Know the Basics": "Use GROUP BY b.Province because Province is the category.",
-      "Comfortable With SQL": "Think fact table plus dimension table.",
-      "Interview Preparation": "This tests whether you can combine joins and aggregations in the right order.",
+    "id": 12,
+    "title": "Active Toronto customers",
+    "description": "Return CustomerID, FirstName, LastName, and CustomerSegment for active customers who live in Toronto.",
+    "difficulty": "Beginner",
+    "topic": "AND",
+    "starter_sql": "",
+    "concept": "Filtering turns broad SQLBank tables into focused business lists. Each condition should match a phrase in the request.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, and CustomerSegment for active customers who live in Toronto."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use AND for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how AND answers the business request before you run the query."
     },
-    reference_sql: "SELECT b.Province, SUM(l.LoanAmount) AS TotalLoanAmount FROM Loans l INNER JOIN Branches b ON l.BranchID = b.BranchID GROUP BY b.Province;",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT CustomerID, FirstName, LastName, CustomerSegment\nFROM Customers\nWHERE City = 'Toronto'\n  AND CustomerStatus = 'Active';",
+    "comparison_mode": "unordered"
   },
   {
-    id: 12,
-    title: "Create Business Labels With CASE",
-    description: "Your manager wants every loan labeled by size for a portfolio review. Return LoanID, LoanAmount, and LoanSize using Small, Medium, and Large.",
-    difficulty: "Intermediate",
-    topic: "CASE",
-    starter_sql: "",
-    concept: "CASE creates conditional labels. It is SQL's way to say: if this condition is true, return this value.",
-    lesson: "Use CASE when a stakeholder wants categories that are not already stored in the table. Here, loan size is derived from LoanAmount.",
-    example_sql: "SELECT ColumnA,\n  CASE\n    WHEN NumberColumn < 100 THEN 'Small'\n    ELSE 'Large'\n  END AS LabelName\nFROM TableName;",
-    success_criteria: ["Small means LoanAmount less than 5000.", "Medium means LoanAmount from 5000 to less than 15000.", "Large means LoanAmount 15000 or more."],
-    guidance: {
-      "Completely New": "CASE starts with CASE, uses WHEN conditions, and ends with END AS LoanSize.",
-      "Know the Basics": "Order matters: check Small before Medium before Large.",
-      "Comfortable With SQL": "Make sure boundaries do not overlap.",
-      "Interview Preparation": "CASE questions often test condition order and edge cases.",
+    "id": 13,
+    "title": "Alberta or British Columbia",
+    "description": "Return CustomerID, FirstName, LastName, Province, and City for customers whose Province is Alberta or British Columbia.",
+    "difficulty": "Beginner",
+    "topic": "OR",
+    "starter_sql": "",
+    "concept": "Filtering turns broad SQLBank tables into focused business lists. Each condition should match a phrase in the request.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, Province, and City for customers whose Province is Alberta or British Columbia.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use OR for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how OR answers the business request before you run the query."
     },
-    reference_sql: "SELECT LoanID, LoanAmount, CASE WHEN LoanAmount < 5000 THEN 'Small' WHEN LoanAmount < 15000 THEN 'Medium' ELSE 'Large' END AS LoanSize FROM Loans;",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT CustomerID, FirstName, LastName, Province, City\nFROM Customers\nWHERE Province = 'Alberta'\n   OR Province = 'British Columbia';",
+    "comparison_mode": "unordered"
   },
   {
-    id: 13,
-    title: "Filter By Dates",
-    description: "Your customer growth manager asks for newer relationships. Return all Customers whose CustomerSince date is on or after 2022-01-01.",
-    difficulty: "Intermediate",
-    topic: "Date Filters",
-    starter_sql: "",
-    concept: "Date filters work like numeric filters when dates are stored in a sortable format. Greater than or equal keeps dates on or after a cutoff.",
-    lesson: "Business teams often ask for recent customers, recent applications, or recent payments. The pattern is a WHERE clause against a date column.",
-    example_sql: "SELECT *\nFROM TableName\nWHERE DateColumn >= '2022-01-01';",
-    success_criteria: ["Read from Customers.", "Filter CustomerSince on or after 2022-01-01.", "Return all customer columns."],
-    guidance: {
-      "Completely New": "Use >= to include the cutoff date itself.",
-      "Know the Basics": "Dates should be quoted like text.",
-      "Comfortable With SQL": "This is a range predicate with only a lower bound.",
-      "Interview Preparation": "Be careful with inclusive and exclusive date boundaries.",
+    "id": 14,
+    "title": "Three-province customer list",
+    "description": "Return CustomerID, FirstName, LastName, and Province for customers in Ontario, Alberta, or Manitoba.",
+    "difficulty": "Beginner",
+    "topic": "IN",
+    "starter_sql": "",
+    "concept": "Filtering turns broad SQLBank tables into focused business lists. Each condition should match a phrase in the request.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, and Province for customers in Ontario, Alberta, or Manitoba."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use IN for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how IN answers the business request before you run the query."
     },
-    reference_sql: "SELECT * FROM Customers WHERE CustomerSince >= '2022-01-01';",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT CustomerID, FirstName, LastName, Province\nFROM Customers\nWHERE Province IN ('Ontario', 'Alberta', 'Manitoba');",
+    "comparison_mode": "unordered"
   },
   {
-    id: 14,
-    title: "Rank Aggregated Results",
-    description: "Your regional director wants the busiest branches by application volume. Return the top 5 BranchName values with ApplicationCount.",
-    difficulty: "Advanced",
-    topic: "Ranking Aggregates",
-    starter_sql: "",
-    concept: "You can aggregate first and then sort the aggregated result. TOP can limit that sorted summary.",
-    lesson: "This is a common analyst workflow: join to get readable branch names, group to count applications, order the counts, and return only the top rows.",
-    example_sql: "SELECT TOP 5 b.Name, COUNT(*) AS ItemCount\nFROM DetailTable d\nINNER JOIN LookupTable b ON d.LookupID = b.LookupID\nGROUP BY b.Name\nORDER BY ItemCount DESC;",
-    success_criteria: ["Join Applications to Branches.", "Count applications per BranchName.", "Return the five highest ApplicationCount values."],
-    guidance: {
-      "Completely New": "Build it in pieces: join first, group second, sort third, TOP last.",
-      "Know the Basics": "The ORDER BY should use the count alias or COUNT(*) descending.",
-      "Comfortable With SQL": "This is a leaderboard query.",
-      "Interview Preparation": "Practice explaining the logical order: FROM/JOIN, GROUP BY, SELECT, ORDER BY, TOP.",
+    "id": 15,
+    "title": "Mid-size applications",
+    "description": "Return ApplicationID, CustomerID, RequestedAmount, and Status for applications with RequestedAmount between 10000 and 20000 inclusive.",
+    "difficulty": "Beginner",
+    "topic": "BETWEEN",
+    "starter_sql": "",
+    "concept": "Filtering turns broad SQLBank tables into focused business lists. Each condition should match a phrase in the request.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return ApplicationID, CustomerID, RequestedAmount, and Status for applications with RequestedAmount between 10000 and 20000 inclusive.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use BETWEEN for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how BETWEEN answers the business request before you run the query."
     },
-    reference_sql: "SELECT TOP 5 b.BranchName, COUNT(*) AS ApplicationCount FROM Applications a INNER JOIN Branches b ON a.BranchID = b.BranchID GROUP BY b.BranchName ORDER BY ApplicationCount DESC, b.BranchName ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT ApplicationID, CustomerID, RequestedAmount, Status\nFROM Applications\nWHERE RequestedAmount BETWEEN 10000 AND 20000;",
+    "comparison_mode": "unordered"
   },
   {
-    id: 15,
-    title: "Branch Approval Rate",
-    description: "Your manager is preparing an executive update and needs the five branches with the highest application approval rate. Return BranchName and ApprovalRate.",
-    difficulty: "Advanced",
-    topic: "Business Analysis",
-    starter_sql: "",
-    concept: "Approval rate is a calculated business metric: approved applications divided by total applications. CASE helps count only approved rows inside the calculation.",
-    lesson: "This task combines the full course: join for branch names, CASE for approved counts, aggregate for totals, calculate a percentage, sort the metric, and limit to the top five.",
-    example_sql: "SELECT TOP 5 GroupName,\n  ROUND(SUM(CASE WHEN Status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS ApprovalRate\nFROM TableName\nGROUP BY GroupName\nORDER BY ApprovalRate DESC;",
-    success_criteria: ["Join Applications to Branches.", "Calculate approved applications divided by all applications.", "Return the top five branches by ApprovalRate."],
-    guidance: {
-      "Completely New": "This is a capstone. Use the example pattern and replace table and column names carefully.",
-      "Know the Basics": "CASE creates 1 for approved rows and 0 for every other row.",
-      "Comfortable With SQL": "Use ROUND to make the percentage readable.",
-      "Interview Preparation": "This is the kind of multi-concept analytics query that appears in SQL job screens.",
+    "id": 16,
+    "title": "Advisory Centre branches",
+    "description": "Return BranchID, BranchName, Province, and City for branches whose BranchName contains the text \"Advisory Centre\".",
+    "difficulty": "Beginner",
+    "topic": "LIKE",
+    "starter_sql": "",
+    "concept": "Filtering turns broad SQLBank tables into focused business lists. Each condition should match a phrase in the request.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return BranchID, BranchName, Province, and City for branches whose BranchName contains the text \"Advisory Centre\".",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use LIKE for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how LIKE answers the business request before you run the query."
     },
-    reference_sql: "SELECT TOP 5 b.BranchName, ROUND(SUM(CASE WHEN a.Status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS ApprovalRate FROM Branches b INNER JOIN Applications a ON b.BranchID = a.BranchID GROUP BY b.BranchName ORDER BY ApprovalRate DESC, b.BranchName ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT BranchID, BranchName, Province, City\nFROM Branches\nWHERE BranchName LIKE '%Advisory Centre%';",
+    "comparison_mode": "unordered"
   },
   {
-    id: 16,
-    title: "Customer Directory For Analysis",
-    description: "Your analytics manager needs a clean customer directory before exploring behavior. Return CustomerID, FirstName, LastName, Province, City, and CustomerSince from Customers.",
-    difficulty: "Beginner",
-    topic: "SELECT",
-    starter_sql: "",
-    concept: "Data analysts often begin by selecting the fields that define the grain of a dataset. Here, the grain is one row per customer.",
-    lesson: "SELECT names the columns you want. Avoid SELECT * when you are preparing an analytical dataset for another person or tool.",
-    example_sql: "SELECT ColumnA, ColumnB\nFROM TableName;",
-    success_criteria: ["Return only the requested customer columns.", "Keep one row per customer.", "Do not filter the customer list."],
-    guidance: {
-      "Completely New": "List each requested column after SELECT, separated by commas.",
-      "Know the Basics": "This is a projection task: choose columns, keep all rows.",
-      "Comfortable With SQL": "Preserve customer grain by reading only from Customers.",
-      "Interview Preparation": "Be ready to explain why the output has one row per customer.",
+    "id": 17,
+    "title": "Names beginning with A",
+    "description": "Return CustomerID, FirstName, LastName, and Province for customers whose FirstName starts with A.",
+    "difficulty": "Beginner",
+    "topic": "LIKE",
+    "starter_sql": "",
+    "concept": "Filtering turns broad SQLBank tables into focused business lists. Each condition should match a phrase in the request.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, and Province for customers whose FirstName starts with A.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use LIKE for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how LIKE answers the business request before you run the query."
     },
-    reference_sql: "SELECT CustomerID, FirstName, LastName, Province, City, CustomerSince FROM Customers;",
-    comparison_mode: "unordered",
+    "reference_sql": "SELECT CustomerID, FirstName, LastName, Province\nFROM Customers\nWHERE FirstName LIKE 'A%';",
+    "comparison_mode": "unordered"
   },
   {
-    id: 17,
-    title: "Account Type Distribution",
-    description: "The product analytics lead wants to know which account types customers are actively using. Return AccountType and AccountCount for active accounts.",
-    difficulty: "Beginner",
-    topic: "GROUP BY",
-    starter_sql: "",
-    concept: "GROUP BY turns account-level rows into a summary by category. The denominator matters: this task only counts active accounts.",
-    lesson: "Use WHERE before GROUP BY when the metric should only include a subset, such as active accounts.",
-    example_sql: "SELECT CategoryColumn, COUNT(*) AS CountName\nFROM TableName\nWHERE StatusColumn = 'Active'\nGROUP BY CategoryColumn;",
-    success_criteria: ["Use Accounts.", "Filter AccountStatus to Active.", "Return AccountType and AccountCount."],
-    guidance: {
-      "Completely New": "Filter first with WHERE AccountStatus = 'Active', then group by AccountType.",
-      "Know the Basics": "COUNT(*) should count active account rows within each type.",
-      "Comfortable With SQL": "This checks metric definition and category grain.",
-      "Interview Preparation": "Explain why inactive or closed accounts are excluded from the denominator.",
+    "id": 18,
+    "title": "Accounts without a closure date",
+    "description": "Return AccountID, CustomerID, AccountType, OpenedDate, Balance, and AccountStatus for accounts where ClosedDate is NULL.",
+    "difficulty": "Beginner",
+    "topic": "IS NULL",
+    "starter_sql": "",
+    "concept": "Filtering turns broad SQLBank tables into focused business lists. Each condition should match a phrase in the request.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return AccountID, CustomerID, AccountType, OpenedDate, Balance, and AccountStatus for accounts where ClosedDate is NULL.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use IS NULL for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how IS NULL answers the business request before you run the query."
     },
-    reference_sql: "SELECT AccountType, COUNT(*) AS AccountCount FROM Accounts WHERE AccountStatus = 'Active' GROUP BY AccountType ORDER BY AccountCount DESC, AccountType ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT AccountID,\n       CustomerID,\n       AccountType,\n       OpenedDate,\n       Balance,\n       AccountStatus\nFROM Accounts\nWHERE ClosedDate IS NULL;",
+    "comparison_mode": "unordered"
   },
   {
-    id: 18,
-    title: "High-Value Transaction Review",
-    description: "Customer Analytics is reviewing large successful transactions. Return the 25 largest successful Transactions over 1000 with TransactionID, AccountID, TransactionDate, Amount, and Channel.",
-    difficulty: "Beginner",
-    topic: "Filtering",
-    starter_sql: "",
-    concept: "Analytical filters often combine status, amount, and date rules. Here the business question is about completed high-value activity.",
-    lesson: "Use WHERE to define which rows count as high-value successful transactions, then ORDER BY to review the biggest values first.",
-    example_sql: "SELECT TOP 25 ColumnA, ColumnB\nFROM TableName\nWHERE StatusColumn = 'Successful' AND AmountColumn > 1000\nORDER BY AmountColumn DESC;",
-    success_criteria: ["Read from Transactions.", "Keep successful transactions over 1000.", "Return the largest 25 rows by Amount."],
-    guidance: {
-      "Completely New": "Use AND because both conditions must be true.",
-      "Know the Basics": "TOP belongs after SELECT and ORDER BY defines which 25 rows are top.",
-      "Comfortable With SQL": "This is a ranked exception review.",
-      "Interview Preparation": "Mention that high-value must be defined before interpreting the result.",
+    "id": 19,
+    "title": "Customers who are not closed",
+    "description": "Return CustomerID, FirstName, LastName, and CustomerStatus for customers whose CustomerStatus is not Closed.",
+    "difficulty": "Beginner",
+    "topic": "Inequality",
+    "starter_sql": "",
+    "concept": "Filtering turns broad SQLBank tables into focused business lists. Each condition should match a phrase in the request.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, and CustomerStatus for customers whose CustomerStatus is not Closed.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use Inequality for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how Inequality answers the business request before you run the query."
     },
-    reference_sql: "SELECT TOP 25 TransactionID, AccountID, TransactionDate, Amount, Channel FROM Transactions WHERE TransactionStatus = 'Successful' AND Amount > 1000 ORDER BY Amount DESC, TransactionID ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT CustomerID, FirstName, LastName, CustomerStatus\nFROM Customers\nWHERE CustomerStatus <> 'Closed';",
+    "comparison_mode": "unordered"
   },
   {
-    id: 19,
-    title: "Monthly Transaction Trend",
-    description: "Your team lead asks whether activity is rising or falling. Return Month, TransactionCount, TransactionValue, and AverageTransactionValue for successful transactions.",
-    difficulty: "Intermediate",
-    topic: "Trend Analysis",
-    starter_sql: "",
-    concept: "Trend analysis groups events into time periods. Analysts separate volume, total value, and average value because each can tell a different story.",
-    lesson: "Create the month with SUBSTRING(TransactionDate, 1, 7), then group by the same expression.",
-    example_sql: "SELECT SUBSTRING(DateColumn, 1, 7) AS Month, COUNT(*) AS Events\nFROM TableName\nGROUP BY SUBSTRING(DateColumn, 1, 7)\nORDER BY Month;",
-    success_criteria: ["Group successful transactions by month.", "Calculate count, total value, and average value.", "Sort months chronologically."],
-    guidance: {
-      "Completely New": "The month is the first seven characters of the date, like 2025-03.",
-      "Know the Basics": "Every non-aggregated expression in SELECT should also appear in GROUP BY.",
-      "Comfortable With SQL": "Compare volume and average value; they can move in different directions.",
-      "Interview Preparation": "Be ready to describe what each metric reveals and what it hides.",
+    "id": 20,
+    "title": "Largest loans first",
+    "description": "Return all loans sorted from highest LoanAmount to lowest.",
+    "difficulty": "Beginner",
+    "topic": "ORDER BY DESC",
+    "starter_sql": "",
+    "concept": "Filtering turns broad SQLBank tables into focused business lists. Each condition should match a phrase in the request.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return all loans sorted from highest LoanAmount to lowest.",
+      "Return rows in the requested order."
+    ],
+    "guidance": {
+      "Completely New": "Start from the table named in the request, then add the requested columns.",
+      "Know the Basics": "Use ORDER BY DESC for this question.",
+      "Comfortable With SQL": "Match the requested filters, output columns, and ordering exactly.",
+      "Interview Preparation": "Explain how ORDER BY DESC answers the business request before you run the query."
     },
-    reference_sql: "SELECT SUBSTRING(TransactionDate, 1, 7) AS Month, COUNT(*) AS TransactionCount, ROUND(SUM(Amount), 2) AS TransactionValue, ROUND(AVG(Amount), 2) AS AverageTransactionValue FROM Transactions WHERE TransactionStatus = 'Successful' GROUP BY SUBSTRING(TransactionDate, 1, 7) ORDER BY Month ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT *\nFROM Loans\nORDER BY LoanAmount DESC;",
+    "comparison_mode": "ordered"
   },
   {
-    id: 20,
-    title: "Customer Segment Balances",
-    description: "The customer strategy team wants to compare balances by customer segment. Return CustomerSegment, ActiveCustomers, TotalBalance, and AverageBalance.",
-    difficulty: "Intermediate",
-    topic: "JOIN + Aggregation",
-    starter_sql: "",
-    concept: "Joining customer and account data changes the grain. Count distinct customers so people with multiple accounts are not over-counted.",
-    lesson: "Customers has segment details; Accounts has balances. Join them, filter active accounts, then aggregate by segment.",
-    example_sql: "SELECT c.Segment, COUNT(DISTINCT c.CustomerID), SUM(a.Balance)\nFROM Customers c\nJOIN Accounts a ON c.CustomerID = a.CustomerID\nGROUP BY c.Segment;",
-    success_criteria: ["Join Customers to Accounts.", "Filter active accounts.", "Use COUNT(DISTINCT CustomerID) for customers."],
-    guidance: {
-      "Completely New": "The same customer can have more than one account, so use DISTINCT when counting customers.",
-      "Know the Basics": "Group by the customer segment column.",
-      "Comfortable With SQL": "This is a grain-awareness task.",
-      "Interview Preparation": "Call out the double-counting risk after the join.",
+    "id": 21,
+    "title": "Top 10 loans",
+    "description": "Return LoanID, CustomerID, LoanAmount, and InterestRate for the 10 largest loans.",
+    "difficulty": "Beginner",
+    "topic": "TOP",
+    "starter_sql": "",
+    "concept": "Sorting, aliases, distinct values, TOP, and basic aggregates make SQL results easier to review and report.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return LoanID, CustomerID, LoanAmount, and InterestRate for the 10 largest loans.",
+      "Return rows in the requested order."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested TOP pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how TOP, ORDER BY answers the business request before you run the query."
     },
-    reference_sql: "SELECT c.CustomerSegment, COUNT(DISTINCT c.CustomerID) AS ActiveCustomers, ROUND(SUM(a.Balance), 2) AS TotalBalance, ROUND(AVG(a.Balance), 2) AS AverageBalance FROM Customers c INNER JOIN Accounts a ON c.CustomerID = a.CustomerID WHERE a.AccountStatus = 'Active' GROUP BY c.CustomerSegment ORDER BY TotalBalance DESC, c.CustomerSegment ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT TOP 10 LoanID, CustomerID, LoanAmount, InterestRate\nFROM Loans\nORDER BY LoanAmount DESC;",
+    "comparison_mode": "ordered"
   },
   {
-    id: 21,
-    title: "Application KPI Scorecard",
-    description: "Lending Analytics needs a monthly scorecard for 2025. Return Month, Applications, Approvals, ApprovalRate, and AverageRequestedAmount.",
-    difficulty: "Intermediate",
-    topic: "KPI Analysis",
-    starter_sql: "",
-    concept: "A KPI needs a numerator, a denominator, and the correct grain. Approval rate is approvals divided by all applications in the month.",
-    lesson: "Conditional aggregation with CASE lets you count approved applications inside each month.",
-    example_sql: "SELECT GroupName,\n  SUM(CASE WHEN Status = 'Approved' THEN 1 ELSE 0 END) AS Approved\nFROM TableName\nGROUP BY GroupName;",
-    success_criteria: ["Filter to 2025 application dates.", "Group by application month.", "Calculate approval rate using all applications as denominator."],
-    guidance: {
-      "Completely New": "Build the monthly count first, then add the approved count.",
-      "Know the Basics": "Use CASE inside SUM for the numerator.",
-      "Comfortable With SQL": "Make the denominator COUNT(*) so pending and declined applications remain included.",
-      "Interview Preparation": "Metric questions are often denominator questions.",
+    "id": 22,
+    "title": "Top five account balances",
+    "description": "Return AccountID, CustomerID, AccountType, and Balance for the five highest account balances.",
+    "difficulty": "Beginner",
+    "topic": "TOP",
+    "starter_sql": "",
+    "concept": "Sorting, aliases, distinct values, TOP, and basic aggregates make SQL results easier to review and report.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return AccountID, CustomerID, AccountType, and Balance for the five highest account balances.",
+      "Return rows in the requested order."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested TOP pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how TOP, ORDER BY answers the business request before you run the query."
     },
-    reference_sql: "SELECT SUBSTRING(ApplicationDate, 1, 7) AS Month, COUNT(*) AS Applications, SUM(CASE WHEN Status = 'Approved' THEN 1 ELSE 0 END) AS Approvals, ROUND(SUM(CASE WHEN Status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS ApprovalRate, ROUND(AVG(RequestedAmount), 2) AS AverageRequestedAmount FROM Applications WHERE ApplicationDate >= '2025-01-01' AND ApplicationDate <= '2025-12-31' GROUP BY SUBSTRING(ApplicationDate, 1, 7) ORDER BY Month ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT TOP 5 AccountID, CustomerID, AccountType, Balance\nFROM Accounts\nORDER BY Balance DESC;",
+    "comparison_mode": "ordered"
   },
   {
-    id: 22,
-    title: "Campaign Conversion Funnel",
-    description: "Growth wants to know which acquisition channels move customers through signup. Return Channel, SignupStarted, SignupCompleted, AccountOpened, and CompletionRate from CustomerEvents.",
-    difficulty: "Advanced",
-    topic: "Funnel Analysis",
-    starter_sql: "",
-    concept: "Funnel analysis counts how many users reach each step. The drop-off between steps is often more important than the total count.",
-    lesson: "Use conditional COUNT DISTINCT logic so one customer is counted once per funnel stage, even if they have multiple events.",
-    example_sql: "SELECT Channel,\n  COUNT(DISTINCT CASE WHEN EventName = 'step_one' THEN CustomerID END) AS StepOne\nFROM Events\nGROUP BY Channel;",
-    success_criteria: ["Group by Channel.", "Count distinct customers at each funnel step.", "Calculate completion rate from completed divided by started."],
-    guidance: {
-      "Completely New": "Each CASE returns CustomerID only for one funnel step.",
-      "Know the Basics": "COUNT DISTINCT prevents duplicate event rows from inflating the funnel.",
-      "Comfortable With SQL": "Compare stage counts by channel to find drop-off.",
-      "Interview Preparation": "Explain why funnel metrics are user-level, not event-level.",
+    "id": 23,
+    "title": "Lowest risk scores first",
+    "description": "Return ApplicationID, CustomerID, RequestedAmount, and RiskScore ordered from lowest RiskScore to highest.",
+    "difficulty": "Beginner",
+    "topic": "ORDER BY ASC",
+    "starter_sql": "",
+    "concept": "Sorting, aliases, distinct values, TOP, and basic aggregates make SQL results easier to review and report.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return ApplicationID, CustomerID, RequestedAmount, and RiskScore ordered from lowest RiskScore to highest.",
+      "Return rows in the requested order."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested ORDER BY ASC pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how ORDER BY ASC answers the business request before you run the query."
     },
-    reference_sql: "SELECT Channel, COUNT(DISTINCT CASE WHEN EventName = 'signup_started' THEN CustomerID END) AS SignupStarted, COUNT(DISTINCT CASE WHEN EventName = 'signup_completed' THEN CustomerID END) AS SignupCompleted, COUNT(DISTINCT CASE WHEN EventName = 'account_opened' THEN CustomerID END) AS AccountOpened, ROUND(COUNT(DISTINCT CASE WHEN EventName = 'signup_completed' THEN CustomerID END) * 100.0 / COUNT(DISTINCT CASE WHEN EventName = 'signup_started' THEN CustomerID END), 2) AS CompletionRate FROM CustomerEvents GROUP BY Channel ORDER BY CompletionRate ASC, Channel ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT ApplicationID, CustomerID, RequestedAmount, RiskScore\nFROM Applications\nORDER BY RiskScore ASC;",
+    "comparison_mode": "ordered"
   },
   {
-    id: 23,
-    title: "Product Adoption",
-    description: "Product Strategy wants active account adoption by product. Return ProductName, ProductCategory, ActiveAccounts, and TotalBalance.",
-    difficulty: "Intermediate",
-    topic: "Product Analysis",
-    starter_sql: "",
-    concept: "Product adoption is about usage, not just availability. Here active accounts represent adoption.",
-    lesson: "Products describes the offering; Accounts shows whether customers opened and still hold the product.",
-    example_sql: "SELECT p.ProductName, COUNT(*) AS ActiveAccounts\nFROM Products p\nJOIN Accounts a ON p.ProductID = a.ProductID\nWHERE a.AccountStatus = 'Active'\nGROUP BY p.ProductName;",
-    success_criteria: ["Join Products to Accounts.", "Filter active accounts.", "Return active account count and balance by product."],
-    guidance: {
-      "Completely New": "Start with Products joined to Accounts on ProductID.",
-      "Know the Basics": "Use WHERE AccountStatus = 'Active'.",
-      "Comfortable With SQL": "Sort adoption from highest to lowest.",
-      "Interview Preparation": "Be clear that this measures active accounts, not unique customers.",
+    "id": 24,
+    "title": "Unique provinces",
+    "description": "Return a list of unique provinces found in the Customers table.\r\nSort the provinces alphabetically.",
+    "difficulty": "Beginner",
+    "topic": "DISTINCT",
+    "starter_sql": "",
+    "concept": "Sorting, aliases, distinct values, TOP, and basic aggregates make SQL results easier to review and report.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return a list of unique provinces found in the Customers table.",
+      "Return rows in the requested order."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested DISTINCT pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how DISTINCT, ORDER BY answers the business request before you run the query."
     },
-    reference_sql: "SELECT p.ProductName, p.ProductCategory, COUNT(*) AS ActiveAccounts, ROUND(SUM(a.Balance), 2) AS TotalBalance FROM Products p INNER JOIN Accounts a ON p.ProductID = a.ProductID WHERE a.AccountStatus = 'Active' GROUP BY p.ProductName, p.ProductCategory ORDER BY ActiveAccounts DESC, p.ProductName ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT DISTINCT Province\nFROM Customers\nORDER BY Province;",
+    "comparison_mode": "ordered"
   },
   {
-    id: 24,
-    title: "Branch Target Achievement",
-    description: "Operations asks which branches are beating application targets in 2025. Return BranchName, Month, Applications, ApplicationsTarget, and TargetAchievementRate.",
-    difficulty: "Advanced",
-    topic: "Target Analysis",
-    starter_sql: "",
-    concept: "Target analysis compares actuals to plan at the same grain. Here the grain is branch-month.",
-    lesson: "Aggregate applications by branch and month, then join to MonthlyTargets using both BranchID and Month.",
-    example_sql: "WITH actuals AS (\n  SELECT BranchID, SUBSTRING(DateColumn, 1, 7) AS Month, COUNT(*) AS Applications\n  FROM TableName\n  GROUP BY BranchID, SUBSTRING(DateColumn, 1, 7)\n)\nSELECT ...",
-    success_criteria: ["Build actual applications at branch-month grain.", "Join to MonthlyTargets.", "Sort best achievement rates first."],
-    guidance: {
-      "Completely New": "This is a multi-step query; use a CTE to keep it readable.",
-      "Know the Basics": "The join needs BranchID and Month so actuals match the right target row.",
-      "Comfortable With SQL": "Validate grain before calculating the rate.",
-      "Interview Preparation": "Explain how mismatched grain can create duplicate or incorrect target comparisons.",
+    "id": 25,
+    "title": "Unique merchant categories",
+    "description": "Return each unique MerchantCategory from Transactions in alphabetical order.",
+    "difficulty": "Beginner",
+    "topic": "DISTINCT",
+    "starter_sql": "",
+    "concept": "Sorting, aliases, distinct values, TOP, and basic aggregates make SQL results easier to review and report.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return each unique MerchantCategory from Transactions in alphabetical order.",
+      "Return rows in the requested order."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested DISTINCT pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how DISTINCT, ORDER BY answers the business request before you run the query."
     },
-    reference_sql: "WITH Actuals AS (SELECT BranchID, SUBSTRING(ApplicationDate, 1, 7) AS Month, COUNT(*) AS Applications FROM Applications WHERE ApplicationDate >= '2025-01-01' AND ApplicationDate <= '2025-12-31' GROUP BY BranchID, SUBSTRING(ApplicationDate, 1, 7)) SELECT TOP 10 b.BranchName, a.Month, a.Applications, t.ApplicationsTarget, ROUND(a.Applications * 100.0 / t.ApplicationsTarget, 2) AS TargetAchievementRate FROM Actuals a INNER JOIN MonthlyTargets t ON a.BranchID = t.BranchID AND a.Month = t.Month INNER JOIN Branches b ON a.BranchID = b.BranchID ORDER BY TargetAchievementRate DESC, b.BranchName ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT DISTINCT MerchantCategory\nFROM Transactions\nORDER BY MerchantCategory;",
+    "comparison_mode": "ordered"
   },
   {
-    id: 25,
-    title: "Customer Engagement Investigation",
-    description: "Senior leadership believes engagement weakened recently. Compare monthly active customers from successful transactions and return Month, ActiveCustomers, TransactionCount, and TransactionValue.",
-    difficulty: "Advanced",
-    topic: "Analytical Investigation",
-    starter_sql: "",
-    concept: "An analytical investigation begins by choosing a metric. Active customers measures reach; transaction count measures frequency; value measures money moved.",
-    lesson: "Join Transactions to Accounts so each transaction can be connected to a customer, then count distinct customers by month.",
-    example_sql: "SELECT Month, COUNT(DISTINCT CustomerID) AS ActiveCustomers\nFROM ...\nGROUP BY Month;",
-    success_criteria: ["Connect transactions to customers through Accounts.", "Group successful transactions by month.", "Return active customers, transaction count, and value."],
-    guidance: {
-      "Completely New": "Transactions do not directly store CustomerID, so use Accounts as the bridge.",
-      "Know the Basics": "COUNT DISTINCT CustomerID prevents a frequent customer from being counted many times.",
-      "Comfortable With SQL": "Compare active customers, count, and value before making a conclusion.",
-      "Interview Preparation": "Frame the result as evidence for a follow-up investigation, not a final business verdict.",
+    "id": 26,
+    "title": "Create readable aliases",
+    "description": "Return:\r\n- CustomerID as CustomerNumber\r\n- FirstName as GivenName\r\n- LastName as FamilyName\r\n- Province",
+    "difficulty": "Beginner",
+    "topic": "Aliases",
+    "starter_sql": "",
+    "concept": "Sorting, aliases, distinct values, TOP, and basic aggregates make SQL results easier to review and report.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return:"
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested Aliases pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how Aliases answers the business request before you run the query."
     },
-    reference_sql: "SELECT SUBSTRING(t.TransactionDate, 1, 7) AS Month, COUNT(DISTINCT a.CustomerID) AS ActiveCustomers, COUNT(*) AS TransactionCount, ROUND(SUM(t.Amount), 2) AS TransactionValue FROM Transactions t INNER JOIN Accounts a ON t.AccountID = a.AccountID WHERE t.TransactionStatus = 'Successful' GROUP BY SUBSTRING(t.TransactionDate, 1, 7) ORDER BY Month ASC;",
-    comparison_mode: "ordered",
+    "reference_sql": "SELECT CustomerID AS CustomerNumber,\n       FirstName AS GivenName,\n       LastName AS FamilyName,\n       Province\nFROM Customers;",
+    "comparison_mode": "unordered"
   },
+  {
+    "id": 27,
+    "title": "Most recent applications",
+    "description": "Return the 10 most recent applications with ApplicationID, CustomerID, ApplicationDate, RequestedAmount, and Status.",
+    "difficulty": "Beginner",
+    "topic": "TOP",
+    "starter_sql": "",
+    "concept": "Sorting, aliases, distinct values, TOP, and basic aggregates make SQL results easier to review and report.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName;",
+    "success_criteria": [
+      "Return the 10 most recent applications with ApplicationID, CustomerID, ApplicationDate, RequestedAmount, and Status.",
+      "Return rows in the requested order."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested TOP pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how TOP, multi-column ORDER BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT TOP 10\n       ApplicationID,\n       CustomerID,\n       ApplicationDate,\n       RequestedAmount,\n       Status\nFROM Applications\nORDER BY ApplicationDate DESC, ApplicationID DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 28,
+    "title": "Count SQLBank customers",
+    "description": "Return one value named CustomerCount containing the total number of rows in Customers.",
+    "difficulty": "Beginner",
+    "topic": "COUNT",
+    "starter_sql": "",
+    "concept": "Sorting, aliases, distinct values, TOP, and basic aggregates make SQL results easier to review and report.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT COUNT(*) AS RowCount\nFROM TableName;",
+    "success_criteria": [
+      "Return one value named CustomerCount containing the total number of rows in Customers.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested COUNT pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how COUNT answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT COUNT(*) AS CustomerCount\nFROM Customers;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 29,
+    "title": "Count active customers",
+    "description": "Return one value named ActiveCustomerCount containing the number of customers whose CustomerStatus is Active.",
+    "difficulty": "Beginner",
+    "topic": "COUNT",
+    "starter_sql": "",
+    "concept": "Sorting, aliases, distinct values, TOP, and basic aggregates make SQL results easier to review and report.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT COUNT(*) AS RowCount\nFROM TableName;",
+    "success_criteria": [
+      "Return one value named ActiveCustomerCount containing the number of customers whose CustomerStatus is Active.",
+      "Apply every requested filter.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested COUNT pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how COUNT, WHERE answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT COUNT(*) AS ActiveCustomerCount\nFROM Customers\nWHERE CustomerStatus = 'Active';",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 30,
+    "title": "Total loan portfolio",
+    "description": "Return the total LoanAmount across all loans as TotalLoanAmount.",
+    "difficulty": "Beginner",
+    "topic": "SUM",
+    "starter_sql": "",
+    "concept": "Sorting, aliases, distinct values, TOP, and basic aggregates make SQL results easier to review and report.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT COUNT(*) AS RowCount\nFROM TableName;",
+    "success_criteria": [
+      "Return the total LoanAmount across all loans as TotalLoanAmount.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested SUM pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how SUM answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT SUM(LoanAmount) AS TotalLoanAmount\nFROM Loans;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 31,
+    "title": "Average loan interest rate",
+    "description": "Return the average InterestRate across all loans as AverageInterestRate.",
+    "difficulty": "Beginner",
+    "topic": "AVG",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT COUNT(*) AS RowCount\nFROM TableName;",
+    "success_criteria": [
+      "Return the average InterestRate across all loans as AverageInterestRate.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested AVG pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how AVG answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT AVG(InterestRate) AS AverageInterestRate\nFROM Loans;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 32,
+    "title": "Smallest and largest requested amount",
+    "description": "Return:\r\n- minimum RequestedAmount as MinimumRequestedAmount\r\n- maximum RequestedAmount as MaximumRequestedAmount",
+    "difficulty": "Beginner",
+    "topic": "MIN",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT COUNT(*) AS RowCount\nFROM TableName;",
+    "success_criteria": [
+      "Return:",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested MIN pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how MIN, MAX answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT MIN(RequestedAmount) AS MinimumRequestedAmount,\n       MAX(RequestedAmount) AS MaximumRequestedAmount\nFROM Applications;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 33,
+    "title": "Total completed payment amount",
+    "description": "Return the sum of Amount for payments whose PaymentStatus is Completed.\r\nName the result CompletedPaymentAmount.",
+    "difficulty": "Beginner",
+    "topic": "SUM",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT COUNT(*) AS RowCount\nFROM TableName;",
+    "success_criteria": [
+      "Return the sum of Amount for payments whose PaymentStatus is Completed.",
+      "Apply every requested filter.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested SUM pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how SUM, WHERE answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT SUM(Amount) AS CompletedPaymentAmount\nFROM Payments\nWHERE PaymentStatus = 'Completed';",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 34,
+    "title": "Count failed transactions",
+    "description": "Return the number of failed transactions as FailedTransactionCount.",
+    "difficulty": "Beginner",
+    "topic": "COUNT",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT COUNT(*) AS RowCount\nFROM TableName;",
+    "success_criteria": [
+      "Return the number of failed transactions as FailedTransactionCount.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested COUNT pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how COUNT, WHERE answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT COUNT(*) AS FailedTransactionCount\nFROM Transactions\nWHERE TransactionStatus = 'Failed';",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 35,
+    "title": "Total campaign spend",
+    "description": "Return the sum of CampaignCost across Campaigns as TotalCampaignCost.",
+    "difficulty": "Beginner",
+    "topic": "SUM",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT COUNT(*) AS RowCount\nFROM TableName;",
+    "success_criteria": [
+      "Return the sum of CampaignCost across Campaigns as TotalCampaignCost.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested SUM pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how SUM answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT SUM(CampaignCost) AS TotalCampaignCost\nFROM Campaigns;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 36,
+    "title": "Customers by province",
+    "description": "Return Province and CustomerCount for each province.\r\nOrder from the highest CustomerCount to lowest.",
+    "difficulty": "Beginner",
+    "topic": "GROUP BY",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return Province and CustomerCount for each province.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested GROUP BY pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how GROUP BY, COUNT answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT Province,\n       COUNT(*) AS CustomerCount\nFROM Customers\nGROUP BY Province\nORDER BY CustomerCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 37,
+    "title": "Applications by status",
+    "description": "Return Status and ApplicationCount for each application status.",
+    "difficulty": "Beginner",
+    "topic": "GROUP BY",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return Status and ApplicationCount for each application status.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested GROUP BY pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how GROUP BY, COUNT answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT Status,\n       COUNT(*) AS ApplicationCount\nFROM Applications\nGROUP BY Status\nORDER BY ApplicationCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 38,
+    "title": "Accounts by type",
+    "description": "Return AccountType and AccountCount for each account type.",
+    "difficulty": "Beginner",
+    "topic": "GROUP BY",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return AccountType and AccountCount for each account type.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested GROUP BY pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how GROUP BY, COUNT answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT AccountType,\n       COUNT(*) AS AccountCount\nFROM Accounts\nGROUP BY AccountType\nORDER BY AccountCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 39,
+    "title": "Transactions by channel",
+    "description": "Return Channel and TransactionCount for each transaction channel.",
+    "difficulty": "Beginner",
+    "topic": "GROUP BY",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return Channel and TransactionCount for each transaction channel.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested GROUP BY pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how GROUP BY, COUNT answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT Channel,\n       COUNT(*) AS TransactionCount\nFROM Transactions\nGROUP BY Channel\nORDER BY TransactionCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 40,
+    "title": "Transaction value by type",
+    "description": "Return TransactionType, TransactionCount, and TotalAmount for each transaction type.",
+    "difficulty": "Beginner",
+    "topic": "GROUP BY",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return TransactionType, TransactionCount, and TotalAmount for each transaction type.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested GROUP BY pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how GROUP BY, COUNT, SUM answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT TransactionType,\n       COUNT(*) AS TransactionCount,\n       SUM(Amount) AS TotalAmount\nFROM Transactions\nGROUP BY TransactionType\nORDER BY TotalAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 41,
+    "title": "Average requested amount by status",
+    "description": "Return Status and AverageRequestedAmount for each application status.",
+    "difficulty": "Beginner",
+    "topic": "GROUP BY",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return Status and AverageRequestedAmount for each application status.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested GROUP BY pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how GROUP BY, AVG answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT Status,\n       AVG(RequestedAmount) AS AverageRequestedAmount\nFROM Applications\nGROUP BY Status\nORDER BY AverageRequestedAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 42,
+    "title": "Provinces with more than 50 customers",
+    "description": "Return Province and CustomerCount only for provinces containing more than 50 customers.",
+    "difficulty": "Beginner",
+    "topic": "GROUP BY",
+    "starter_sql": "",
+    "concept": "Aggregate queries summarize many rows into business metrics. GROUP BY controls the category each metric is calculated for.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return Province and CustomerCount only for provinces containing more than 50 customers.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested GROUP BY pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how GROUP BY, HAVING answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT Province,\n       COUNT(*) AS CustomerCount\nFROM Customers\nGROUP BY Province\nHAVING COUNT(*) > 50\nORDER BY CustomerCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 43,
+    "title": "Customer names on loans",
+    "description": "Return LoanID, FirstName, LastName, LoanAmount, and LoanStatus for every loan.",
+    "difficulty": "Beginner",
+    "topic": "INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return LoanID, FirstName, LastName, LoanAmount, and LoanStatus for every loan."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested INNER JOIN pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT l.LoanID,\n       c.FirstName,\n       c.LastName,\n       l.LoanAmount,\n       l.LoanStatus\nFROM Loans AS l\nINNER JOIN Customers AS c\n    ON l.CustomerID = c.CustomerID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 44,
+    "title": "Branch names on applications",
+    "description": "Return ApplicationID, BranchName, ApplicationDate, RequestedAmount, and Status.",
+    "difficulty": "Beginner",
+    "topic": "INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return ApplicationID, BranchName, ApplicationDate, RequestedAmount, and Status."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested INNER JOIN pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT a.ApplicationID,\n       b.BranchName,\n       a.ApplicationDate,\n       a.RequestedAmount,\n       a.Status\nFROM Applications AS a\nINNER JOIN Branches AS b\n    ON a.BranchID = b.BranchID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 45,
+    "title": "Loan information on payments",
+    "description": "Return PaymentID, LoanID, LoanAmount, PaymentDate, Amount, and PaymentStatus.",
+    "difficulty": "Beginner",
+    "topic": "INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return PaymentID, LoanID, LoanAmount, PaymentDate, Amount, and PaymentStatus."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested INNER JOIN pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT p.PaymentID,\n       l.LoanID,\n       l.LoanAmount,\n       p.PaymentDate,\n       p.Amount,\n       p.PaymentStatus\nFROM Payments AS p\nINNER JOIN Loans AS l\n    ON p.LoanID = l.LoanID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 46,
+    "title": "Customer names on accounts",
+    "description": "Return AccountID, FirstName, LastName, AccountType, Balance, and AccountStatus.",
+    "difficulty": "Beginner",
+    "topic": "INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return AccountID, FirstName, LastName, AccountType, Balance, and AccountStatus."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested INNER JOIN pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT a.AccountID,\n       c.FirstName,\n       c.LastName,\n       a.AccountType,\n       a.Balance,\n       a.AccountStatus\nFROM Accounts AS a\nINNER JOIN Customers AS c\n    ON a.CustomerID = c.CustomerID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 47,
+    "title": "Product names on accounts",
+    "description": "Return AccountID, ProductName, ProductCategory, AccountType, Balance, and AccountStatus.",
+    "difficulty": "Beginner",
+    "topic": "INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return AccountID, ProductName, ProductCategory, AccountType, Balance, and AccountStatus."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested INNER JOIN pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT a.AccountID,\n       p.ProductName,\n       p.ProductCategory,\n       a.AccountType,\n       a.Balance,\n       a.AccountStatus\nFROM Accounts AS a\nINNER JOIN Products AS p\n    ON a.ProductID = p.ProductID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 48,
+    "title": "Product names on applications",
+    "description": "Return ApplicationID, ProductName, ProductCategory, RequestedAmount, and Status.",
+    "difficulty": "Beginner",
+    "topic": "INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return ApplicationID, ProductName, ProductCategory, RequestedAmount, and Status."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested INNER JOIN pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT a.ApplicationID,\n       p.ProductName,\n       p.ProductCategory,\n       a.RequestedAmount,\n       a.Status\nFROM Applications AS a\nINNER JOIN Products AS p\n    ON a.ProductID = p.ProductID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 49,
+    "title": "Account type on transactions",
+    "description": "Return TransactionID, AccountType, TransactionType, Amount, Channel, and TransactionStatus.",
+    "difficulty": "Beginner",
+    "topic": "INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return TransactionID, AccountType, TransactionType, Amount, Channel, and TransactionStatus."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested INNER JOIN pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT t.TransactionID,\n       a.AccountType,\n       t.TransactionType,\n       t.Amount,\n       t.Channel,\n       t.TransactionStatus\nFROM Transactions AS t\nINNER JOIN Accounts AS a\n    ON t.AccountID = a.AccountID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 50,
+    "title": "Customer names on events",
+    "description": "Return EventID, FirstName, LastName, EventName, Channel, and DeviceType.",
+    "difficulty": "Beginner",
+    "topic": "INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return EventID, FirstName, LastName, EventName, Channel, and DeviceType."
+    ],
+    "guidance": {
+      "Completely New": "Identify the result grain before writing SELECT.",
+      "Know the Basics": "Use the requested INNER JOIN pattern and keep aliases readable.",
+      "Comfortable With SQL": "Check whether the prompt asks for sorting or exact output column names.",
+      "Interview Preparation": "Explain how INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT e.EventID,\n       c.FirstName,\n       c.LastName,\n       e.EventName,\n       e.Channel,\n       e.DeviceType\nFROM CustomerEvents AS e\nINNER JOIN Customers AS c\n    ON e.CustomerID = c.CustomerID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 51,
+    "title": "Branch names on monthly targets",
+    "description": "Return Month, BranchName, ApplicationsTarget, ApprovalsTarget, and RevenueTarget.",
+    "difficulty": "Beginner",
+    "topic": "INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return Month, BranchName, ApplicationsTarget, ApprovalsTarget, and RevenueTarget."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT m.Month,\n       b.BranchName,\n       m.ApplicationsTarget,\n       m.ApprovalsTarget,\n       m.RevenueTarget\nFROM MonthlyTargets AS m\nINNER JOIN Branches AS b\n    ON m.BranchID = b.BranchID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 52,
+    "title": "Customer names on applications",
+    "description": "Return ApplicationID, FirstName, LastName, RequestedAmount, Status, and RiskScore.",
+    "difficulty": "Beginner",
+    "topic": "INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return ApplicationID, FirstName, LastName, RequestedAmount, Status, and RiskScore."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT a.ApplicationID,\n       c.FirstName,\n       c.LastName,\n       a.RequestedAmount,\n       a.Status,\n       a.RiskScore\nFROM Applications AS a\nINNER JOIN Customers AS c\n    ON a.CustomerID = c.CustomerID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 53,
+    "title": "Three-table payment detail",
+    "description": "Return PaymentID, customer FirstName and LastName, LoanAmount, PaymentDate, Amount, and PaymentStatus.",
+    "difficulty": "Beginner",
+    "topic": "Three-table INNER JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return PaymentID, customer FirstName and LastName, LoanAmount, PaymentDate, Amount, and PaymentStatus."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table INNER JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT p.PaymentID,\n       c.FirstName,\n       c.LastName,\n       l.LoanAmount,\n       p.PaymentDate,\n       p.Amount,\n       p.PaymentStatus\nFROM Payments AS p\nINNER JOIN Loans AS l\n    ON p.LoanID = l.LoanID\nINNER JOIN Customers AS c\n    ON l.CustomerID = c.CustomerID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 54,
+    "title": "Application review file",
+    "description": "Return ApplicationID, customer FirstName and LastName, BranchName, RequestedAmount, Status, and RiskScore.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return ApplicationID, customer FirstName and LastName, BranchName, RequestedAmount, Status, and RiskScore."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT a.ApplicationID,\n       c.FirstName,\n       c.LastName,\n       b.BranchName,\n       a.RequestedAmount,\n       a.Status,\n       a.RiskScore\nFROM Applications AS a\nINNER JOIN Customers AS c\n    ON a.CustomerID = c.CustomerID\nINNER JOIN Branches AS b\n    ON a.BranchID = b.BranchID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 55,
+    "title": "Loan servicing file",
+    "description": "Return LoanID, customer FirstName and LastName, BranchName, LoanAmount, InterestRate, and LoanStatus.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return LoanID, customer FirstName and LastName, BranchName, LoanAmount, InterestRate, and LoanStatus."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT l.LoanID,\n       c.FirstName,\n       c.LastName,\n       b.BranchName,\n       l.LoanAmount,\n       l.InterestRate,\n       l.LoanStatus\nFROM Loans AS l\nINNER JOIN Customers AS c\n    ON l.CustomerID = c.CustomerID\nINNER JOIN Branches AS b\n    ON l.BranchID = b.BranchID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 56,
+    "title": "Account product portfolio",
+    "description": "Return AccountID, customer FirstName and LastName, ProductName, AccountType, Balance, and AccountStatus.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return AccountID, customer FirstName and LastName, ProductName, AccountType, Balance, and AccountStatus."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT a.AccountID,\n       c.FirstName,\n       c.LastName,\n       p.ProductName,\n       a.AccountType,\n       a.Balance,\n       a.AccountStatus\nFROM Accounts AS a\nINNER JOIN Customers AS c\n    ON a.CustomerID = c.CustomerID\nINNER JOIN Products AS p\n    ON a.ProductID = p.ProductID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 57,
+    "title": "Customer transaction detail",
+    "description": "Return TransactionID, customer FirstName and LastName, AccountType, TransactionType, Amount, Channel, and TransactionStatus.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return TransactionID, customer FirstName and LastName, AccountType, TransactionType, Amount, Channel, and TransactionStatus."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT t.TransactionID,\n       c.FirstName,\n       c.LastName,\n       a.AccountType,\n       t.TransactionType,\n       t.Amount,\n       t.Channel,\n       t.TransactionStatus\nFROM Transactions AS t\nINNER JOIN Accounts AS a\n    ON t.AccountID = a.AccountID\nINNER JOIN Customers AS c\n    ON a.CustomerID = c.CustomerID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 58,
+    "title": "Events with missing products preserved",
+    "description": "Return EventID, EventName, ProductName, Channel, and DeviceType for every customer event, including events that do not have a ProductID.",
+    "difficulty": "Beginner",
+    "topic": "LEFT JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return EventID, EventName, ProductName, Channel, and DeviceType for every customer event, including events that do not have a ProductID."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how LEFT JOIN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT e.EventID,\n       e.EventName,\n       p.ProductName,\n       e.Channel,\n       e.DeviceType\nFROM CustomerEvents AS e\nLEFT JOIN Products AS p\n    ON e.ProductID = p.ProductID;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 59,
+    "title": "Application count by branch",
+    "description": "Return BranchName and ApplicationCount for every branch that has applications.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return BranchName and ApplicationCount for every branch that has applications.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT b.BranchName,\n       COUNT(*) AS ApplicationCount\nFROM Applications AS a\nINNER JOIN Branches AS b\n    ON a.BranchID = b.BranchID\nGROUP BY b.BranchName\nORDER BY ApplicationCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 60,
+    "title": "Approved applications by branch",
+    "description": "Return BranchName and ApprovedApplicationCount for approved applications only.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "JOINs connect related SQLBank tables so reports can include IDs, names, products, branches, and activity details together.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return BranchName and ApprovedApplicationCount for approved applications only.",
+      "Apply every requested filter.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, WHERE, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT b.BranchName,\n       COUNT(*) AS ApprovedApplicationCount\nFROM Applications AS a\nINNER JOIN Branches AS b\n    ON a.BranchID = b.BranchID\nWHERE a.Status = 'Approved'\nGROUP BY b.BranchName\nORDER BY ApprovedApplicationCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 61,
+    "title": "Total loan amount by branch",
+    "description": "Return BranchName and TotalLoanAmount for each branch.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "CASE expressions convert raw values into business labels directly in the query result.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return BranchName and TotalLoanAmount for each branch.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, SUM, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT b.BranchName,\n       SUM(l.LoanAmount) AS TotalLoanAmount\nFROM Loans AS l\nINNER JOIN Branches AS b\n    ON l.BranchID = b.BranchID\nGROUP BY b.BranchName\nORDER BY TotalLoanAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 62,
+    "title": "Completed payments by customer",
+    "description": "Return CustomerID, FirstName, LastName, and CompletedPaymentAmount for completed payments.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "CASE expressions convert raw values into business labels directly in the query result.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, and CompletedPaymentAmount for completed payments.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN, SUM answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT c.CustomerID,\n       c.FirstName,\n       c.LastName,\n       SUM(p.Amount) AS CompletedPaymentAmount\nFROM Payments AS p\nINNER JOIN Loans AS l\n    ON p.LoanID = l.LoanID\nINNER JOIN Customers AS c\n    ON l.CustomerID = c.CustomerID\nWHERE p.PaymentStatus = 'Completed'\nGROUP BY c.CustomerID, c.FirstName, c.LastName\nORDER BY CompletedPaymentAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 63,
+    "title": "Transaction amount by customer",
+    "description": "Return CustomerID, FirstName, LastName, and TotalTransactionAmount for successful transactions.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "CASE expressions convert raw values into business labels directly in the query result.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, and TotalTransactionAmount for successful transactions.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN, SUM answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT c.CustomerID,\n       c.FirstName,\n       c.LastName,\n       SUM(t.Amount) AS TotalTransactionAmount\nFROM Transactions AS t\nINNER JOIN Accounts AS a\n    ON t.AccountID = a.AccountID\nINNER JOIN Customers AS c\n    ON a.CustomerID = c.CustomerID\nWHERE t.TransactionStatus = 'Successful'\nGROUP BY c.CustomerID, c.FirstName, c.LastName\nORDER BY TotalTransactionAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 64,
+    "title": "Total account balance by customer",
+    "description": "Return CustomerID, FirstName, LastName, and TotalBalance across each customer's accounts.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "CASE expressions convert raw values into business labels directly in the query result.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, and TotalBalance across each customer's accounts.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, SUM answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT c.CustomerID,\n       c.FirstName,\n       c.LastName,\n       SUM(a.Balance) AS TotalBalance\nFROM Customers AS c\nINNER JOIN Accounts AS a\n    ON c.CustomerID = a.CustomerID\nGROUP BY c.CustomerID, c.FirstName, c.LastName\nORDER BY TotalBalance DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 65,
+    "title": "Customers with no loans",
+    "description": "Return CustomerID, FirstName, LastName, and Province for customers who do not have a matching loan.",
+    "difficulty": "Beginner",
+    "topic": "LEFT JOIN",
+    "starter_sql": "",
+    "concept": "CASE expressions convert raw values into business labels directly in the query result.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, and Province for customers who do not have a matching loan."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how LEFT JOIN, IS NULL answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT c.CustomerID,\n       c.FirstName,\n       c.LastName,\n       c.Province\nFROM Customers AS c\nLEFT JOIN Loans AS l\n    ON c.CustomerID = l.CustomerID\nWHERE l.LoanID IS NULL;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 66,
+    "title": "Application size bands",
+    "description": "Return ApplicationID, RequestedAmount, and AmountBand.\r\nUse:\r\n- below 10000 = Small\r\n- below 25000 = Medium\r\n- everything else = Large",
+    "difficulty": "Beginner",
+    "topic": "CASE",
+    "starter_sql": "",
+    "concept": "CASE expressions convert raw values into business labels directly in the query result.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnName,\n       CASE WHEN ColumnName = 'Value' THEN 'Label' ELSE 'Other' END AS LabelName\nFROM TableName;",
+    "success_criteria": [
+      "Return ApplicationID, RequestedAmount, and AmountBand."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how CASE answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT ApplicationID,\n       RequestedAmount,\n       CASE\n           WHEN RequestedAmount < 10000 THEN 'Small'\n           WHEN RequestedAmount < 25000 THEN 'Medium'\n           ELSE 'Large'\n       END AS AmountBand\nFROM Applications;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 67,
+    "title": "Risk-score bands",
+    "description": "Return ApplicationID, RiskScore, and RiskBand.\r\nUse:\r\n- below 600 = Review\r\n- below 700 = Standard\r\n- 700 or higher = Strong",
+    "difficulty": "Beginner",
+    "topic": "CASE",
+    "starter_sql": "",
+    "concept": "CASE expressions convert raw values into business labels directly in the query result.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnName,\n       CASE WHEN ColumnName = 'Value' THEN 'Label' ELSE 'Other' END AS LabelName\nFROM TableName;",
+    "success_criteria": [
+      "Return ApplicationID, RiskScore, and RiskBand."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how CASE answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT ApplicationID,\n       RiskScore,\n       CASE\n           WHEN RiskScore < 600 THEN 'Review'\n           WHEN RiskScore < 700 THEN 'Standard'\n           ELSE 'Strong'\n       END AS RiskBand\nFROM Applications;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 68,
+    "title": "Simplify loan status",
+    "description": "Return LoanID, LoanStatus, and PortfolioGroup.\r\nActive and Delinquent loans should be labelled Open Portfolio.\r\nAll other statuses should be labelled Closed Portfolio.",
+    "difficulty": "Beginner",
+    "topic": "CASE",
+    "starter_sql": "",
+    "concept": "CASE expressions convert raw values into business labels directly in the query result.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnName,\n       CASE WHEN ColumnName = 'Value' THEN 'Label' ELSE 'Other' END AS LabelName\nFROM TableName;",
+    "success_criteria": [
+      "Return LoanID, LoanStatus, and PortfolioGroup."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how CASE, IN answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT LoanID,\n       LoanStatus,\n       CASE\n           WHEN LoanStatus IN ('Active', 'Delinquent')\n               THEN 'Open Portfolio'\n           ELSE 'Closed Portfolio'\n       END AS PortfolioGroup\nFROM Loans;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 69,
+    "title": "Payment health",
+    "description": "Return PaymentID, PaymentStatus, and PaymentHealth.\r\nUse:\r\n- Completed = Healthy\r\n- Late = Watch\r\n- everything else = Action Required",
+    "difficulty": "Beginner",
+    "topic": "CASE",
+    "starter_sql": "",
+    "concept": "CASE expressions convert raw values into business labels directly in the query result.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnName,\n       CASE WHEN ColumnName = 'Value' THEN 'Label' ELSE 'Other' END AS LabelName\nFROM TableName;",
+    "success_criteria": [
+      "Return PaymentID, PaymentStatus, and PaymentHealth."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how CASE answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT PaymentID,\n       PaymentStatus,\n       CASE\n           WHEN PaymentStatus = 'Completed' THEN 'Healthy'\n           WHEN PaymentStatus = 'Late' THEN 'Watch'\n           ELSE 'Action Required'\n       END AS PaymentHealth\nFROM Payments;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 70,
+    "title": "Open and closed accounts",
+    "description": "Return AccountID, ClosedDate, and ClosureState.\r\nIf ClosedDate is NULL, label the account Open.\r\nOtherwise label it Closed.",
+    "difficulty": "Beginner",
+    "topic": "CASE",
+    "starter_sql": "",
+    "concept": "CASE expressions convert raw values into business labels directly in the query result.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnName,\n       CASE WHEN ColumnName = 'Value' THEN 'Label' ELSE 'Other' END AS LabelName\nFROM TableName;",
+    "success_criteria": [
+      "Return AccountID, ClosedDate, and ClosureState."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how CASE, NULL answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT AccountID,\n       ClosedDate,\n       CASE\n           WHEN ClosedDate IS NULL THEN 'Open'\n           ELSE 'Closed'\n       END AS ClosureState\nFROM Accounts;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 71,
+    "title": "Product context on events",
+    "description": "Return EventID, EventName, ProductID, and ProductContext.\r\nIf ProductID is NULL, use No Product.\r\nOtherwise use Product Linked.",
+    "difficulty": "Beginner",
+    "topic": "CASE",
+    "starter_sql": "",
+    "concept": "Date filters and conditional aggregation help analysts answer time-bound and status-specific business questions.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnName,\n       CASE WHEN ColumnName = 'Value' THEN 'Label' ELSE 'Other' END AS LabelName\nFROM TableName;",
+    "success_criteria": [
+      "Return EventID, EventName, ProductID, and ProductContext."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how CASE, NULL answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT EventID,\n       EventName,\n       ProductID,\n       CASE\n           WHEN ProductID IS NULL THEN 'No Product'\n           ELSE 'Product Linked'\n       END AS ProductContext\nFROM CustomerEvents;",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 72,
+    "title": "Applications created in 2025",
+    "description": "Return ApplicationID, CustomerID, ApplicationDate, RequestedAmount, and Status for applications created during 2025.",
+    "difficulty": "Beginner",
+    "topic": "Date range",
+    "starter_sql": "",
+    "concept": "Date filters and conditional aggregation help analysts answer time-bound and status-specific business questions.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return ApplicationID, CustomerID, ApplicationDate, RequestedAmount, and Status for applications created during 2025.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Date range answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT ApplicationID,\n       CustomerID,\n       ApplicationDate,\n       RequestedAmount,\n       Status\nFROM Applications\nWHERE ApplicationDate >= '2025-01-01'\n  AND ApplicationDate < '2026-01-01';",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 73,
+    "title": "Loans started in 2025",
+    "description": "Return LoanID, CustomerID, StartDate, LoanAmount, and LoanStatus for loans started during 2025.",
+    "difficulty": "Beginner",
+    "topic": "Date range",
+    "starter_sql": "",
+    "concept": "Date filters and conditional aggregation help analysts answer time-bound and status-specific business questions.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return LoanID, CustomerID, StartDate, LoanAmount, and LoanStatus for loans started during 2025.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Date range answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT LoanID,\n       CustomerID,\n       StartDate,\n       LoanAmount,\n       LoanStatus\nFROM Loans\nWHERE StartDate >= '2025-01-01'\n  AND StartDate < '2026-01-01';",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 74,
+    "title": "Payments made in 2026",
+    "description": "Return PaymentID, LoanID, PaymentDate, Amount, and PaymentStatus for payments made during 2026.",
+    "difficulty": "Beginner",
+    "topic": "Date range",
+    "starter_sql": "",
+    "concept": "Date filters and conditional aggregation help analysts answer time-bound and status-specific business questions.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return PaymentID, LoanID, PaymentDate, Amount, and PaymentStatus for payments made during 2026.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Date range answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT PaymentID,\n       LoanID,\n       PaymentDate,\n       Amount,\n       PaymentStatus\nFROM Payments\nWHERE PaymentDate >= '2026-01-01'\n  AND PaymentDate < '2027-01-01';",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 75,
+    "title": "Q1 2026 transactions",
+    "description": "Return TransactionID, AccountID, TransactionDate, TransactionType, Amount, and Channel for transactions from January through March 2026.",
+    "difficulty": "Beginner",
+    "topic": "Date range",
+    "starter_sql": "",
+    "concept": "Date filters and conditional aggregation help analysts answer time-bound and status-specific business questions.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return TransactionID, AccountID, TransactionDate, TransactionType, Amount, and Channel for transactions from January through March 2026."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Date range answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT TransactionID,\n       AccountID,\n       TransactionDate,\n       TransactionType,\n       Amount,\n       Channel\nFROM Transactions\nWHERE TransactionDate >= '2026-01-01'\n  AND TransactionDate < '2026-04-01';",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 76,
+    "title": "Long-standing customers",
+    "description": "Return CustomerID, FirstName, LastName, and CustomerSince for customers who joined before 2020-01-01.",
+    "difficulty": "Beginner",
+    "topic": "Date comparison",
+    "starter_sql": "",
+    "concept": "Date filters and conditional aggregation help analysts answer time-bound and status-specific business questions.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return CustomerID, FirstName, LastName, and CustomerSince for customers who joined before 2020-01-01.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Date comparison answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT CustomerID,\n       FirstName,\n       LastName,\n       CustomerSince\nFROM Customers\nWHERE CustomerSince < '2020-01-01';",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 77,
+    "title": "Campaigns active on a date",
+    "description": "Return CampaignID, CampaignName, StartDate, EndDate, and Channel for campaigns that were active on June 15, 2025.",
+    "difficulty": "Beginner",
+    "topic": "Date overlap logic",
+    "starter_sql": "",
+    "concept": "Date filters and conditional aggregation help analysts answer time-bound and status-specific business questions.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnA, ColumnB\nFROM TableName\nWHERE ColumnA = 'Value';",
+    "success_criteria": [
+      "Return CampaignID, CampaignName, StartDate, EndDate, and Channel for campaigns that were active on June 15, 2025.",
+      "Apply every requested filter."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Date overlap logic answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT CampaignID,\n       CampaignName,\n       StartDate,\n       EndDate,\n       Channel\nFROM Campaigns\nWHERE StartDate <= '2025-06-15'\n  AND EndDate >= '2025-06-15';",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 78,
+    "title": "Regional customer distribution",
+    "description": "Return Province, CustomerCount, and ActiveCustomerCount.",
+    "difficulty": "Beginner",
+    "topic": "Conditional aggregation",
+    "starter_sql": "",
+    "concept": "Date filters and conditional aggregation help analysts answer time-bound and status-specific business questions.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnName,\n       CASE WHEN ColumnName = 'Value' THEN 'Label' ELSE 'Other' END AS LabelName\nFROM TableName;",
+    "success_criteria": [
+      "Return Province, CustomerCount, and ActiveCustomerCount.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Conditional aggregation answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT Province,\n       COUNT(*) AS CustomerCount,\n       SUM(\n           CASE\n               WHEN CustomerStatus = 'Active' THEN 1\n               ELSE 0\n           END\n       ) AS ActiveCustomerCount\nFROM Customers\nGROUP BY Province\nORDER BY CustomerCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 79,
+    "title": "Account status by type",
+    "description": "Return AccountType, AccountCount, and ActiveAccountCount.",
+    "difficulty": "Beginner",
+    "topic": "Conditional aggregation",
+    "starter_sql": "",
+    "concept": "Date filters and conditional aggregation help analysts answer time-bound and status-specific business questions.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT ColumnName,\n       CASE WHEN ColumnName = 'Value' THEN 'Label' ELSE 'Other' END AS LabelName\nFROM TableName;",
+    "success_criteria": [
+      "Return AccountType, AccountCount, and ActiveAccountCount.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Conditional aggregation answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT AccountType,\n       COUNT(*) AS AccountCount,\n       SUM(\n           CASE\n               WHEN AccountStatus = 'Active' THEN 1\n               ELSE 0\n           END\n       ) AS ActiveAccountCount\nFROM Accounts\nGROUP BY AccountType\nORDER BY AccountCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 80,
+    "title": "Branch lending summary",
+    "description": "Return BranchName, LoanCount, TotalLoanAmount, and AverageInterestRate.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Date filters and conditional aggregation help analysts answer time-bound and status-specific business questions.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return BranchName, LoanCount, TotalLoanAmount, and AverageInterestRate.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Map each requested output column to its source table or expression.",
+      "Know the Basics": "Build joins and grouping before refining the final SELECT list.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, multiple aggregates answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT b.BranchName,\n       COUNT(*) AS LoanCount,\n       SUM(l.LoanAmount) AS TotalLoanAmount,\n       AVG(l.InterestRate) AS AverageInterestRate\nFROM Loans AS l\nINNER JOIN Branches AS b\n    ON l.BranchID = b.BranchID\nGROUP BY b.BranchName\nORDER BY TotalLoanAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 81,
+    "title": "Completed payments by loan status",
+    "description": "Return LoanStatus and CompletedPaymentAmount using completed payments only.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Analyst reports combine filters, joins, grouping, and calculations while keeping the output grain clear.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return LoanStatus and CompletedPaymentAmount using completed payments only.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Keep the report grain aligned with the business request.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, WHERE, SUM, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT l.LoanStatus,\n       SUM(p.Amount) AS CompletedPaymentAmount\nFROM Payments AS p\nINNER JOIN Loans AS l\n    ON p.LoanID = l.LoanID\nWHERE p.PaymentStatus = 'Completed'\nGROUP BY l.LoanStatus\nORDER BY CompletedPaymentAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 82,
+    "title": "Applications by product",
+    "description": "Return ProductName and ApplicationCount.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Analyst reports combine filters, joins, grouping, and calculations while keeping the output grain clear.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return ProductName and ApplicationCount.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Keep the report grain aligned with the business request.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT p.ProductName,\n       COUNT(*) AS ApplicationCount\nFROM Applications AS a\nINNER JOIN Products AS p\n    ON a.ProductID = p.ProductID\nGROUP BY p.ProductName\nORDER BY ApplicationCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 83,
+    "title": "Approved applications by product",
+    "description": "Return ProductName and ApprovedApplicationCount for approved applications only.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Analyst reports combine filters, joins, grouping, and calculations while keeping the output grain clear.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return ProductName and ApprovedApplicationCount for approved applications only.",
+      "Apply every requested filter.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Keep the report grain aligned with the business request.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, WHERE, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT p.ProductName,\n       COUNT(*) AS ApprovedApplicationCount\nFROM Applications AS a\nINNER JOIN Products AS p\n    ON a.ProductID = p.ProductID\nWHERE a.Status = 'Approved'\nGROUP BY p.ProductName\nORDER BY ApprovedApplicationCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 84,
+    "title": "Transaction performance by channel",
+    "description": "Return Channel, TransactionCount, and TotalTransactionAmount for successful transactions.",
+    "difficulty": "Beginner",
+    "topic": "WHERE",
+    "starter_sql": "",
+    "concept": "Analyst reports combine filters, joins, grouping, and calculations while keeping the output grain clear.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return Channel, TransactionCount, and TotalTransactionAmount for successful transactions.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Keep the report grain aligned with the business request.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how WHERE, GROUP BY, COUNT, SUM answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT Channel,\n       COUNT(*) AS TransactionCount,\n       SUM(Amount) AS TotalTransactionAmount\nFROM Transactions\nWHERE TransactionStatus = 'Successful'\nGROUP BY Channel\nORDER BY TotalTransactionAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 85,
+    "title": "Merchant-category transaction value",
+    "description": "Return MerchantCategory, TransactionCount, and TotalAmount for successful transactions.",
+    "difficulty": "Beginner",
+    "topic": "WHERE",
+    "starter_sql": "",
+    "concept": "Analyst reports combine filters, joins, grouping, and calculations while keeping the output grain clear.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return MerchantCategory, TransactionCount, and TotalAmount for successful transactions.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Keep the report grain aligned with the business request.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how WHERE, GROUP BY, COUNT, SUM answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT MerchantCategory,\n       COUNT(*) AS TransactionCount,\n       SUM(Amount) AS TotalAmount\nFROM Transactions\nWHERE TransactionStatus = 'Successful'\nGROUP BY MerchantCategory\nORDER BY TotalAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 86,
+    "title": "Customer acquisition mix",
+    "description": "Return AcquisitionChannel and CustomerCount.",
+    "difficulty": "Beginner",
+    "topic": "GROUP BY",
+    "starter_sql": "",
+    "concept": "Analyst reports combine filters, joins, grouping, and calculations while keeping the output grain clear.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return AcquisitionChannel and CustomerCount.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Keep the report grain aligned with the business request.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT AcquisitionChannel,\n       COUNT(*) AS CustomerCount\nFROM Customers\nGROUP BY AcquisitionChannel\nORDER BY CustomerCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 87,
+    "title": "Balance by customer segment",
+    "description": "Return CustomerSegment and AverageBalance using Customers joined to Accounts.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Analyst reports combine filters, joins, grouping, and calculations while keeping the output grain clear.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return CustomerSegment and AverageBalance using Customers joined to Accounts.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Keep the report grain aligned with the business request.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, AVG, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT c.CustomerSegment,\n       AVG(a.Balance) AS AverageBalance\nFROM Customers AS c\nINNER JOIN Accounts AS a\n    ON c.CustomerID = a.CustomerID\nGROUP BY c.CustomerSegment\nORDER BY AverageBalance DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 88,
+    "title": "Monthly company targets",
+    "description": "Return Month, TotalApplicationsTarget, TotalApprovalsTarget, and TotalRevenueTarget across all branches.",
+    "difficulty": "Beginner",
+    "topic": "GROUP BY",
+    "starter_sql": "",
+    "concept": "Analyst reports combine filters, joins, grouping, and calculations while keeping the output grain clear.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT CategoryColumn, COUNT(*) AS ItemCount\nFROM TableName\nGROUP BY CategoryColumn;",
+    "success_criteria": [
+      "Return Month, TotalApplicationsTarget, TotalApprovalsTarget, and TotalRevenueTarget across all branches.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Keep the report grain aligned with the business request.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how GROUP BY, SUM answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT Month,\n       SUM(ApplicationsTarget) AS TotalApplicationsTarget,\n       SUM(ApprovalsTarget) AS TotalApprovalsTarget,\n       SUM(RevenueTarget) AS TotalRevenueTarget\nFROM MonthlyTargets\nGROUP BY Month\nORDER BY Month;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 89,
+    "title": "Branch approval rate",
+    "description": "Return BranchName, ApplicationCount, ApprovedCount, and ApprovalRatePct.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Analyst reports combine filters, joins, grouping, and calculations while keeping the output grain clear.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return BranchName, ApplicationCount, ApprovedCount, and ApprovalRatePct.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Keep the report grain aligned with the business request.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, conditional aggregation, arithmetic answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT b.BranchName,\n       COUNT(*) AS ApplicationCount,\n       SUM(\n           CASE\n               WHEN a.Status = 'Approved' THEN 1\n               ELSE 0\n           END\n       ) AS ApprovedCount,\n       100.0 *\n       SUM(\n           CASE\n               WHEN a.Status = 'Approved' THEN 1\n               ELSE 0\n           END\n       ) / COUNT(*) AS ApprovalRatePct\nFROM Applications AS a\nINNER JOIN Branches AS b\n    ON a.BranchID = b.BranchID\nGROUP BY b.BranchName\nORDER BY ApprovalRatePct DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 90,
+    "title": "Approved requested amount by branch",
+    "description": "Return BranchName, ApprovedApplicationCount, and ApprovedRequestedAmount for approved applications.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Analyst reports combine filters, joins, grouping, and calculations while keeping the output grain clear.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return BranchName, ApprovedApplicationCount, and ApprovedRequestedAmount for approved applications.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Keep the report grain aligned with the business request.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, WHERE, COUNT, SUM, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT b.BranchName,\n       COUNT(*) AS ApprovedApplicationCount,\n       SUM(a.RequestedAmount) AS ApprovedRequestedAmount\nFROM Applications AS a\nINNER JOIN Branches AS b\n    ON a.BranchID = b.BranchID\nWHERE a.Status = 'Approved'\nGROUP BY b.BranchName\nORDER BY ApprovedRequestedAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 91,
+    "title": "Top customers by loan amount",
+    "description": "SQLBank wants to identify its largest lending relationships.\r\nReturn the 10 customers with the largest total LoanAmount.\r\nInclude:\r\n- CustomerID\r\n- FirstName\r\n- LastName\r\n- TotalLoanAmount",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Beginner capstones combine the SQL patterns already introduced: joins, filters, grouping, aggregates, CASE, and ordered business outputs.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return the 10 customers with the largest total LoanAmount.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Break the analyst request into output columns, source tables, filters, grouping, and ordering.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, GROUP BY, SUM, TOP answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT TOP 10\n       c.CustomerID,\n       c.FirstName,\n       c.LastName,\n       SUM(l.LoanAmount) AS TotalLoanAmount\nFROM Customers AS c\nINNER JOIN Loans AS l\n    ON c.CustomerID = l.CustomerID\nGROUP BY c.CustomerID, c.FirstName, c.LastName\nORDER BY TotalLoanAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 92,
+    "title": "Customers with active accounts and loans",
+    "description": "Return distinct CustomerID, FirstName, and LastName for customers who have at least one active account and at least one active loan.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "Beginner capstones combine the SQL patterns already introduced: joins, filters, grouping, aggregates, CASE, and ordered business outputs.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT a.ColumnOne, b.ColumnTwo\nFROM TableA AS a\nINNER JOIN TableB AS b\n    ON a.SharedID = b.SharedID;",
+    "success_criteria": [
+      "Return distinct CustomerID, FirstName, and LastName for customers who have at least one active account and at least one active loan."
+    ],
+    "guidance": {
+      "Completely New": "Break the analyst request into output columns, source tables, filters, grouping, and ordering.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN, WHERE, DISTINCT answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT DISTINCT\n       c.CustomerID,\n       c.FirstName,\n       c.LastName\nFROM Customers AS c\nINNER JOIN Accounts AS a\n    ON c.CustomerID = a.CustomerID\nINNER JOIN Loans AS l\n    ON c.CustomerID = l.CustomerID\nWHERE a.AccountStatus = 'Active'\n  AND l.LoanStatus = 'Active';",
+    "comparison_mode": "unordered"
+  },
+  {
+    "id": 93,
+    "title": "Completed payments by branch",
+    "description": "Operations wants to understand how much completed payment value each branch is servicing.\r\nReturn BranchName and CompletedPaymentAmount.\r\nOnly include completed payments.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "Beginner capstones combine the SQL patterns already introduced: joins, filters, grouping, aggregates, CASE, and ordered business outputs.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return BranchName and CompletedPaymentAmount.",
+      "Apply every requested filter.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Break the analyst request into output columns, source tables, filters, grouping, and ordering.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN, SUM, WHERE, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT b.BranchName,\n       SUM(p.Amount) AS CompletedPaymentAmount\nFROM Payments AS p\nINNER JOIN Loans AS l\n    ON p.LoanID = l.LoanID\nINNER JOIN Branches AS b\n    ON l.BranchID = b.BranchID\nWHERE p.PaymentStatus = 'Completed'\nGROUP BY b.BranchName\nORDER BY CompletedPaymentAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 94,
+    "title": "Product account balances",
+    "description": "Return ProductName, AccountCount, and TotalBalance for accounts associated with each product.",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Beginner capstones combine the SQL patterns already introduced: joins, filters, grouping, aggregates, CASE, and ordered business outputs.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return ProductName, AccountCount, and TotalBalance for accounts associated with each product.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Break the analyst request into output columns, source tables, filters, grouping, and ordering.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, COUNT, SUM, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT p.ProductName,\n       COUNT(*) AS AccountCount,\n       SUM(a.Balance) AS TotalBalance\nFROM Accounts AS a\nINNER JOIN Products AS p\n    ON a.ProductID = p.ProductID\nGROUP BY p.ProductName\nORDER BY TotalBalance DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 95,
+    "title": "Transaction activity by customer segment",
+    "description": "Return CustomerSegment, TransactionCount, and TotalTransactionAmount for successful transactions.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "Beginner capstones combine the SQL patterns already introduced: joins, filters, grouping, aggregates, CASE, and ordered business outputs.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return CustomerSegment, TransactionCount, and TotalTransactionAmount for successful transactions.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Break the analyst request into output columns, source tables, filters, grouping, and ordering.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN, GROUP BY, COUNT, SUM answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT c.CustomerSegment,\n       COUNT(*) AS TransactionCount,\n       SUM(t.Amount) AS TotalTransactionAmount\nFROM Transactions AS t\nINNER JOIN Accounts AS a\n    ON t.AccountID = a.AccountID\nINNER JOIN Customers AS c\n    ON a.CustomerID = c.CustomerID\nWHERE t.TransactionStatus = 'Successful'\nGROUP BY c.CustomerSegment\nORDER BY TotalTransactionAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 96,
+    "title": "Mobile activity by customer segment",
+    "description": "Return CustomerSegment, TransactionCount, and TotalAmount for successful Mobile transactions.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "Beginner capstones combine the SQL patterns already introduced: joins, filters, grouping, aggregates, CASE, and ordered business outputs.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return CustomerSegment, TransactionCount, and TotalAmount for successful Mobile transactions.",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Break the analyst request into output columns, source tables, filters, grouping, and ordering.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN, multiple filters, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT c.CustomerSegment,\n       COUNT(*) AS TransactionCount,\n       SUM(t.Amount) AS TotalAmount\nFROM Transactions AS t\nINNER JOIN Accounts AS a\n    ON t.AccountID = a.AccountID\nINNER JOIN Customers AS c\n    ON a.CustomerID = c.CustomerID\nWHERE t.TransactionStatus = 'Successful'\n  AND t.Channel = 'Mobile'\nGROUP BY c.CustomerSegment\nORDER BY TotalAmount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 97,
+    "title": "Annual branch targets",
+    "description": "Return BranchName:\r\n- AnnualApplicationsTarget\r\n- AnnualApprovalsTarget\r\n- AnnualRevenueTarget\r\n- AnnualCustomerGrowthTarget",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Beginner capstones combine the SQL patterns already introduced: joins, filters, grouping, aggregates, CASE, and ordered business outputs.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return BranchName:",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Break the analyst request into output columns, source tables, filters, grouping, and ordering.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, multiple SUMs, GROUP BY answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT b.BranchName,\n       SUM(m.ApplicationsTarget) AS AnnualApplicationsTarget,\n       SUM(m.ApprovalsTarget) AS AnnualApprovalsTarget,\n       SUM(m.RevenueTarget) AS AnnualRevenueTarget,\n       SUM(m.CustomerGrowthTarget) AS AnnualCustomerGrowthTarget\nFROM MonthlyTargets AS m\nINNER JOIN Branches AS b\n    ON m.BranchID = b.BranchID\nGROUP BY b.BranchName\nORDER BY AnnualRevenueTarget DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 98,
+    "title": "Capstone: Branch payment health",
+    "description": "Operations wants a payment-health report for every branch.\r\nReturn:\r\n- BranchName\r\n- PaymentCount\r\n- CompletedCount\r\n- LateCount\r\n- MissedCount\r\n- TotalPaymentAmount\r\nOrder branches by LateCount descending and then MissedCount descending.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "Beginner capstones combine the SQL patterns already introduced: joins, filters, grouping, aggregates, CASE, and ordered business outputs.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return:",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Break the analyst request into output columns, source tables, filters, grouping, and ordering.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN, GROUP BY, conditional aggregation answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT b.BranchName,\n       COUNT(*) AS PaymentCount,\n       SUM(\n           CASE\n               WHEN p.PaymentStatus = 'Completed' THEN 1\n               ELSE 0\n           END\n       ) AS CompletedCount,\n       SUM(\n           CASE\n               WHEN p.PaymentStatus = 'Late' THEN 1\n               ELSE 0\n           END\n       ) AS LateCount,\n       SUM(\n           CASE\n               WHEN p.PaymentStatus = 'Missed' THEN 1\n               ELSE 0\n           END\n       ) AS MissedCount,\n       SUM(p.Amount) AS TotalPaymentAmount\nFROM Payments AS p\nINNER JOIN Loans AS l\n    ON p.LoanID = l.LoanID\nINNER JOIN Branches AS b\n    ON l.BranchID = b.BranchID\nGROUP BY b.BranchName\nORDER BY LateCount DESC, MissedCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 99,
+    "title": "Capstone: Product adoption portfolio",
+    "description": "Product leadership wants to understand product adoption across SQLBank.\r\nReturn:\r\n- ProductName\r\n- ProductCategory\r\n- AccountCount\r\n- ActiveAccountCount\r\n- TotalBalance",
+    "difficulty": "Beginner",
+    "topic": "JOIN",
+    "starter_sql": "",
+    "concept": "Beginner capstones combine the SQL patterns already introduced: joins, filters, grouping, aggregates, CASE, and ordered business outputs.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return:",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Break the analyst request into output columns, source tables, filters, grouping, and ordering.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how JOIN, GROUP BY, conditional aggregation answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT p.ProductName,\n       p.ProductCategory,\n       COUNT(*) AS AccountCount,\n       SUM(\n           CASE\n               WHEN a.AccountStatus = 'Active' THEN 1\n               ELSE 0\n           END\n       ) AS ActiveAccountCount,\n       SUM(a.Balance) AS TotalBalance\nFROM Accounts AS a\nINNER JOIN Products AS p\n    ON a.ProductID = p.ProductID\nGROUP BY p.ProductName, p.ProductCategory\nORDER BY AccountCount DESC;",
+    "comparison_mode": "ordered"
+  },
+  {
+    "id": 100,
+    "title": "Final Beginner Capstone: Customer-segment activity",
+    "description": "Analytics wants a customer-segment view of successful transaction activity.\r\nReturn:\r\n- CustomerSegment\r\n- TransactionCount\r\n- TotalTransactionAmount\r\n- AverageTransactionAmount\r\nOrder the results by TotalTransactionAmount from highest to lowest.",
+    "difficulty": "Beginner",
+    "topic": "Three-table JOIN",
+    "starter_sql": "",
+    "concept": "Beginner capstones combine the SQL patterns already introduced: joins, filters, grouping, aggregates, CASE, and ordered business outputs.",
+    "lesson": "Use the existing SQLBank tables exactly as named. The reference SQL is one correct solution, while equivalent queries can pass when they return the same rows, columns, aliases, and required ordering.",
+    "example_sql": "SELECT d.Category, COUNT(*) AS ItemCount\nFROM DetailTable AS d\nINNER JOIN LookupTable AS l\n    ON d.LookupID = l.LookupID\nGROUP BY d.Category;",
+    "success_criteria": [
+      "Return:",
+      "Return rows in the requested order.",
+      "Use the requested aggregate metric names."
+    ],
+    "guidance": {
+      "Completely New": "Break the analyst request into output columns, source tables, filters, grouping, and ordering.",
+      "Know the Basics": "Match the filter, grouping, and sorting requirements in the prompt.",
+      "Comfortable With SQL": "Focus on returning the same result shape and row set as the request.",
+      "Interview Preparation": "Explain how Three-table JOIN, WHERE, GROUP BY, COUNT, SUM, AVG answers the business request before you run the query."
+    },
+    "reference_sql": "SELECT c.CustomerSegment,\n       COUNT(*) AS TransactionCount,\n       SUM(t.Amount) AS TotalTransactionAmount,\n       AVG(t.Amount) AS AverageTransactionAmount\nFROM Transactions AS t\nINNER JOIN Accounts AS a\n    ON t.AccountID = a.AccountID\nINNER JOIN Customers AS c\n    ON a.CustomerID = c.CustomerID\nWHERE t.TransactionStatus = 'Successful'\nGROUP BY c.CustomerSegment\nORDER BY TotalTransactionAmount DESC;",
+    "comparison_mode": "ordered"
+  }
 ];
 
 const prohibitedKeywords = new Set([

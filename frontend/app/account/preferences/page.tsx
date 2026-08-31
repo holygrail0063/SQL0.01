@@ -146,7 +146,6 @@ function LearningPreferencesContent() {
               <p className="mt-2 text-sm leading-6 text-slate-300">{selectedCourse.description}</p>
               <div className="mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
                 <span>{selectedCourse.moduleCountLabel}</span>
-                <span>{selectedCourse.lessonCountLabel}</span>
                 <span>{selectedCourse.questionCountLabel}</span>
                 <span>{selectedCourse.exerciseCountLabel}</span>
                 <span>{selectedCourse.projectCountLabel}</span>

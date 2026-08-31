@@ -67,14 +67,14 @@ function LearnContent() {
       <p className="font-mono text-sm text-cyan">Your SQL Path</p>
       <h1 className="mt-3 text-3xl font-semibold text-slate-50">{course.title}</h1>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{course.description}</p>
-      <p className="mt-2 text-sm text-slate-500">{course.moduleCountLabel} • {course.lessonCountLabel} • {course.questionCountLabel} • Self-paced</p>
+      <p className="mt-2 text-sm text-slate-500">{course.moduleCountLabel} • {course.questionCountLabel} • Self-paced</p>
       {error && (
         <div className="mt-6 rounded border border-red-900/70 bg-red-950/40 p-4 text-sm text-red-100">
           Learning data could not be loaded. {error}
         </div>
       )}
       <div className="mt-8 space-y-6">
-        {moduleProgress.map(({ module, completedLessons, totalLessons, status, percent }) => {
+        {moduleProgress.map(({ module, completedQuestions, totalQuestions, status, percent }) => {
           const optionalReview = isModuleBeforeRecommendedStart(course, module);
           return (
           <section className="rounded border border-line bg-panel p-5" key={module.id}>
@@ -89,7 +89,7 @@ function LearnContent() {
                   {status === "Locked" && <Lock className="mr-1 inline" size={14} />}
                   {status}
                 </div>
-                <div className="mt-1 text-slate-500">{completedLessons} / {totalLessons} lessons</div>
+                <div className="mt-1 text-slate-500">{completedQuestions} / {totalQuestions} questions</div>
               </div>
             </div>
             <div className="mt-4 h-2 rounded bg-slate-800">

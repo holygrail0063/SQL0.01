@@ -111,7 +111,7 @@ function ProgressContent() {
       </div>
 
       <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard icon={<BarChart3 size={18} />} label="Course Progress" value={`${analytics.summary.courseProgress}%`} detail={`${analytics.summary.completedLessons} of ${analytics.summary.totalLessons} lessons completed`} />
+        <MetricCard icon={<BarChart3 size={18} />} label="Course Progress" value={`${analytics.summary.courseProgress}%`} detail={`${analytics.summary.completedQuestions} of ${analytics.summary.totalQuestions} questions completed`} />
         <MetricCard icon={<ListChecks size={18} />} label="Problems Solved" value={String(analytics.summary.solvedChallenges)} detail={`${analytics.summary.attemptedQueries} total query attempts`} />
         <MetricCard
           icon={<CheckCircle2 size={18} />}
@@ -130,7 +130,7 @@ function ProgressContent() {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-slate-50">{course.shortTitle}</h2>
-                <p className="mt-1 text-sm text-slate-400">{analytics.summary.completedLessons} of {analytics.summary.totalLessons} lessons completed</p>
+                <p className="mt-1 text-sm text-slate-400">{analytics.summary.completedQuestions} of {analytics.summary.totalQuestions} questions completed</p>
               </div>
               <span className="text-2xl font-semibold text-slate-50">{analytics.summary.courseProgress}%</span>
             </div>
@@ -219,7 +219,7 @@ function CurrentModuleSummary({ moduleProgress }: { moduleProgress: ModuleProgre
     <div className="rounded-lg border border-line bg-panel p-5">
       <p className="font-mono text-xs uppercase tracking-wider text-cyan">Current Module</p>
       <h3 className="mt-2 text-lg font-semibold text-slate-50">{moduleProgress.module.title}</h3>
-      <p className="mt-2 text-sm text-slate-400">{moduleProgress.completedLessons} of {moduleProgress.totalLessons} lessons completed</p>
+      <p className="mt-2 text-sm text-slate-400">{moduleProgress.completedQuestions} of {moduleProgress.totalQuestions} questions completed</p>
       <div className="mt-4 h-2 rounded-full bg-elevated">
         <div className="h-2 rounded-full bg-brand-strong" style={{ width: `${moduleProgress.percent}%` }} />
       </div>
@@ -241,7 +241,7 @@ function SkillMasteryPanel({ encounteredSkills, upcomingSkills }: { encounteredS
     <div>
       <div className="space-y-4">
         {encounteredSkills.slice(0, 6).map((skill) => (
-          <ProgressRow key={skill.skill} label={skill.skill} value={skill.mastery} detail={skill.attempts > 0 ? `${skill.correctAttempts}/${skill.attempts} attempts correct` : "Lesson progress evidence"} />
+          <ProgressRow key={skill.skill} label={skill.skill} value={skill.mastery} detail={skill.attempts > 0 ? `${skill.correctAttempts}/${skill.attempts} attempts correct` : "Question progress evidence"} />
         ))}
       </div>
       {upcomingSkills.length > 0 && <UpNextSkills skills={upcomingSkills} />}

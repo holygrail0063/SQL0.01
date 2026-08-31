@@ -63,6 +63,8 @@ export type DashboardAnalytics = {
     courseProgress: number;
     completedLessons: number;
     totalLessons: number;
+    completedQuestions: number;
+    totalQuestions: number;
     attemptedQueries: number;
     solvedChallenges: number;
     currentStreak: number;
@@ -115,8 +117,8 @@ export function buildDashboardAnalytics(
   const correctRangeAttempts = rangeAttempts.filter((attempt) => attempt.is_correct).length;
   const completedRows = progressRows.filter((row) => row.status === "completed");
   const moduleProgress = buildModuleProgress(course, progressRows);
-  const totalLessons = moduleProgress.reduce((sum, module) => sum + module.totalLessons, 0);
-  const completedLessons = moduleProgress.reduce((sum, module) => sum + module.completedLessons, 0);
+  const totalQuestions = moduleProgress.reduce((sum, module) => sum + module.totalQuestions, 0);
+  const completedQuestions = moduleProgress.reduce((sum, module) => sum + module.completedQuestions, 0);
   const completedChallengeIds = new Set(completedRows.map((row) => row.challenge_id));
   const firstTry = firstTryAccuracy(attempts);
   const solvedAttempts = completedRows.map((row) => row.attempt_count).filter((count) => count > 0);
@@ -125,9 +127,11 @@ export function buildDashboardAnalytics(
   return {
     summary: {
       readiness: readinessScore(course, progressRows),
-      courseProgress: totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0,
-      completedLessons,
-      totalLessons,
+      courseProgress: totalQuestions ? Math.round((completedQuestions / totalQuestions) * 100) : 0,
+      completedLessons: completedQuestions,
+      totalLessons: totalQuestions,
+      completedQuestions,
+      totalQuestions,
       attemptedQueries: attempts.length,
       solvedChallenges: completedChallengeIds.size,
       currentStreak: currentActivityStreak(attempts),
