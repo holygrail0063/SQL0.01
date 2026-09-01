@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test": "node scripts/sqlbank-regression.mjs",
-    "validate:curriculum": "node scripts/validate-curriculum.mjs"
+    "validate:curriculum": "node scripts/validate-curriculum.mjs",
+    "test:smoke": "node scripts/production-smoke.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "4.7.0",
