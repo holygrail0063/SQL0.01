@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("first_name,last_name,display_name,sql_level")
-    .eq("auth_user_id", user.id)
+    .eq("id", user.id)
     .maybeSingle();
 
   const displayName = profileDisplayName(profile, user.email);

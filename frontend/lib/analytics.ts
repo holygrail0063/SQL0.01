@@ -19,9 +19,7 @@ export type ChallengeAttempt = {
   id?: string;
   user_id: string;
   challenge_id: number;
-  query_text?: string | null;
   is_correct: boolean;
-  execution_time_ms?: number | null;
   attempted_at: string;
 };
 
@@ -93,7 +91,7 @@ export async function getChallengeAttempts(user: User): Promise<ChallengeAttempt
 
   const { data, error } = await supabase
     .from("challenge_attempts")
-    .select("id,user_id,challenge_id,query_text,is_correct,execution_time_ms,attempted_at")
+    .select("id,user_id,challenge_id,is_correct,attempted_at")
     .eq("user_id", user.id)
     .order("attempted_at", { ascending: false })
     .limit(5000);

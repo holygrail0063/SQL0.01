@@ -5,7 +5,6 @@ import { requireSupabase, supabase } from "@/lib/supabase";
 
 export type Profile = {
   id?: string;
-  auth_user_id: string;
   first_name: string | null;
   last_name: string | null;
   display_name: string | null;
@@ -31,14 +30,14 @@ export type ProgressRow = {
 
 export async function getProfile(user: User): Promise<Profile | null> {
   if (!supabase) return null;
-  const { data, error } = await supabase.from("profiles").select("*").eq("auth_user_id", user.id).maybeSingle();
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
   if (error) throw error;
   return data;
 }
 
 export async function saveProfile(user: User, values: Partial<Profile>): Promise<Profile> {
   const client = requireSupabase();
-  const { data: existing, error: existingError } = await client.from("profiles").select("*").eq("auth_user_id", user.id).maybeSingle();
+  const { data: existing, error: existingError } = await client.from("profiles").select("*").eq("id", user.id).maybeSingle();
   if (existingError) throw existingError;
 
   const metadataNames = namesFromMetadata(user);
@@ -47,7 +46,7 @@ export async function saveProfile(user: User, values: Partial<Profile>): Promise
   const displayName = [firstName, lastName].filter(Boolean).join(" ") || cleanName(values.display_name) || existing?.display_name || metadataNames.displayName || user.email?.split("@")[0] || null;
 
   const profile = {
-    auth_user_id: user.id,
+    id: user.id,
     first_name: firstName,
     last_name: lastName,
     display_name: displayName,
@@ -58,18 +57,18 @@ export async function saveProfile(user: User, values: Partial<Profile>): Promise
     onboarding_completed: values.onboarding_completed ?? existing?.onboarding_completed ?? false,
     updated_at: new Date().toISOString(),
   };
-  const { data, error } = await client.from("profiles").upsert(profile, { onConflict: "auth_user_id" }).select("*").single();
+  const { data, error } = await client.from("profiles").upsert(profile, { onConflict: "id" }).select("*").single();
   if (error && isMissingProfileColumnError(error)) {
     if ("accent_color" in values) throw error;
     const fallbackProfile = {
-      auth_user_id: user.id,
+      id: user.id,
       display_name: displayName,
       selected_role: profile.selected_role,
       sql_level: profile.sql_level,
       onboarding_completed: profile.onboarding_completed,
       updated_at: profile.updated_at,
     };
-    const { data: fallbackData, error: fallbackError } = await client.from("profiles").upsert(fallbackProfile, { onConflict: "auth_user_id" }).select("*").single();
+    const { data: fallbackData, error: fallbackError } = await client.from("profiles").upsert(fallbackProfile, { onConflict: "id" }).select("*").single();
     if (fallbackError) throw fallbackError;
     return { ...fallbackData, first_name: firstName, last_name: lastName, accent_color: normalizeAccentId(existing?.accent_color) };
   }
@@ -85,7 +84,7 @@ export async function saveAccentColor(user: User, accentColor: unknown): Promise
   const { data, error } = await client
     .from("profiles")
     .update({ accent_color: accent, updated_at: updatedAt })
-    .eq("auth_user_id", user.id)
+    .eq("id", user.id)
     .select("accent_color")
     .maybeSingle();
 
@@ -97,7 +96,7 @@ export async function saveAccentColor(user: User, accentColor: unknown): Promise
   const { data: inserted, error: insertError } = await client
     .from("profiles")
     .insert({
-      auth_user_id: user.id,
+      id: user.id,
       first_name: metadataNames.firstName,
       last_name: metadataNames.lastName,
       display_name: displayName,
@@ -152,16 +151,14 @@ export async function getProgress(user: User): Promise<ProgressRow[]> {
   return data ?? [];
 }
 
-export async function recordAttempt(user: User, challengeId: number, queryText: string, result: QueryResult) {
+export async function recordAttempt(user: User, challengeId: number, _queryText: string, result: QueryResult) {
   const client = requireSupabase();
   const attemptedAt = new Date().toISOString();
 
   await client.from("challenge_attempts").insert({
     user_id: user.id,
     challenge_id: challengeId,
-    query_text: queryText,
     is_correct: result.correct,
-    execution_time_ms: result.executionTimeMs,
     attempted_at: attemptedAt,
   });
 
