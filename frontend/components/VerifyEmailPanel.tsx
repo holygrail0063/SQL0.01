@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { useAuth } from "@/lib/auth";
 import { isEmailVerified, readableVerificationError, resendVerificationEmail, verifiedUserDestination } from "@/lib/email-verification";
+import { safeNextPath } from "@/lib/session-boundary";
 
 type VerifyEmailPanelProps = {
   initialEmail?: string;
@@ -75,7 +76,7 @@ export function VerifyEmailPanel({ initialEmail = "", state = "pending", message
     }
   }
 
-  const continueHref = nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/login";
+  const continueHref = safeNextPath(nextPath ?? null) ?? "/login";
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-ink px-5 py-12 text-slate-50">
