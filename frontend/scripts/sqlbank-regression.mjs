@@ -82,11 +82,11 @@ const cases = [
   {
     name: "Strict stage columns pass and reject extras",
     run() {
-      const correct = sqlbank.runSqlBankQuery(26, "SELECT CustomerID, Province, City FROM Customers;").body;
-      assert(correct.success && correct.correct, "stage 2 strict projection should pass");
+      const correct = sqlbank.runSqlBankQuery(2, "SELECT CustomerID, FirstName, LastName, Province, City FROM Customers;").body;
+      assert(correct.success && correct.correct, "challenge 2 strict projection should pass");
 
-      const extra = sqlbank.runSqlBankQuery(26, "SELECT * FROM Customers;").body;
-      assert(extra.success && !extra.correct, "SELECT * should fail strict three-column stage");
+      const extra = sqlbank.runSqlBankQuery(2, "SELECT * FROM Customers;").body;
+      assert(extra.success && !extra.correct, "SELECT * should fail strict five-column challenge");
       assert(extra.evaluation?.type === "extra_columns", `expected extra_columns, got ${extra.evaluation?.type}`);
     },
   },
@@ -107,7 +107,7 @@ const cases = [
   {
     name: "Ordered challenge detects wrong order",
     run() {
-      const result = sqlbank.runSqlBankQuery(5, "SELECT * FROM Loans ORDER BY LoanAmount ASC;").body;
+      const result = sqlbank.runSqlBankQuery(20, "SELECT * FROM Loans ORDER BY LoanAmount ASC;").body;
       assert(result.success && !result.correct, "ascending order should fail descending order task");
       assert(result.evaluation?.type === "wrong_order", `expected wrong_order, got ${result.evaluation?.type}`);
     },

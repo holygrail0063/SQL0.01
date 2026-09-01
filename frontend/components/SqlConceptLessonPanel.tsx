@@ -12,7 +12,7 @@ export function SqlConceptLessonPanel({ lesson, onComplete, onClose, replay = fa
   const [stepIndex, setStepIndex] = useState(0);
   const step = steps[stepIndex] ?? steps[0];
   const isLast = stepIndex === steps.length - 1;
-  const doneLabel = replay ? "Close" : "Your Turn";
+  const doneLabel = replay ? "Close" : "Try it yourself ->";
 
   function finish() {
     if (replay) onClose?.();
@@ -25,6 +25,7 @@ export function SqlConceptLessonPanel({ lesson, onComplete, onClose, replay = fa
         <div>
           <p className="font-mono text-xs uppercase tracking-wider text-cyan">{lesson.kind === "full" ? "Concept Lesson" : "Mini Concept"}</p>
           <h2 className="mt-1 text-xl font-semibold">{lesson.title}</h2>
+          <p className="mt-1 text-xs text-slate-500">{stepIndex + 1} of {steps.length}</p>
         </div>
         <div className="flex items-center gap-2">
           {stepIndex > 0 && (
@@ -37,7 +38,7 @@ export function SqlConceptLessonPanel({ lesson, onComplete, onClose, replay = fa
           </button>
           {!replay && (
             <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm text-slate-300 hover:border-brand-strong/50" onClick={finish} type="button">
-              <SkipForward size={15} /> Skip
+              <SkipForward size={15} /> Skip Lesson
             </button>
           )}
           <button className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={() => (isLast ? finish() : setStepIndex((value) => Math.min(steps.length - 1, value + 1)))} type="button">

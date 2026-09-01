@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { BookOpen, Lightbulb, PanelLeftClose, PanelLeftOpen, Play, RotateCcw } from "lucide-react";
 import type { CSSProperties, Dispatch, PointerEvent, ReactNode, SetStateAction } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ResultsTable } from "@/components/ResultsTable";
 import { SchemaExplorer } from "@/components/SchemaExplorer";
 import { SqlEditor } from "@/components/SqlEditor";
@@ -33,7 +33,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const fallbackLessonBundle = useMemo(() => getLessonById(lessonId), [lessonId]);
   const selectedCourse = useMemo(() => getCourseForProfile(profile) ?? fallbackLessonBundle?.course ?? null, [fallbackLessonBundle, profile]);
   const lessonBundle = useMemo(() => (selectedCourse ? getLessonByIdInCourse(selectedCourse, lessonId) : null) ?? fallbackLessonBundle, [fallbackLessonBundle, lessonId, selectedCourse]);
-  const stages = useMemo(() => (lessonBundle ? [...conceptStagesForLesson(lessonBundle.course, lessonBundle.lesson), ...getLessonStages(lessonBundle.lesson)] : []), [lessonBundle]);
+  const introConceptStages = useMemo(() => (lessonBundle ? conceptStagesForLesson(lessonBundle.course, lessonBundle.lesson) : []), [lessonBundle]);
+  const stages = useMemo(() => (lessonBundle ? getLessonStages(lessonBundle.lesson) : []), [lessonBundle]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [schema, setSchema] = useState<SchemaTable[]>([]);
   const [progress, setProgress] = useState<ProgressRow[]>([]);
@@ -56,6 +57,17 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [resultTab, setResultTab] = useState<ResultTabId>("results");
   const [courseCompletionAcknowledged, setCourseCompletionAcknowledged] = useState(false);
   const [reviewConceptId, setReviewConceptId] = useState<string | null>(null);
+  const [teachingConceptId, setTeachingConceptId] = useState<string | null>(null);
+  const conceptOverlayOpen = Boolean(teachingConceptId || reviewConceptId);
+
+  useEffect(() => {
+    if (!conceptOverlayOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [conceptOverlayOpen]);
 
   useEffect(() => {
     if (!user) return;
@@ -91,6 +103,19 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     window.localStorage.setItem(frontierStorageKey(user.id, lessonId), String(nextFrontierIndex));
     setInitializedFrontierKey(initializationKey);
   }, [initializedFrontierKey, lessonBundle, lessonId, loading, progress, stages, user]);
+
+  useEffect(() => {
+    if (!lessonBundle || !user || loading || !stages.length) return;
+    const stage = stages[activeStageIndex];
+    if (!stage?.challengeId || !introConceptStages.length) {
+      setTeachingConceptId(null);
+      return;
+    }
+    const currentConceptStillApplies = Boolean(teachingConceptId && introConceptStages.some((conceptStage) => conceptStage.conceptId === teachingConceptId && !isStageCompleted(conceptStage, progress, completedConceptStages)));
+    if (currentConceptStillApplies) return;
+    const nextConceptStage = introConceptStages.find((conceptStage) => !isStageCompleted(conceptStage, progress, completedConceptStages));
+    setTeachingConceptId(nextConceptStage?.conceptId ?? null);
+  }, [activeStageIndex, completedConceptStages, introConceptStages, lessonBundle, loading, progress, stages, teachingConceptId, user]);
 
   useEffect(() => {
     const activeStage = stages[activeStageIndex];
@@ -190,7 +215,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const isReviewingPastStage = activeStageIndex < frontierStageIndex && !lessonCompletedFromHistory;
   const activeQuestionNumber = stages.slice(0, activeStageIndex + 1).filter((stage) => Boolean(stage.challengeId)).length;
   const totalQuestionStages = stages.filter((stage) => Boolean(stage.challengeId)).length;
-  const questionContextLabel = activeStage?.conceptId ? "Concept lesson" : totalQuestionStages ? `Question ${Math.max(1, activeQuestionNumber)} of ${totalQuestionStages}` : "Question";
+  const questionContextLabel = totalQuestionStages ? `Question ${Math.max(1, activeQuestionNumber)} of ${totalQuestionStages}` : "Question";
   const frontierQuestionNumber = stages.slice(0, frontierStageIndex + 1).filter((stage) => Boolean(stage.challengeId)).length;
   const frontierQuestionLabel = `Question ${Math.max(1, frontierQuestionNumber)}`;
   const shouldShowPreviousQuestion = Boolean(position?.hasPreviousQuestion);
@@ -199,7 +224,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const courseCompletionKeyValue = user ? courseCompletionKey(user.id, course.id) : null;
   const completionLabel = course.learningModeId === "quick-interview-prep" ? "Complete Interview Prep" : "Complete Course";
   const completedLabel = course.learningModeId === "quick-interview-prep" ? "✓ Interview Prep Completed" : "✓ Course Completed";
-  const activeConceptLesson = activeStage?.conceptId ? conceptLessonById(activeStage.conceptId) : null;
+  const teachingConceptLesson = teachingConceptId ? conceptLessonById(teachingConceptId) : null;
   const reviewConceptLesson = reviewConceptId ? conceptLessonById(reviewConceptId) : null;
   const reviewConcepts = reviewableConceptLessons(course, lesson, completedConceptStages);
   const reinforcement = reinforcementForLesson(course, lesson, completedConceptStages);
@@ -246,6 +271,16 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     setFrontierStageIndex(nextIndex);
     window.localStorage.setItem(frontierStorageKey(user.id, lessonId), String(nextIndex));
     setActiveStageIndex(nextIndex);
+  }
+
+  function completeTeachingConcept(conceptId: string) {
+    if (!user) return;
+    const nextConcepts = new Set(completedConceptStages);
+    nextConcepts.add(conceptId);
+    setCompletedConceptStages(nextConcepts);
+    window.localStorage.setItem(conceptStorageKey(user.id, course.id), JSON.stringify([...nextConcepts]));
+    const nextConceptStage = introConceptStages.find((conceptStage) => conceptStage.conceptId !== conceptId && !isStageCompleted(conceptStage, progress, nextConcepts));
+    setTeachingConceptId(nextConceptStage?.conceptId ?? null);
   }
 
   function moveToStage(index: number) {
@@ -362,7 +397,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                         </button>
                         {showTutor && (
                           <p className="mt-3 text-sm leading-6 text-slate-300">
-                            {activeConceptLesson?.coachPrompt ?? `You are working on ${activeStage.title}. Focus on this request: ${activeStage.instructions.split("\n")[0]} ${activeChallenge ? "Run a query that returns the requested business output." : "Read the concept, then continue when it makes sense."}`}
+                            {teachingConceptLesson?.coachPrompt ?? `You are working on ${activeStage.title}. Focus on this request: ${activeStage.instructions.split("\n")[0]} Run a query that returns the requested business output.`}
                           </p>
                         )}
                       </section>
@@ -498,7 +533,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                   </div>
                   <div className="min-h-0 flex-1 overflow-auto">
                     {resultTab === "results" && <ResultsTable result={result} />}
-                    {resultTab === "feedback" && <FeedbackPanel activeStage={activeStage} lessonPrompt={lesson.interpretationPrompt} reinforcement={reinforcement} result={result} />}
+                    {resultTab === "feedback" && <FeedbackPanel activeStage={activeStage} lessonPrompt={lesson.interpretationPrompt} query={query} reinforcement={reinforcement} result={result} reviewConcepts={reviewConcepts} onReviewConcept={setReviewConceptId} />}
                     {resultTab === "breakdown" && (
                       <ol className="space-y-2 p-5 text-sm leading-6 text-slate-300">
                         {explainQuery(query, result, activeStage, activeChallenge).map((line) => <li key={line}>{line}</li>)}
@@ -508,8 +543,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                 </div>
               </div>
             </div>
-          ) : activeConceptLesson ? (
-            <SqlConceptLessonPanel lesson={activeConceptLesson} onComplete={continueToNextStage} />
           ) : (
             <div className="flex min-h-0 flex-1 items-center justify-center bg-editor px-6 py-10 text-center">
               <div className="max-w-xl">
@@ -548,14 +581,33 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
         </section>
       </div>
       </main>
+      {teachingConceptLesson && (
+        <ConceptLessonOverlay>
+          <SqlConceptLessonPanel lesson={teachingConceptLesson} onComplete={() => completeTeachingConcept(teachingConceptLesson.id)} />
+        </ConceptLessonOverlay>
+      )}
       {reviewConceptLesson && (
-        <div className="fixed inset-0 z-50 bg-black/70 p-3 backdrop-blur sm:p-6" role="dialog" aria-modal="true">
-          <div className="mx-auto h-full max-w-6xl overflow-hidden rounded-lg border border-line bg-editor shadow-2xl">
-            <SqlConceptLessonPanel lesson={reviewConceptLesson} onClose={() => setReviewConceptId(null)} replay />
-          </div>
-        </div>
+        <ConceptLessonOverlay>
+          <SqlConceptLessonPanel lesson={reviewConceptLesson} onClose={() => setReviewConceptId(null)} replay />
+        </ConceptLessonOverlay>
       )}
     </>
+  );
+}
+
+function ConceptLessonOverlay({ children }: { children: ReactNode }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    panelRef.current?.focus();
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-3 backdrop-blur-[1px] sm:p-6" role="dialog" aria-modal="true" aria-label="SQL concept lesson">
+      <div className="h-[min(760px,calc(100dvh-1.5rem))] w-full max-w-5xl overflow-hidden rounded-lg border border-line bg-editor shadow-2xl outline-none sm:h-[min(760px,calc(100dvh-3rem))]" ref={panelRef} tabIndex={-1}>
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -699,19 +751,11 @@ function ResultTab({
   );
 }
 
-function FeedbackPanel({ activeStage, lessonPrompt, reinforcement, result }: { activeStage: LessonStageDefinition; lessonPrompt: string; reinforcement: string | null; result: QueryResult | null }) {
+function FeedbackPanel({ activeStage, lessonPrompt, query, reinforcement, result, reviewConcepts, onReviewConcept }: { activeStage: LessonStageDefinition; lessonPrompt: string; query: string; reinforcement: string | null; result: QueryResult | null; reviewConcepts: ReturnType<typeof reviewableConceptLessons>; onReviewConcept: (conceptId: string) => void }) {
   if (!result) {
     return <div className="p-5 text-sm text-slate-500">Run your query to see feedback.</div>;
   }
 
-  if (!result.success) {
-    return (
-      <div className="p-5">
-        <div className="mb-2 text-sm font-semibold text-red-300">Query error</div>
-        <div className="rounded border border-red-900/60 bg-red-950/30 p-3 text-sm text-red-100">{result.message ?? "The query could not be completed."}</div>
-      </div>
-    );
-  }
 
   if (result.correct) {
     return (
@@ -724,12 +768,155 @@ function FeedbackPanel({ activeStage, lessonPrompt, reinforcement, result }: { a
     );
   }
 
+  const feedback = educationalFeedback(activeStage, query, result);
+  const matchingReviewConcepts = reviewConcepts.filter((concept) => feedback.reviewConceptIds.includes(concept.id));
+
   return (
-    <div className="p-5 text-sm leading-6 text-amber">
-      <p className="font-semibold">Almost there.</p>
-      <p className="mt-2">{result.message ?? "Your SQL ran, but it does not match the active exercise yet."}</p>
+    <div className="space-y-3 p-5 text-sm leading-6 text-amber">
+      <div>
+        <p className="font-semibold">{feedback.title}</p>
+        {feedback.lines.map((line) => <p className="mt-2" key={line}>{line}</p>)}
+      </div>
+      {feedback.syntax && <pre className="overflow-auto rounded border border-line bg-ink p-3 text-slate-200"><code>{feedback.syntax}</code></pre>}
+      {result.message && feedback.showSqlMessage && <p className="rounded border border-line bg-elevated p-3 text-slate-300">SQL message: {result.message}</p>}
+      {matchingReviewConcepts.length > 0 && (
+        <div className="flex flex-wrap gap-2 pt-1">
+          {matchingReviewConcepts.map((concept) => (
+            <button className="rounded border border-line px-3 py-1.5 text-xs text-slate-200 hover:border-brand/40 hover:text-brand" key={concept.id} onClick={() => onReviewConcept(concept.id)} type="button">
+              Review {concept.shortTitle}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
+}
+
+type EducationalFeedback = {
+  title: string;
+  lines: string[];
+  syntax?: string;
+  reviewConceptIds: string[];
+  showSqlMessage?: boolean;
+};
+
+function educationalFeedback(activeStage: LessonStageDefinition, query: string, result: QueryResult): EducationalFeedback {
+  const skills = new Set(activeStageSkillAliases(activeStage));
+  const sql = query.toUpperCase();
+  const type = result.evaluation?.type ?? result.errorType ?? "logic_error";
+  const message = result.message ?? "";
+
+  if (!result.success) {
+    if (/single quotes/i.test(message)) {
+      return {
+        title: "Check the value",
+        lines: ["Text values need single quotes, like 'Ontario'.", "Numbers such as 700 usually do not need quotes."],
+        reviewConceptIds: ["where", "like"],
+        showSqlMessage: true,
+      };
+    }
+    if (/column|field|identifier|does not exist|not found|no such/i.test(message)) {
+      return {
+        title: "Column not found",
+        lines: ["One of the names in your SQL does not match the SQLBank schema.", "Check the Database tab and compare the column spelling with your SELECT, WHERE, JOIN, or ORDER BY clause."],
+        reviewConceptIds: skills.has("inner-join") || skills.has("join") ? ["inner-join"] : ["column-selection"],
+        showSqlMessage: true,
+      };
+    }
+    if (/parse|syntax|near/i.test(message)) {
+      return {
+        title: "SQL found a syntax problem",
+        lines: ["A basic filtered query normally follows SELECT, then FROM, then WHERE.", "Check whether the clause before the highlighted word is complete."],
+        syntax: "SELECT ...\nFROM ...\nWHERE ...",
+        reviewConceptIds: ["select-from", "where"],
+        showSqlMessage: true,
+      };
+    }
+    return { title: "Query error", lines: ["SQLBank could not run this query yet.", "Use the SQL message below to find the first thing to fix."], reviewConceptIds: [], showSqlMessage: true };
+  }
+
+  if (/=\s*NULL\b/i.test(query)) {
+    return { title: "NULL is handled differently", lines: ["NULL means the value is missing or unknown.", "Use SQL's NULL-checking syntax instead of =."], reviewConceptIds: ["is-null"] };
+  }
+  if (skills.has("like") && /LIKE\s+'[^%_']+'/i.test(query)) {
+    return { title: "Check the text pattern", lines: ["Your pattern matches only one exact text value.", "For starts with, contains, or ends with, the percent wildcard represents extra characters."], reviewConceptIds: ["like", "like-prefix"] };
+  }
+  if (skills.has("top") && /\bTOP\s+\d+/i.test(query) && !/\bORDER\s+BY\b/i.test(query)) {
+    return { title: "TOP needs a sort for ranked questions", lines: ["You limited the result, but SQL does not yet know what largest, highest, newest, or top means.", "Sort the important value before choosing the top rows."], reviewConceptIds: ["top", "order-by-desc"] };
+  }
+  if (skills.has("and") && /\bOR\b/i.test(query) && !/\bAND\b/i.test(query)) {
+    return { title: "Check how the conditions work together", lines: ["Your query allows a row when either condition is true.", "This question appears to require rows that satisfy both conditions."], reviewConceptIds: ["and"] };
+  }
+  if (skills.has("group-by") && /\b(COUNT|SUM|AVG|MIN|MAX)\s*\(/i.test(query) && !/\bGROUP\s+BY\b/i.test(query)) {
+    return { title: "You need one result for each group", lines: ["The aggregate calculates a value, but SQL also needs to know how to divide rows into groups.", "Phrases like for each, by, and per are clues for GROUP BY."], reviewConceptIds: ["group-by"] };
+  }
+  if (skills.has("sum") && /\bCOUNT\s*\(/i.test(query) && !/\bSUM\s*\(/i.test(query)) {
+    return { title: "COUNT answers how many", lines: ["This question asks for a total amount or value.", "Think about the aggregate function that adds numbers together."], reviewConceptIds: ["sum"] };
+  }
+  if ((skills.has("inner-join") || skills.has("join") || skills.has("left-join") || skills.has("three-table-inner-join")) && !/\bJOIN\b/i.test(query)) {
+    return { title: "A table relationship may be missing", lines: ["The question uses information that lives across related tables.", "SQL needs a JOIN and an ON condition to explain how those records connect."], reviewConceptIds: [skills.has("left-join") ? "left-join" : "inner-join"] };
+  }
+  if ((skills.has("inner-join") || skills.has("join") || skills.has("left-join")) && /\b(LOANID\s*=\s*CUSTOMERID|CUSTOMERID\s*=\s*LOANID|BRANCHID\s*=\s*CUSTOMERID|PRODUCTID\s*=\s*CUSTOMERID)\b/i.test(sql)) {
+    return { title: "Check the relationship", lines: ["Those fields identify different kinds of records.", "Look for the matching key that appears in both related tables."], reviewConceptIds: ["inner-join", "left-join"] };
+  }
+
+  switch (type) {
+    case "missing_columns":
+    case "wrong_alias":
+      return { title: type === "wrong_alias" ? "Check the requested column name" : "Your rows may be right, but columns are missing", lines: ["Compare your output with the Return section of the question.", message || "One or more requested output columns are missing."], reviewConceptIds: ["column-selection", "aliases"] };
+    case "extra_columns":
+      return { title: "Too many output columns", lines: ["The result should show only the requested fields.", "Check the Return section and remove columns that were not requested."], reviewConceptIds: ["column-selection"] };
+    case "wrong_order":
+      return { title: "Your data is correct, but the order is different", lines: ["Check the Sort by instruction.", "ASC sorts low-to-high; DESC sorts high-to-low."], reviewConceptIds: ["order-by", "order-by-desc", "order-by-asc", "multi-column-order-by"] };
+    case "empty_result":
+      return { title: "Your SQL ran, but no rows matched", lines: ["That usually means a filter is too restrictive or one value does not match the data.", "Check your WHERE conditions and quoted text values."], reviewConceptIds: ["where"] };
+    case "wrong_row_count":
+      return { title: result.rowCount > Number(result.evaluation?.details?.expectedRowCount ?? 0) ? "Your query returns too many rows" : "Your query is missing rows", lines: [message || "Re-read the filter, JOIN, GROUP BY, or TOP requirement and compare it with your SQL."], reviewConceptIds: conceptReviewsForSkills(skills) };
+    case "aggregation_mismatch":
+      return { title: "Check the calculation", lines: ["Your SQL returns a metric, but the calculated value does not match yet.", "Check whether the question asks for a count, total, average, group, or conditional metric."], reviewConceptIds: conceptReviewsForSkills(skills) };
+    default:
+      return { title: "Almost there", lines: [message || "Your SQL ran, but it does not match the active exercise yet.", "Compare your columns, rows, filters, joins, grouping, calculations, and sorting with the question."], reviewConceptIds: conceptReviewsForSkills(skills) };
+  }
+}
+
+function activeStageSkillAliases(activeStage: LessonStageDefinition) {
+  const haystack = `${activeStage.title} ${activeStage.instructions}`.toLowerCase();
+  const aliases: string[] = [];
+  const checks: Array<[string, RegExp]> = [
+    ["where", /\bwhere\b|only|filter|whose|from ontario|in toronto/],
+    ["and", /\band\b|both/],
+    ["or", /\bor\b|either/],
+    ["in", /\bin\b|one of/],
+    ["between", /between|inclusive/],
+    ["like", /like|starts with|contains/],
+    ["is-null", /null|missing|without|no matching/],
+    ["order-by", /sort|order|alphabetically/],
+    ["order-by-desc", /largest|highest|descending|newest|most recent/],
+    ["order-by-asc", /lowest|ascending|alphabetically/],
+    ["top", /top|largest|highest|first 10|five highest/],
+    ["distinct", /distinct|unique/],
+    ["aliases", / as |named|alias/],
+    ["count", /count|how many|number of/],
+    ["sum", /sum|total amount|total value|totalbalance|total/],
+    ["avg", /average|avg/],
+    ["group-by", /for each| by |per |group/],
+    ["having", /more than \d+|containing more than/],
+    ["inner-join", /join|with customer|branchname|productname|accounttype/],
+    ["left-join", /left join|including .* do not|without|no matching/],
+    ["case", /case|band|label|portfolio|health|state|context/],
+    ["date-range", /during|date|before|2025|2026|january/],
+    ["conditional-aggregation", /activecustomer|approvedcount|completedcount|latecount|missedcount|conditional/],
+    ["kpi-approval-rate", /rate|percentage|approvalrate/],
+  ];
+  for (const [skill, pattern] of checks) {
+    if (pattern.test(haystack)) aliases.push(skill);
+  }
+  return aliases;
+}
+
+function conceptReviewsForSkills(skills: Set<string>) {
+  const ids = ["where", "and", "or", "in", "between", "like", "is-null", "order-by", "order-by-desc", "top", "distinct", "count", "sum", "avg", "group-by", "having", "inner-join", "left-join", "case", "date-range", "conditional-aggregation", "kpi-approval-rate"];
+  return ids.filter((id) => skills.has(id) || (id === "inner-join" && skills.has("join")));
 }
 
 function executionStatus(result: QueryResult | null, running: boolean, error: string | null, completed: boolean, courseCompleted: boolean, completedLabel = "✓ Course Completed") {

@@ -589,7 +589,7 @@ export function getLessonStages(lessonDefinition: LessonDefinition): LessonStage
       sequence: 1,
       type: lessonDefinition.type === "review" ? "review" : "business_task",
       title: lessonDefinition.title,
-      instructions: lessonDefinition.independentPrompt,
+      instructions: learnerQuestionInstructions(lessonDefinition),
       estimatedMinutes: lessonDefinition.estimatedMinutes,
       challengeId: lessonDefinition.challengeId,
       hints: lessonDefinition.hints,
@@ -600,6 +600,28 @@ export function getLessonStages(lessonDefinition: LessonDefinition): LessonStage
   ];
 }
 
+function learnerQuestionInstructions(lessonDefinition: LessonDefinition) {
+  if (!lessonDefinition.id.startsWith("beginner-q")) return lessonDefinition.independentPrompt;
+  const lines = lessonDefinition.independentPrompt
+    .replace(/\r/g, "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const usefulLines = lines.filter((line, index) => {
+    if (index > 0) return true;
+    return /^(return|show|only|include|sort|order|use|if|active|all|find|count|create|compare)/i.test(line);
+  });
+  const body = (usefulLines.length ? usefulLines : lines)
+    .join("\n")
+    .replace(/^Return\s+/i, "Show ")
+    .replace(/\nReturn\s+/gi, "\nReturn ")
+    .replace(/\nOrder the results by\s+/gi, "\n\nSort by:\n")
+    .replace(/\nOrder branches by\s+/gi, "\n\nSort by:\nbranches by ")
+    .replace(/\nOnly include\s+/gi, "\n\nFilter:\n")
+    .replace(/\nInclude:\s*/gi, "\n\nReturn:\n")
+    .replace(/\nReturn:\s*/gi, "\n\nReturn:\n");
+  return `${lessonDefinition.title}\n\n${body}`;
+}
 function createBeginnerCourse(): CourseDefinition {
   const modeId: LearningModeId = "completely-new";
   const config = LEARNING_MODE_CONFIG[modeId];
