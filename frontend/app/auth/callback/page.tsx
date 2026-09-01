@@ -1,16 +1,22 @@
 "use client";
 
+import type { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
+import { VerifyEmailPanel } from "@/components/VerifyEmailPanel";
+import { isEmailVerified, verifiedUserDestination } from "@/lib/email-verification";
 import { supabase } from "@/lib/supabase";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
   const [message, setMessage] = useState("Confirming your email...");
+  const [error, setError] = useState(false);
+  const [successDestination, setSuccessDestination] = useState<string | null>(null);
 
   useEffect(() => {
     if (!supabase) {
+      setError(true);
       setMessage("Supabase is not configured for this environment.");
       return;
     }
@@ -18,25 +24,42 @@ export default function AuthCallbackPage() {
     const client = supabase;
     let active = true;
 
+    async function continueVerifiedUser(user: User) {
+      const destination = await verifiedUserDestination(user);
+      if (!active) return;
+      setMessage("Your QueryRight account is ready.");
+      setSuccessDestination(destination);
+      window.setTimeout(() => {
+        if (active) router.replace(destination);
+      }, 1400);
+    }
+
     async function finishAuthRedirect() {
       await new Promise((resolve) => window.setTimeout(resolve, 400));
-      const { data } = await client.auth.getSession();
+      const { data, error: sessionError } = await client.auth.getSession();
 
       if (!active) return;
 
-      if (data.session) {
-        router.replace("/onboarding");
+      if (sessionError) {
+        setError(true);
+        setMessage("Verification link is invalid or expired.");
         return;
       }
 
-      setMessage("Confirmation could not be completed. Please request a new sign-in link.");
-      window.setTimeout(() => {
-        if (active) router.replace("/login");
-      }, 1800);
+      const user = data.session?.user;
+      if (user && isEmailVerified(user)) {
+        await continueVerifiedUser(user);
+        return;
+      }
+
+      setError(true);
+      setMessage("Confirmation could not be completed. Please request a new verification link.");
     }
 
     const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
-      if (session) router.replace("/onboarding");
+      const user = session?.user;
+      if (!user || !isEmailVerified(user)) return;
+      continueVerifiedUser(user);
     });
 
     finishAuthRedirect();
@@ -46,6 +69,14 @@ export default function AuthCallbackPage() {
       listener.subscription.unsubscribe();
     };
   }, [router]);
+
+  if (successDestination) {
+    return <VerifyEmailPanel state="success" message={message} nextPath={successDestination} />;
+  }
+
+  if (error) {
+    return <VerifyEmailPanel state="error" message={message} />;
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-ink px-5 py-12 text-slate-50">

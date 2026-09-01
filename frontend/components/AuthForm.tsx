@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { AlertCircle } from "lucide-react";
 import Script from "next/script";
 import { FormEvent, useEffect, useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { applyDefaultAccent } from "@/lib/accent";
+import { isEmailVerified, verificationPath, verifiedUserDestination } from "@/lib/email-verification";
 import { clearExplicitLogoutFlag, DEFAULT_AUTHENTICATED_ROUTE, safeNextPath } from "@/lib/session-boundary";
 import { authRedirectUrl, isSupabaseConfigured, requireSupabase } from "@/lib/supabase";
 
@@ -30,6 +32,7 @@ export function AuthForm({
   const [website, setWebsite] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -50,6 +53,7 @@ export function AuthForm({
     event.preventDefault();
     setError(null);
     setMessage(null);
+    setUnverifiedEmail(null);
 
     if (website) {
       setError("Authentication failed. Please try again.");
@@ -98,16 +102,21 @@ export function AuthForm({
           },
         });
         if (signUpError) throw signUpError;
-        window.location.href = "/onboarding";
+        window.location.href = verificationPath(email);
       } else if (mode === "login") {
-        const { error: loginError } = await client.auth.signInWithPassword({
+        const { data, error: loginError } = await client.auth.signInWithPassword({
           email,
           password,
           options: { captchaToken: captchaToken || undefined },
         });
         if (loginError) throw loginError;
         const nextPath = new URLSearchParams(window.location.search).get("next");
-        window.location.href = safeNextPath(nextPath) ?? DEFAULT_AUTHENTICATED_ROUTE;
+        const safeNext = safeNextPath(nextPath);
+        if (!isEmailVerified(data.user)) {
+          window.location.href = verificationPath(data.user?.email ?? email, safeNext);
+          return;
+        }
+        window.location.href = await verifiedUserDestination(data.user, safeNext ?? DEFAULT_AUTHENTICATED_ROUTE);
       } else {
         const { error: resetError } = await client.auth.resetPasswordForEmail(email, {
           redirectTo: authRedirectUrl("/login"),
@@ -117,7 +126,12 @@ export function AuthForm({
         setMessage("If an account exists for that email, password reset instructions have been sent.");
       }
     } catch (caught) {
-      setError(readableAuthError(caught));
+      if (mode === "login" && isUnconfirmedEmailError(caught)) {
+        setUnverifiedEmail(email.trim());
+        setError("Verify your account before you sign in or request a verification email.");
+      } else {
+        setError(readableAuthError(caught));
+      }
     } finally {
       setLoading(false);
     }
@@ -125,6 +139,7 @@ export function AuthForm({
 
   const title = mode === "signup" ? "Create your account" : mode === "forgot" ? "Reset your password" : "Welcome back";
   const passwordChecks = getPasswordChecks(password);
+  const pendingNextPath = typeof window !== "undefined" ? safeNextPath(new URLSearchParams(window.location.search).get("next")) : null;
 
   const authContent = (
     <>
@@ -235,7 +250,17 @@ export function AuthForm({
             />
           )}
 
-          {error && <p className="status-error rounded border p-3 text-sm" role="alert">{error}</p>}
+          {error && unverifiedEmail ? (
+            <div className="rounded border border-red-500/50 bg-red-600 px-4 py-3 text-sm font-semibold text-white" role="alert">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="mt-0.5 shrink-0" size={18} />
+                <div>
+                  <p>{error}</p>
+                  <Link className="mt-2 inline-block text-xs font-semibold text-white underline underline-offset-2 hover:text-red-100" href={verificationPath(unverifiedEmail, pendingNextPath)}>Resend Account Verification</Link>
+                </div>
+              </div>
+            </div>
+          ) : error ? <p className="status-error rounded border p-3 text-sm" role="alert">{error}</p> : null}
           {message && <p className="status-success rounded border p-3 text-sm" role="status">{message}</p>}
 
           <button
@@ -318,6 +343,11 @@ function getPasswordChecks(value: string) {
     { label: "Number", valid: /\d/.test(value) },
     { label: "Symbol", valid: /[^A-Za-z0-9]/.test(value) },
   ];
+}
+
+function isUnconfirmedEmailError(caught: unknown) {
+  const message = caught instanceof Error ? caught.message : String(caught ?? "");
+  return /email.*not.*confirm|not.*confirmed|confirm.*email|email.*verify|verify.*email/i.test(message);
 }
 
 function readableAuthError(caught: unknown) {
