@@ -79,6 +79,10 @@ export type LessonStageDefinition = {
   questionType: QuestionType;
   databaseId: DatabaseId;
   difficultyId: DifficultyId;
+  conceptId?: string;
+  sourceChallengeId?: number;
+  teachingKind?: "full" | "mini";
+  reinforcement?: string;
 };
 
 export type SkillMastery = {

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ResultsTable } from "@/components/ResultsTable";
 import { SchemaExplorer } from "@/components/SchemaExplorer";
 import { SqlEditor } from "@/components/SqlEditor";
+import { SqlConceptLessonPanel } from "@/components/SqlConceptLessonPanel";
 import { api, type Challenge, type QueryResult, type SchemaTable } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import {
@@ -21,6 +22,7 @@ import {
   type LessonStageDefinition,
 } from "@/lib/course";
 import { getProfile, getProgress, recordAttempt, type Profile, type ProgressRow } from "@/lib/progress";
+import { conceptLessonById, conceptStagesForLesson, reinforcementForLesson, reviewableConceptLessons } from "@/lib/sql-concept-lessons";
 import { lastSqlWorkspaceKey, lessonDraftKey, lessonHintKey, lessonResultKey, lessonResultTabKey, lessonTutorKey } from "@/lib/sql-editor-state";
 
 type ResultTabId = "results" | "feedback" | "breakdown";
@@ -31,7 +33,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const fallbackLessonBundle = useMemo(() => getLessonById(lessonId), [lessonId]);
   const selectedCourse = useMemo(() => getCourseForProfile(profile) ?? fallbackLessonBundle?.course ?? null, [fallbackLessonBundle, profile]);
   const lessonBundle = useMemo(() => (selectedCourse ? getLessonByIdInCourse(selectedCourse, lessonId) : null) ?? fallbackLessonBundle, [fallbackLessonBundle, lessonId, selectedCourse]);
-  const stages = useMemo(() => (lessonBundle ? getLessonStages(lessonBundle.lesson) : []), [lessonBundle]);
+  const stages = useMemo(() => (lessonBundle ? [...conceptStagesForLesson(lessonBundle.course, lessonBundle.lesson), ...getLessonStages(lessonBundle.lesson)] : []), [lessonBundle]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [schema, setSchema] = useState<SchemaTable[]>([]);
   const [progress, setProgress] = useState<ProgressRow[]>([]);
@@ -53,6 +55,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [editorPercent, setEditorPercent] = useState(52);
   const [resultTab, setResultTab] = useState<ResultTabId>("results");
   const [courseCompletionAcknowledged, setCourseCompletionAcknowledged] = useState(false);
+  const [reviewConceptId, setReviewConceptId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -73,7 +76,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     if (initializedFrontierKey === initializationKey) return;
     window.localStorage.setItem(lastSqlWorkspaceKey(user.id), `/learn/lesson/${lessonId}`);
     const saved = window.localStorage.getItem(frontierStorageKey(user.id, lessonId));
-    const savedConcepts = JSON.parse(window.localStorage.getItem(conceptStorageKey(user.id)) ?? "[]") as string[];
+    const savedConcepts = JSON.parse(window.localStorage.getItem(conceptStorageKey(user.id, lessonBundle.course.id)) ?? "[]") as string[];
     const completedConceptSet = new Set(savedConcepts);
     setCompletedConceptStages(completedConceptSet);
     const savedIndex = saved ? Number(saved) : Number.NaN;
@@ -178,21 +181,28 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const canRevealMoreHints = Boolean(activeStage && hintCount < activeStage.hints.length);
   const activeStageStoredCompleted = Boolean(activeStage && isStageCompleted(activeStage, progress, completedConceptStages));
   const currentRunCorrect = Boolean(result?.correct);
-  const activeStageCompleted = activeStageStoredCompleted || currentRunCorrect || Boolean(activeStage && !activeStage.challengeId);
+  const activeStageCompleted = activeStageStoredCompleted || currentRunCorrect || Boolean(activeStage && !activeStage.challengeId && !activeStage.conceptId);
   const lessonCompletedFromHistory = stages.length > 0 && stages.every((stage) => isStageCompleted(stage, progress, completedConceptStages));
   const position = resolveCurriculumPosition(course, lesson.id, activeStageIndex);
   const completedChallengeIds = new Set(progress.filter((row) => row.status === "completed").map((row) => row.challenge_id));
   if (currentRunCorrect && activeChallenge) completedChallengeIds.add(activeChallenge.id);
   const courseCompleted = isCourseCompletedByChallengeIds(course, completedChallengeIds);
   const isReviewingPastStage = activeStageIndex < frontierStageIndex && !lessonCompletedFromHistory;
-  const questionContextLabel = stages.length ? `Question ${activeStageIndex + 1} of ${stages.length}` : "Question";
-  const frontierQuestionLabel = `Question ${frontierStageIndex + 1}`;
+  const activeQuestionNumber = stages.slice(0, activeStageIndex + 1).filter((stage) => Boolean(stage.challengeId)).length;
+  const totalQuestionStages = stages.filter((stage) => Boolean(stage.challengeId)).length;
+  const questionContextLabel = activeStage?.conceptId ? "Concept lesson" : totalQuestionStages ? `Question ${Math.max(1, activeQuestionNumber)} of ${totalQuestionStages}` : "Question";
+  const frontierQuestionNumber = stages.slice(0, frontierStageIndex + 1).filter((stage) => Boolean(stage.challengeId)).length;
+  const frontierQuestionLabel = `Question ${Math.max(1, frontierQuestionNumber)}`;
   const shouldShowPreviousQuestion = Boolean(position?.hasPreviousQuestion);
   const shouldShowReturnToFrontier = isReviewingPastStage;
   const progressionAction = position ? resolveProgressionAction(position, activeStageCompleted, courseCompleted, courseCompletionAcknowledged) : null;
   const courseCompletionKeyValue = user ? courseCompletionKey(user.id, course.id) : null;
   const completionLabel = course.learningModeId === "quick-interview-prep" ? "Complete Interview Prep" : "Complete Course";
   const completedLabel = course.learningModeId === "quick-interview-prep" ? "✓ Interview Prep Completed" : "✓ Course Completed";
+  const activeConceptLesson = activeStage?.conceptId ? conceptLessonById(activeStage.conceptId) : null;
+  const reviewConceptLesson = reviewConceptId ? conceptLessonById(reviewConceptId) : null;
+  const reviewConcepts = reviewableConceptLessons(course, lesson, completedConceptStages);
+  const reinforcement = reinforcementForLesson(course, lesson, completedConceptStages);
 
   async function runQuery() {
     if (!activeChallenge || !activeStage) return;
@@ -228,9 +238,9 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     }
     if (!activeStage.challengeId) {
       const nextConcepts = new Set(completedConceptStages);
-      nextConcepts.add(activeStage.id);
+      nextConcepts.add(activeStage.conceptId ?? activeStage.id);
       setCompletedConceptStages(nextConcepts);
-      window.localStorage.setItem(conceptStorageKey(user.id), JSON.stringify([...nextConcepts]));
+      window.localStorage.setItem(conceptStorageKey(user.id, course.id), JSON.stringify([...nextConcepts]));
     }
     const nextIndex = Math.min(activeStageIndex + 1, stages.length - 1);
     setFrontierStageIndex(nextIndex);
@@ -270,7 +280,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const hasMultipleStages = stages.length > 1;
 
   return (
-    <main className="min-h-[calc(100dvh-4rem)] bg-ink text-slate-50 lg:flex lg:h-[calc(100dvh-4rem)] lg:min-h-[560px] lg:flex-col lg:overflow-hidden">
+    <>
+      <main className="min-h-[calc(100dvh-4rem)] bg-ink text-slate-50 lg:flex lg:h-[calc(100dvh-4rem)] lg:min-h-[560px] lg:flex-col lg:overflow-hidden">
       <header className="shrink-0 border-b border-line bg-panel px-5 py-3">
         <div className="mx-auto max-w-7xl">
           <p className="font-mono text-xs uppercase tracking-wider text-cyan">SQL Learning Path / {course.experienceLevel} / Module {module.sequence} / Lesson {lesson.sequence}</p>
@@ -351,9 +362,21 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                         </button>
                         {showTutor && (
                           <p className="mt-3 text-sm leading-6 text-slate-300">
-                            You are working on {activeStage.title}. Focus on this request: {activeStage.instructions.split("\n")[0]} {activeChallenge ? "Run a query that returns the requested business output." : "Read the concept, then continue when it makes sense."}
+                            {activeConceptLesson?.coachPrompt ?? `You are working on ${activeStage.title}. Focus on this request: ${activeStage.instructions.split("\n")[0]} ${activeChallenge ? "Run a query that returns the requested business output." : "Read the concept, then continue when it makes sense."}`}
                           </p>
                         )}
+                      </section>
+                    )}
+                    {reviewConcepts.length > 0 && activeChallenge && (
+                      <section className="rounded-lg border border-line bg-elevated p-3">
+                        <p className="text-sm font-semibold text-slate-50">Review Concept</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {reviewConcepts.map((concept) => (
+                            <button className="rounded border border-line px-3 py-1.5 text-xs text-slate-300 hover:border-brand/40 hover:text-brand" key={concept.id} onClick={() => setReviewConceptId(concept.id)} type="button">
+                              {concept.shortTitle}
+                            </button>
+                          ))}
+                        </div>
                       </section>
                     )}
                     <section className="rounded-lg border border-line bg-elevated p-3">
@@ -475,7 +498,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                   </div>
                   <div className="min-h-0 flex-1 overflow-auto">
                     {resultTab === "results" && <ResultsTable result={result} />}
-                    {resultTab === "feedback" && <FeedbackPanel activeStage={activeStage} lessonPrompt={lesson.interpretationPrompt} result={result} />}
+                    {resultTab === "feedback" && <FeedbackPanel activeStage={activeStage} lessonPrompt={lesson.interpretationPrompt} reinforcement={reinforcement} result={result} />}
                     {resultTab === "breakdown" && (
                       <ol className="space-y-2 p-5 text-sm leading-6 text-slate-300">
                         {explainQuery(query, result, activeStage, activeChallenge).map((line) => <li key={line}>{line}</li>)}
@@ -485,6 +508,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                 </div>
               </div>
             </div>
+          ) : activeConceptLesson ? (
+            <SqlConceptLessonPanel lesson={activeConceptLesson} onComplete={continueToNextStage} />
           ) : (
             <div className="flex min-h-0 flex-1 items-center justify-center bg-editor px-6 py-10 text-center">
               <div className="max-w-xl">
@@ -522,12 +547,24 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
           )}
         </section>
       </div>
-    </main>
+      </main>
+      {reviewConceptLesson && (
+        <div className="fixed inset-0 z-50 bg-black/70 p-3 backdrop-blur sm:p-6" role="dialog" aria-modal="true">
+          <div className="mx-auto h-full max-w-6xl overflow-hidden rounded-lg border border-line bg-editor shadow-2xl">
+            <SqlConceptLessonPanel lesson={reviewConceptLesson} onClose={() => setReviewConceptId(null)} replay />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
 function isStageCompleted(stage: LessonStageDefinition, progress: ProgressRow[], completedConceptStages: Set<string>) {
-  if (!stage.challengeId) return completedConceptStages.has(stage.id);
+  if (!stage.challengeId) {
+    if (stage.conceptId && completedConceptStages.has(stage.conceptId)) return true;
+    if (stage.sourceChallengeId) return progress.some((row) => row.challenge_id === stage.sourceChallengeId && row.status === "completed");
+    return completedConceptStages.has(stage.id);
+  }
   return progress.some((row) => row.challenge_id === stage.challengeId && row.status === "completed");
 }
 
@@ -546,8 +583,8 @@ function frontierStorageKey(userId: string, lessonId: string) {
   return `queryright:lesson:${userId}:${lessonId}:active-stage`;
 }
 
-function conceptStorageKey(userId: string) {
-  return `queryright:lesson:${userId}:completed-concepts`;
+function conceptStorageKey(userId: string, courseId: string) {
+  return `queryright:course:${userId}:${courseId}:completed-concepts`;
 }
 
 function courseCompletionKey(userId: string, courseId: string) {
@@ -662,7 +699,7 @@ function ResultTab({
   );
 }
 
-function FeedbackPanel({ activeStage, lessonPrompt, result }: { activeStage: LessonStageDefinition; lessonPrompt: string; result: QueryResult | null }) {
+function FeedbackPanel({ activeStage, lessonPrompt, reinforcement, result }: { activeStage: LessonStageDefinition; lessonPrompt: string; reinforcement: string | null; result: QueryResult | null }) {
   if (!result) {
     return <div className="p-5 text-sm text-slate-500">Run your query to see feedback.</div>;
   }
@@ -681,6 +718,7 @@ function FeedbackPanel({ activeStage, lessonPrompt, result }: { activeStage: Les
       <div className="p-5 text-sm leading-6 text-green-100">
         <p className="font-semibold text-success">Correct.</p>
         <p className="mt-2">{activeStage.title} is complete.</p>
+        {reinforcement && <p className="mt-2 rounded border border-success/30 bg-success/10 p-3 text-green-100">{reinforcement}</p>}
         <p className="mt-2 text-slate-300">{lessonPrompt}</p>
       </div>
     );
