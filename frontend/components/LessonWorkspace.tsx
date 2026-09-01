@@ -224,6 +224,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const courseCompletionKeyValue = user ? courseCompletionKey(user.id, course.id) : null;
   const completionLabel = course.learningModeId === "quick-interview-prep" ? "Complete Interview Prep" : "Complete Course";
   const completedLabel = course.learningModeId === "quick-interview-prep" ? "✓ Interview Prep Completed" : "✓ Course Completed";
+  const activeConceptLesson = activeStage?.conceptId ? conceptLessonById(activeStage.conceptId) : null;
   const teachingConceptLesson = teachingConceptId ? conceptLessonById(teachingConceptId) : null;
   const reviewConceptLesson = reviewConceptId ? conceptLessonById(reviewConceptId) : null;
   const reviewConcepts = reviewableConceptLessons(course, lesson, completedConceptStages);
@@ -542,6 +543,10 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                   </div>
                 </div>
               </div>
+            </div>
+          ) : activeConceptLesson ? (
+            <div className="min-h-0 flex-1 overflow-hidden bg-editor">
+              <SqlConceptLessonPanel lesson={activeConceptLesson} onComplete={continueToNextStage} />
             </div>
           ) : (
             <div className="flex min-h-0 flex-1 items-center justify-center bg-editor px-6 py-10 text-center">
