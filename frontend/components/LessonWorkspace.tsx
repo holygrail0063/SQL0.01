@@ -22,7 +22,7 @@ import {
   type LessonStageDefinition,
 } from "@/lib/course";
 import { getProfile, getProgress, recordAttempt, type Profile, type ProgressRow } from "@/lib/progress";
-import { conceptLessonById, conceptStagesForLesson, reinforcementForLesson, reviewableConceptLessons } from "@/lib/sql-concept-lessons";
+import { conceptLessonById, conceptStagesForLesson, reinforcementForLesson, reviewableConceptLessons, teachingConceptForLesson } from "@/lib/sql-concept-lessons";
 import { lastSqlWorkspaceKey, lessonDraftKey, lessonHintKey, lessonResultKey, lessonResultTabKey, lessonTutorKey } from "@/lib/sql-editor-state";
 
 type ResultTabId = "results" | "feedback" | "breakdown";
@@ -58,6 +58,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [courseCompletionAcknowledged, setCourseCompletionAcknowledged] = useState(false);
   const [reviewConceptId, setReviewConceptId] = useState<string | null>(null);
   const [teachingConceptId, setTeachingConceptId] = useState<string | null>(null);
+  const [dismissedTeachingStageKey, setDismissedTeachingStageKey] = useState<string | null>(null);
   const conceptOverlayOpen = Boolean(teachingConceptId || reviewConceptId);
 
   useEffect(() => {
@@ -107,15 +108,19 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   useEffect(() => {
     if (!lessonBundle || !user || loading || !stages.length) return;
     const stage = stages[activeStageIndex];
-    if (!stage?.challengeId || !introConceptStages.length) {
+    if (!stage?.challengeId) {
       setTeachingConceptId(null);
       return;
     }
-    const currentConceptStillApplies = Boolean(teachingConceptId && introConceptStages.some((conceptStage) => conceptStage.conceptId === teachingConceptId && !isStageCompleted(conceptStage, progress, completedConceptStages)));
-    if (currentConceptStillApplies) return;
-    const nextConceptStage = introConceptStages.find((conceptStage) => !isStageCompleted(conceptStage, progress, completedConceptStages));
-    setTeachingConceptId(nextConceptStage?.conceptId ?? null);
-  }, [activeStageIndex, completedConceptStages, introConceptStages, lessonBundle, loading, progress, stages, teachingConceptId, user]);
+    const concept = teachingConceptForLesson(lessonBundle.course, lessonBundle.lesson);
+    const teachingStageKey = concept ? `${stage.id}:${concept.id}` : null;
+    if (!concept || dismissedTeachingStageKey === teachingStageKey) {
+      setTeachingConceptId(null);
+      return;
+    }
+    if (teachingConceptId === concept.id) return;
+    setTeachingConceptId(concept.id);
+  }, [activeStageIndex, dismissedTeachingStageKey, lessonBundle, loading, stages, teachingConceptId, user]);
 
   useEffect(() => {
     const activeStage = stages[activeStageIndex];
@@ -275,13 +280,13 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   }
 
   function completeTeachingConcept(conceptId: string) {
-    if (!user) return;
+    if (!user || !activeStage) return;
     const nextConcepts = new Set(completedConceptStages);
     nextConcepts.add(conceptId);
     setCompletedConceptStages(nextConcepts);
     window.localStorage.setItem(conceptStorageKey(user.id, course.id), JSON.stringify([...nextConcepts]));
-    const nextConceptStage = introConceptStages.find((conceptStage) => conceptStage.conceptId !== conceptId && !isStageCompleted(conceptStage, progress, nextConcepts));
-    setTeachingConceptId(nextConceptStage?.conceptId ?? null);
+    setDismissedTeachingStageKey(`${activeStage.id}:${conceptId}`);
+    setTeachingConceptId(null);
   }
 
   function moveToStage(index: number) {

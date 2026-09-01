@@ -96,6 +96,10 @@ export function conceptStagesForLesson(course: CourseDefinition, lesson: LessonD
     .map((concept, index) => conceptStage(concept, lesson, index + 1));
 }
 
+export function teachingConceptForLesson(course: CourseDefinition, lesson: LessonDefinition) {
+  if (course.learningModeId !== "completely-new" || lesson.challengeId >= 91) return null;
+  return sqlConceptLessons.find((concept) => concept.firstChallengeId === lesson.challengeId && conceptMatchesLesson(concept, lesson)) ?? sqlConceptLessons.find((concept) => concept.firstChallengeId <= lesson.challengeId && conceptMayHelpLesson(concept, lesson)) ?? null;
+}
 export function reviewableConceptLessons(course: CourseDefinition, lesson: LessonDefinition, learnedConceptIds: Set<string>) {
   if (course.learningModeId !== "completely-new") return [];
   return sqlConceptLessons.filter((concept) => learnedConceptIds.has(concept.id) && conceptMayHelpLesson(concept, lesson));
