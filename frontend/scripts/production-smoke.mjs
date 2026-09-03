@@ -39,6 +39,14 @@ await check("security headers present", async () => {
   expect(response.headers.get("referrer-policy") === "strict-origin-when-cross-origin", "missing Referrer-Policy");
 });
 
+
+await check("health endpoint reports service", async () => {
+  const response = await fetch(`${baseUrl}/api/health`, { headers: { "cache-control": "no-cache" } });
+  expect(response.ok, `expected 2xx, got ${response.status}`);
+  const payload = await response.json();
+  expect(payload?.ok === true, "health payload did not report ok=true");
+  expect(payload?.service === "queryright-frontend", "health payload did not report queryright-frontend");
+});
 await check("anonymous challenge SQL is blocked", async () => {
   const response = await fetch(`${baseUrl}/api/query/run`, {
     method: "POST",
