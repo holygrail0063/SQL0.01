@@ -1,5 +1,6 @@
 export type TourId = "queryright_app_tour_v1" | "queryright_workspace_tour_v1";
 export type TourPlacement = "top" | "bottom" | "left" | "right" | "auto";
+export type TourShape = "rect" | "circle";
 
 export type TourStep = {
   id: string;
@@ -8,6 +9,8 @@ export type TourStep = {
   description: string;
   placement?: TourPlacement;
   route?: string;
+  shape?: TourShape;
+  spotlightPadding?: number;
 };
 
 export const APP_TOUR_ID: TourId = "queryright_app_tour_v1";
@@ -20,6 +23,7 @@ export const appTourSteps: TourStep[] = [
     title: "Your courses",
     description: "Start a learning path or continue exactly where you left off. Beginner and Interview Prep live here.",
     placement: "bottom",
+    shape: "rect",
   },
   {
     id: "sql-space",
@@ -27,20 +31,7 @@ export const appTourSteps: TourStep[] = [
     title: "Your SQL workspace",
     description: "Jump back into your current SQL work and continue practicing.",
     placement: "bottom",
-  },
-  {
-    id: "dashboard",
-    target: '[data-tour="nav-dashboard"]',
-    title: "See your progress",
-    description: "Track your learning activity, accuracy and progress as you work through QueryRight.",
-    placement: "bottom",
-  },
-  {
-    id: "sqlbank",
-    target: '[data-tour="nav-sqlbank"]',
-    title: "Explore SQLBank",
-    description: "Use SQLBank practice to work through realistic requests and open the sandbox for unguided querying.",
-    placement: "bottom",
+    shape: "rect",
   },
   {
     id: "profile",
@@ -48,6 +39,8 @@ export const appTourSteps: TourStep[] = [
     title: "Make it yours",
     description: "Manage your profile, appearance and learning preferences here.",
     placement: "left",
+    shape: "circle",
+    spotlightPadding: 8,
   },
   {
     id: "tour-replay",
@@ -56,6 +49,7 @@ export const appTourSteps: TourStep[] = [
     description: "Replay this tour anytime from here.",
     placement: "top",
     route: "/account/help",
+    shape: "rect",
   },
 ];
 

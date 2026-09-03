@@ -14,8 +14,6 @@ import { APP_TOUR_ID, appTourSteps, consumePendingTour, isTourCompleted, type To
 const navItems = [
   { href: "/learn", label: "Learn", tour: "nav-learn" },
   { href: "/sql-editor", label: "SQL Space", tour: "nav-sql-space" },
-  { href: "/progress", label: "Dashboard", tour: "nav-dashboard" },
-  { href: "/practice", label: "SQLBank", tour: "nav-sqlbank" },
 ];
 
 export function AppShell({ children, manageAccent = true }: { children: ReactNode; manageAccent?: boolean }) {
@@ -102,7 +100,5 @@ function primaryNavClass(active: boolean) {
 
 function isActiveNav(pathname: string, href: string) {
   if (href === "/sql-editor") return pathname === "/sql-editor" || pathname === "/sql-space" || pathname.startsWith("/learn/lesson");
-  if (href === "/progress") return pathname === "/progress" || pathname === "/dashboard";
-  if (href === "/practice") return pathname === "/practice" || pathname === "/sqlbank" || pathname.startsWith("/practice/") || pathname.startsWith("/sqlbank/");
   return pathname === href;
 }

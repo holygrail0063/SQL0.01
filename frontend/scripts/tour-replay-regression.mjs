@@ -48,17 +48,37 @@ check("App tour and workspace tour are versioned per authenticated user", () => 
   contains(files.tours, "queryright:tour:${userId}:pending");
   contains(files.appShell, "profile?.onboarding_completed");
 });
+check("App tour has exactly four visible steps and no removed nav targets", () => {
+  contains(files.tours, "id: \"learn\"");
+  contains(files.tours, "id: \"sql-space\"");
+  contains(files.tours, "id: \"profile\"");
+  contains(files.tours, "id: \"tour-replay\"");
+  absent(files.tours, "id: \"dashboard\"");
+  absent(files.tours, "id: \"sqlbank\"");
+  absent(files.tours, "nav-dashboard");
+  absent(files.tours, "nav-sqlbank");
+  absent(files.appShell, "Dashboard");
+  absent(files.appShell, "SQLBank");
+  const appTourBlock = files.tours.slice(files.tours.indexOf("export const appTourSteps"), files.tours.indexOf("export const workspaceTourSteps"));
+  const stepCount = (appTourBlock.match(/\n  \{/g) ?? []).length;
+  if (stepCount !== 4) throw new Error(`Expected 4 app tour steps, found ${stepCount}`);
+});
 
 check("Guided tour has spotlight behaviour and resilient controls", () => {
   contains(files.appShell + files.lessonWorkspace + files.tours, "queryright:start-tour");
   contains(files.guidedTour, "scrollIntoView");
   contains(files.guidedTour, "window.addEventListener(\"resize\"");
   contains(files.guidedTour, "window.addEventListener(\"scroll\"");
+  contains(files.guidedTour, "ResizeObserver");
+  contains(files.guidedTour, "getBoundingClientRect()");
+  contains(files.guidedTour, "frame.shape === \"circle\"");
+  contains(files.guidedTour, "radial-gradient(circle");
   contains(files.guidedTour, "missingAttempts");
   contains(files.guidedTour, "console.warn");
   contains(files.guidedTour, "event.key === \"Escape\"");
   contains(files.guidedTour, "Back");
   contains(files.guidedTour, "Skip");
+  absent(files.guidedTour, "% steps.length");
 });
 
 check("Stable tour targets exist for requested app and workspace steps", () => {

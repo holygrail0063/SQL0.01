@@ -2,12 +2,13 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { TourId, TourPlacement, TourStep } from "@/lib/tours";
 import { markTourCompleted } from "@/lib/tours";
 
 type Rect = { top: number; left: number; width: number; height: number };
 type TooltipPosition = { top: number; left: number };
+type SpotlightFrame = Rect & { borderRadius: string; padding: number; shape: NonNullable<TourStep["shape"]> };
 
 const CARD_WIDTH = 320;
 const GAP = 16;
@@ -57,6 +58,15 @@ export function GuidedTour({
     document.body.style.overflow = "hidden";
     window.setTimeout(() => closeRef.current?.focus(), reduceMotion ? 0 : 120);
 
+    let frameId = 0;
+    let observer: ResizeObserver | null = null;
+
+    function updateRect(target: HTMLElement) {
+      const next = target.getBoundingClientRect();
+      setRect({ top: next.top, left: next.left, width: next.width, height: next.height });
+      setMissingAttempts(0);
+    }
+
     function measure() {
       if (current.route && current.route !== window.location.pathname) return;
       const target = document.querySelector<HTMLElement>(current.target);
@@ -66,11 +76,13 @@ export function GuidedTour({
         return;
       }
       target.scrollIntoView({ block: "center", inline: "center", behavior: reduceMotion ? "auto" : "smooth" });
-      window.setTimeout(() => {
-        const next = target.getBoundingClientRect();
-        setRect({ top: next.top, left: next.left, width: next.width, height: next.height });
-        setMissingAttempts(0);
-      }, reduceMotion ? 0 : 180);
+      window.setTimeout(() => updateRect(target), reduceMotion ? 0 : 180);
+      observer?.disconnect();
+      observer = new ResizeObserver(() => {
+        cancelAnimationFrame(frameId);
+        frameId = requestAnimationFrame(() => updateRect(target));
+      });
+      observer.observe(target);
     }
 
     measure();
@@ -78,6 +90,8 @@ export function GuidedTour({
     window.addEventListener("scroll", measure, true);
     return () => {
       document.body.style.overflow = previousOverflow;
+      cancelAnimationFrame(frameId);
+      observer?.disconnect();
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
@@ -158,8 +172,14 @@ export function GuidedTour({
         role="dialog"
         transition={{ duration: reduceMotion ? 0.05 : 0.18 }}
       >
-        {rect ? <Spotlight rect={rect} /> : <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[2px]" />}
-        {rect && <div aria-hidden="true" className="absolute rounded-lg border-2 border-brand shadow-[0_0_0_6px_rgb(var(--color-brand)/0.14),0_0_42px_rgb(var(--color-brand)/0.34)]" style={spotlightStyle(rect)} />}
+        {rect ? <Spotlight frame={spotlightFrame(rect, current)} /> : <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[2px]" />}
+        {rect && (
+          <div
+            aria-hidden="true"
+            className="absolute border-2 border-brand shadow-[0_0_0_6px_rgb(var(--color-brand)/0.14),0_0_42px_rgb(var(--color-brand)/0.34)]"
+            style={spotlightStyle(spotlightFrame(rect, current))}
+          />
+        )}
         <motion.div
           className="pointer-events-auto fixed w-[min(320px,calc(100vw-1.5rem))] rounded-lg border border-line bg-elevated p-4 shadow-2xl shadow-black/45"
           initial={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
@@ -189,30 +209,62 @@ export function GuidedTour({
   );
 }
 
-function Spotlight({ rect }: { rect: Rect }) {
-  const top = Math.max(0, rect.top - PAD);
-  const left = Math.max(0, rect.left - PAD);
-  const right = Math.max(0, window.innerWidth - rect.left - rect.width - PAD);
-  const bottom = Math.max(0, window.innerHeight - rect.top - rect.height - PAD);
-  const width = rect.width + PAD * 2;
-  const height = rect.height + PAD * 2;
+function Spotlight({ frame }: { frame: SpotlightFrame }) {
+  const top = Math.max(0, frame.top);
+  const left = Math.max(0, frame.left);
+  const right = Math.max(0, window.innerWidth - frame.left - frame.width);
+  const bottom = Math.max(0, window.innerHeight - frame.top - frame.height);
   const panel = "absolute bg-slate-950/76 backdrop-blur-[2px]";
+  if (frame.shape === "circle") {
+    const centerX = frame.left + frame.width / 2;
+    const centerY = frame.top + frame.height / 2;
+    const radius = frame.width / 2;
+    const mask = `radial-gradient(circle ${radius}px at ${centerX}px ${centerY}px, transparent 0 ${radius}px, black ${radius + 1}px)`;
+    return <div className="absolute inset-0 bg-slate-950/76 backdrop-blur-[2px]" style={{ WebkitMaskImage: mask, maskImage: mask }} />;
+  }
   return (
     <>
       <div className={panel} style={{ left: 0, top: 0, width: "100%", height: top }} />
-      <div className={panel} style={{ left: 0, top, width: left, height }} />
-      <div className={panel} style={{ right: 0, top, width: right, height }} />
+      <div className={panel} style={{ left: 0, top, width: left, height: frame.height }} />
+      <div className={panel} style={{ right: 0, top, width: right, height: frame.height }} />
       <div className={panel} style={{ left: 0, bottom: 0, width: "100%", height: bottom }} />
     </>
   );
 }
 
-function spotlightStyle(rect: Rect): React.CSSProperties {
+function spotlightFrame(rect: Rect, step: TourStep): SpotlightFrame {
+  const padding = step.spotlightPadding ?? PAD;
+  const shape = step.shape ?? "rect";
+  if (shape === "circle") {
+    const diameter = Math.max(rect.width, rect.height) + padding * 2;
+    return {
+      top: rect.top + rect.height / 2 - diameter / 2,
+      left: rect.left + rect.width / 2 - diameter / 2,
+      width: diameter,
+      height: diameter,
+      borderRadius: "9999px",
+      padding,
+      shape,
+    };
+  }
   return {
-    top: Math.max(PAD / 2, rect.top - PAD),
-    left: Math.max(PAD / 2, rect.left - PAD),
-    width: Math.min(window.innerWidth - PAD, rect.width + PAD * 2),
-    height: Math.min(window.innerHeight - PAD, rect.height + PAD * 2),
+    top: rect.top - padding,
+    left: rect.left - padding,
+    width: rect.width + padding * 2,
+    height: rect.height + padding * 2,
+    borderRadius: "0.5rem",
+    padding,
+    shape,
+  };
+}
+
+function spotlightStyle(frame: SpotlightFrame): CSSProperties {
+  return {
+    top: Math.max(frame.padding / 2, frame.top),
+    left: Math.max(frame.padding / 2, frame.left),
+    width: Math.min(window.innerWidth - frame.padding, frame.width),
+    height: Math.min(window.innerHeight - frame.padding, frame.height),
+    borderRadius: frame.borderRadius,
   };
 }
 
