@@ -1,11 +1,14 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { PlayCircle, RotateCcw } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/auth";
 import { requireSupabase } from "@/lib/supabase";
 import { SUPPORT_TOPICS, type SupportTopic } from "@/lib/support-topics";
+import { APP_TOUR_ID, WORKSPACE_TOUR_ID, requestTour } from "@/lib/tours";
 
 export default function HelpPage() {
   return (
@@ -21,6 +24,7 @@ type FieldErrors = Partial<Record<"topic" | "subject" | "message", string>>;
 
 function HelpContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const [topic, setTopic] = useState<SupportTopic | "">("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -93,6 +97,35 @@ function HelpContent() {
       </p>
 
       <section className="mt-8 max-w-3xl rounded-lg border border-line bg-panel p-5 shadow-sm shadow-black/20 sm:p-6">
+        <p className="font-mono text-xs uppercase tracking-wider text-cyan">Guided Tours</p>
+        <h2 className="mt-2 text-xl font-semibold text-slate-50">Get oriented again</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-400">Replay the product walkthroughs without changing your progress, attempts, or settings.</p>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <button
+            className="inline-flex h-11 items-center justify-center gap-2 rounded border border-line px-4 text-sm font-semibold text-slate-200 transition hover:border-brand/50 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand"
+            data-tour="app-tour-replay"
+            onClick={() => user && requestTour(user.id, APP_TOUR_ID)}
+            type="button"
+          >
+            <PlayCircle size={17} />
+            Take QueryRight Tour
+          </button>
+          <button
+            className="inline-flex h-11 items-center justify-center gap-2 rounded border border-line px-4 text-sm font-semibold text-slate-200 transition hover:border-brand/50 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand"
+            onClick={() => {
+              if (!user) return;
+              requestTour(user.id, WORKSPACE_TOUR_ID);
+              router.push("/sql-editor");
+            }}
+            type="button"
+          >
+            <RotateCcw size={17} />
+            Replay Workspace Tour
+          </button>
+        </div>
+      </section>
+
+      <section className="mt-6 max-w-3xl rounded-lg border border-line bg-panel p-5 shadow-sm shadow-black/20 sm:p-6">
         {sent ? (
           <div aria-live="polite" className="rounded-lg border border-success/30 bg-success/10 p-5" data-testid="help-success" role="status">
             <p className="text-sm font-semibold text-success">✓ Message sent</p>

@@ -128,6 +128,7 @@ export function ProfileMorphMenu({ user, currentPath }: { user: User | null; cur
           aria-haspopup="menu"
           aria-label={isOpen ? "Close account menu" : "Open account menu"}
           className="absolute right-0 top-0 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-sm font-bold text-slate-50 outline-none transition hover:border-brand/40 hover:bg-brand/10 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+          data-tour="profile-menu"
           onClick={() => setIsOpen((value) => !value)}
           type="button"
         >

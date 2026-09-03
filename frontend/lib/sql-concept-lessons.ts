@@ -44,7 +44,6 @@ export type SqlConceptLesson = {
   exampleSql: string;
   yourTurn: string;
   reinforcement: string;
-  coachPrompt: string;
   visual: SqlConceptVisualKind;
 };
 
@@ -111,12 +110,12 @@ export function reinforcementForLesson(course: CourseDefinition, lesson: LessonD
   return direct?.reinforcement ?? null;
 }
 
-function full(id: string, triggerSkills: string[], firstChallengeId: number, title: string, shortTitle: string, summary: string, syntax: string, plainEnglish: string[], exampleTitle: string, exampleSql: string, yourTurn: string, reinforcement: string, coachPrompt: string, visual: SqlConceptVisualKind): SqlConceptLesson {
-  return { id, triggerSkills, firstChallengeId, kind: "full", title, shortTitle, summary, syntax, plainEnglish, exampleTitle, exampleSql, yourTurn, reinforcement, coachPrompt, visual };
+function full(id: string, triggerSkills: string[], firstChallengeId: number, title: string, shortTitle: string, summary: string, syntax: string, plainEnglish: string[], exampleTitle: string, exampleSql: string, yourTurn: string, reinforcement: string, _legacyPrompt: string, visual: SqlConceptVisualKind): SqlConceptLesson {
+  return { id, triggerSkills, firstChallengeId, kind: "full", title, shortTitle, summary, syntax, plainEnglish, exampleTitle, exampleSql, yourTurn, reinforcement, visual };
 }
 
-function mini(id: string, triggerSkills: string[], firstChallengeId: number, title: string, shortTitle: string, summary: string, syntax: string, plainEnglish: string[], exampleTitle: string, exampleSql: string, yourTurn: string, reinforcement: string, coachPrompt: string, visual: SqlConceptVisualKind): SqlConceptLesson {
-  return { id, triggerSkills, firstChallengeId, kind: "mini", title, shortTitle, summary, syntax, plainEnglish, exampleTitle, exampleSql, yourTurn, reinforcement, coachPrompt, visual };
+function mini(id: string, triggerSkills: string[], firstChallengeId: number, title: string, shortTitle: string, summary: string, syntax: string, plainEnglish: string[], exampleTitle: string, exampleSql: string, yourTurn: string, reinforcement: string, _legacyPrompt: string, visual: SqlConceptVisualKind): SqlConceptLesson {
+  return { id, triggerSkills, firstChallengeId, kind: "mini", title, shortTitle, summary, syntax, plainEnglish, exampleTitle, exampleSql, yourTurn, reinforcement, visual };
 }
 
 function conceptStage(concept: SqlConceptLesson, lesson: LessonDefinition, sequence: number): LessonStageDefinition {

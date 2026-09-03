@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 
 export function SqlEditor({
   className = "min-h-[320px] flex-1 border-b border-line",
+  dataTour,
   onChange,
   onRun,
   style,
@@ -13,6 +14,7 @@ export function SqlEditor({
   value: string;
   onChange: (value: string) => void;
   onRun?: () => void;
+  dataTour?: string;
   className?: string;
   style?: CSSProperties;
 }) {
@@ -22,7 +24,7 @@ export function SqlEditor({
   };
 
   return (
-    <div className={className} style={style}>
+    <div className={className} data-tour={dataTour} style={style}>
       <Editor
         height="100%"
         defaultLanguage="sql"

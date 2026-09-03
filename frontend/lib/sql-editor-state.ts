@@ -18,9 +18,6 @@ export function lessonResultTabKey(userId: string, lessonId: string, stageId: st
   return `queryright:sql-editor:${userId}:lesson:${lessonId}:${stageId}:result-tab`;
 }
 
-export function lessonTutorKey(userId: string, lessonId: string, stageId: string) {
-  return `queryright:sql-editor:${userId}:lesson:${lessonId}:${stageId}:coach-open`;
-}
 
 export function challengeDraftKey(userId: string, challengeId: number) {
   return `queryright:sql-editor:${userId}:challenge:${challengeId}:draft`;

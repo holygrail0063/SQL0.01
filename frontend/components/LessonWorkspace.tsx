@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Lightbulb, PanelLeftClose, PanelLeftOpen, Play, RotateCcw } from "lucide-react";
+import { Lightbulb, PanelLeftClose, PanelLeftOpen, Play, RefreshCcw, RotateCcw } from "lucide-react";
 import type { CSSProperties, Dispatch, PointerEvent, ReactNode, SetStateAction } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ResultsTable } from "@/components/ResultsTable";
@@ -22,8 +22,10 @@ import {
   type LessonStageDefinition,
 } from "@/lib/course";
 import { getProfile, getProgress, recordAttempt, type Profile, type ProgressRow } from "@/lib/progress";
-import { conceptLessonById, conceptStagesForLesson, reinforcementForLesson, reviewableConceptLessons, teachingConceptForLesson } from "@/lib/sql-concept-lessons";
-import { lastSqlWorkspaceKey, lessonDraftKey, lessonHintKey, lessonResultKey, lessonResultTabKey, lessonTutorKey } from "@/lib/sql-editor-state";
+import { conceptLessonById, reinforcementForLesson, reviewableConceptLessons, teachingConceptForLesson } from "@/lib/sql-concept-lessons";
+import { GuidedTour } from "@/components/tour/GuidedTour";
+import { WORKSPACE_TOUR_ID, consumePendingTour, isTourCompleted, workspaceTourSteps, type TourId } from "@/lib/tours";
+import { lastSqlWorkspaceKey, lessonDraftKey, lessonHintKey, lessonResultKey, lessonResultTabKey } from "@/lib/sql-editor-state";
 
 type ResultTabId = "results" | "feedback" | "breakdown";
 
@@ -33,7 +35,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const fallbackLessonBundle = useMemo(() => getLessonById(lessonId), [lessonId]);
   const selectedCourse = useMemo(() => getCourseForProfile(profile) ?? fallbackLessonBundle?.course ?? null, [fallbackLessonBundle, profile]);
   const lessonBundle = useMemo(() => (selectedCourse ? getLessonByIdInCourse(selectedCourse, lessonId) : null) ?? fallbackLessonBundle, [fallbackLessonBundle, lessonId, selectedCourse]);
-  const introConceptStages = useMemo(() => (lessonBundle ? conceptStagesForLesson(lessonBundle.course, lessonBundle.lesson) : []), [lessonBundle]);
   const stages = useMemo(() => (lessonBundle ? getLessonStages(lessonBundle.lesson) : []), [lessonBundle]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [schema, setSchema] = useState<SchemaTable[]>([]);
@@ -44,7 +45,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<QueryResult | null>(null);
   const [hintCount, setHintCount] = useState(0);
-  const [showTutor, setShowTutor] = useState(false);
   const [completedConceptStages, setCompletedConceptStages] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
@@ -58,6 +58,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [reviewConceptId, setReviewConceptId] = useState<string | null>(null);
   const [teachingConceptId, setTeachingConceptId] = useState<string | null>(null);
   const [dismissedTeachingStageKey, setDismissedTeachingStageKey] = useState<string | null>(null);
+  const [workspaceTourActive, setWorkspaceTourActive] = useState(false);
   const conceptOverlayOpen = Boolean(teachingConceptId || reviewConceptId);
 
   useEffect(() => {
@@ -113,13 +114,13 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     }
     const concept = teachingConceptForLesson(lessonBundle.course, lessonBundle.lesson);
     const teachingStageKey = concept ? `${stage.id}:${concept.id}` : null;
-    if (!concept || dismissedTeachingStageKey === teachingStageKey) {
+    if (!concept || dismissedTeachingStageKey === teachingStageKey || completedConceptStages.has(concept.id)) {
       setTeachingConceptId(null);
       return;
     }
     if (teachingConceptId === concept.id) return;
     setTeachingConceptId(concept.id);
-  }, [activeStageIndex, dismissedTeachingStageKey, lessonBundle, loading, stages, teachingConceptId, user]);
+  }, [activeStageIndex, completedConceptStages, dismissedTeachingStageKey, lessonBundle, loading, stages, teachingConceptId, user]);
 
   useEffect(() => {
     const activeStage = stages[activeStageIndex];
@@ -130,7 +131,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
       const restoredResultTab = parseStoredResultTab(window.localStorage.getItem(lessonResultTabKey(user.id, lessonId, activeStage.id)), restoredResult);
       setResult(restoredResult);
       setHintCount(Number.isFinite(restoredHints) ? clamp(restoredHints, 0, activeStage.hints.length) : 0);
-      setShowTutor(window.localStorage.getItem(lessonTutorKey(user.id, lessonId, activeStage.id)) === "true");
       setResultTab(restoredResultTab);
       const draft = window.localStorage.getItem(lessonDraftKey(user.id, lessonId, activeStage.id));
       if (draft !== null) setQuery(draft);
@@ -139,7 +139,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     }
     setResult(null);
     setHintCount(0);
-    setShowTutor(false);
     setResultTab("results");
     if (activeStage && !activeStage.carryForwardQuery) {
       setQuery(activeStage.starterSql ?? "");
@@ -158,11 +157,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     window.localStorage.setItem(lessonHintKey(user.id, lessonId, activeStage.id), String(hintCount));
   }, [activeStageIndex, hintCount, lessonId, stages, user]);
 
-  useEffect(() => {
-    const activeStage = stages[activeStageIndex];
-    if (!user || !activeStage) return;
-    window.localStorage.setItem(lessonTutorKey(user.id, lessonId, activeStage.id), String(showTutor));
-  }, [activeStageIndex, lessonId, showTutor, stages, user]);
 
   useEffect(() => {
     const activeStage = stages[activeStageIndex];
@@ -199,6 +193,22 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     setCourseCompletionAcknowledged(window.localStorage.getItem(courseCompletionKey(user.id, lessonBundle.course.id)) === "true");
   }, [lessonBundle, user]);
 
+  const activeStageForTour = stages[activeStageIndex];
+
+  useEffect(() => {
+    if (!user || loading || !activeStageForTour?.challengeId) return;
+    if (consumePendingTour(user.id, WORKSPACE_TOUR_ID) || !isTourCompleted(user.id, WORKSPACE_TOUR_ID)) setWorkspaceTourActive(true);
+  }, [activeStageForTour?.challengeId, loading, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    function handleTourRequest(event: Event) {
+      const detail = (event as CustomEvent<{ tourId?: TourId }>).detail;
+      if (detail?.tourId === WORKSPACE_TOUR_ID) setWorkspaceTourActive(true);
+    }
+    window.addEventListener("queryright:start-tour", handleTourRequest);
+    return () => window.removeEventListener("queryright:start-tour", handleTourRequest);
+  }, [user]);
   if (loading) return <main className="p-8 text-slate-400">Preparing your lesson...</main>;
   if (!lessonBundle) return <main className="p-8 text-red-200">This lesson was not found.</main>;
 
@@ -206,7 +216,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const activeStage = stages[activeStageIndex] ?? stages[0];
   const activeChallenge = activeStage?.challengeId ? challenges.find((challenge) => challenge.id === activeStage.challengeId) ?? null : null;
   const visibleHints = activeStage?.hints.slice(0, hintCount) ?? [];
-  const showLessonCoach = course.assistanceLevel !== "minimal";
   const canRevealMoreHints = Boolean(activeStage && hintCount < activeStage.hints.length);
   const activeStageStoredCompleted = Boolean(activeStage && isStageCompleted(activeStage, progress, completedConceptStages));
   const currentRunCorrect = Boolean(result?.correct);
@@ -232,6 +241,9 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const teachingConceptLesson = teachingConceptId ? conceptLessonById(teachingConceptId) : null;
   const reviewConceptLesson = reviewConceptId ? conceptLessonById(reviewConceptId) : null;
   const reviewConcepts = reviewableConceptLessons(course, lesson, completedConceptStages);
+  const primaryReplayConcept = activeStage?.challengeId ? teachingConceptForLesson(course, lesson) : activeConceptLesson;
+  const canReplayLesson = Boolean(primaryReplayConcept);
+  const replayLabel = reviewConcepts.length > 1 ? "Review Concepts" : "Replay Lesson";
   const reinforcement = reinforcementForLesson(course, lesson, completedConceptStages);
 
   async function runQuery() {
@@ -288,6 +300,13 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
     setTeachingConceptId(null);
   }
 
+  function replayLesson() {
+    if (!primaryReplayConcept) return;
+    setTeachingConceptId(null);
+    setReviewConceptId(null);
+    window.setTimeout(() => setReviewConceptId(primaryReplayConcept.id), 0);
+  }
+
   function moveToStage(index: number) {
     if (!user || !isStageUnlocked(index, stages, progress, completedConceptStages, frontierStageIndex)) return;
     const stage = stages[index];
@@ -322,7 +341,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
 
   return (
     <>
-      <main className="min-h-[calc(100dvh-4rem)] bg-ink text-slate-50 lg:flex lg:h-[calc(100dvh-4rem)] lg:min-h-[560px] lg:flex-col lg:overflow-hidden">
+      <main className="min-h-[calc(100dvh-4rem)] bg-ink text-slate-50 lg:flex lg:h-[calc(100dvh-4rem)] lg:min-h-[560px] lg:flex-col lg:overflow-hidden" data-tour="lesson-workspace">
       <header className="shrink-0 border-b border-line bg-panel px-5 py-3">
         <div className="mx-auto max-w-7xl">
           <p className="font-mono text-xs uppercase tracking-wider text-cyan">SQL Learning Path / {course.experienceLevel} / Module {module.sequence} / Lesson {lesson.sequence}</p>
@@ -360,7 +379,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
         className="grid grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-cols-[var(--sidebar-width)_1fr] lg:grid-rows-[auto_minmax(0,1fr)]"
         style={{ "--sidebar-width": sidebarCollapsed ? "48px" : `${sidebarWidth}px` } as CSSProperties & Record<"--sidebar-width", string>}
       >
-        <aside className="relative order-2 min-h-[260px] border-y border-line bg-panel lg:order-none lg:col-start-1 lg:row-span-2 lg:min-h-0 lg:border-b-0 lg:border-r lg:border-t-0">
+        <aside className="relative order-2 min-h-[260px] border-y border-line bg-panel lg:order-none lg:col-start-1 lg:row-span-2 lg:min-h-0 lg:border-b-0 lg:border-r lg:border-t-0" data-tour="schema-explorer">
           {sidebarCollapsed ? (
             <button
               aria-label="Expand database schema panel"
@@ -401,7 +420,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
           )}
         </aside>
 
-        <section className="order-1 border-b border-line bg-elevated px-5 py-3 lg:col-start-2 lg:row-start-1">
+        <section className="order-1 border-b border-line bg-elevated px-5 py-3 lg:col-start-2 lg:row-start-1" data-tour="workspace-question">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0 max-w-4xl">
               <p className="text-xs font-semibold uppercase tracking-wider text-brand">Question</p>
@@ -409,11 +428,11 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               <div className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</div>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
-              {showLessonCoach && (
-                <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" onClick={() => setShowTutor((value) => !value)} type="button">
-                  <BookOpen size={16} />
-                  Lesson Coach
-                  <span className="text-brand">{showTutor ? "Hide" : "Open"}</span>
+
+              {canReplayLesson && activeChallenge && (
+                <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" data-tour="replay-lesson" onClick={replayLesson} type="button">
+                  <RefreshCcw size={16} />
+                  {replayLabel}
                 </button>
               )}
               {reviewConcepts.length > 0 && activeChallenge && reviewConcepts.map((concept) => (
@@ -422,18 +441,14 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                 </button>
               ))}
               {canRevealMoreHints && (
-                <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" onClick={() => setHintCount((value) => value + 1)} type="button">
+                <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" data-tour="hint-control" onClick={() => setHintCount((value) => value + 1)} type="button">
                   <Lightbulb size={16} />
                   Hint {hintCount + 1}
                 </button>
               )}
             </div>
           </div>
-          {showTutor && (
-            <p className="mt-3 border-t border-line pt-3 text-sm leading-6 text-slate-300">
-              {teachingConceptLesson?.coachPrompt ?? `You are working on ${activeStage.title}. Focus on this request: ${activeStage.instructions.split("\n")[0]} Run a query that returns the requested business output.`}
-            </p>
-          )}
+
           {visibleHints.length > 0 && (
             <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3 text-sm leading-6 text-slate-300">
               {visibleHints.map((hint, index) => <p key={hint}>Hint {index + 1}: {hint}</p>)}
@@ -449,7 +464,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{activeChallenge ? "SQL Editor" : "Concept"}</p>
               <p className="mt-1 text-xs text-slate-500">{course.shortTitle} • {stageTitle(activeStage)} • {questionContextLabel}</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2" data-tour="lesson-navigation">
               {activeChallenge && executionStatus(result, running, error, activeStageCompleted, courseCompleted && courseCompletionAcknowledged && Boolean(position?.isFinalCourseQuestion), completedLabel) && (
                 <span className={`text-xs ${statusTone(result, running, error, activeStageCompleted)}`}>
                   {executionStatus(result, running, error, activeStageCompleted, courseCompleted && courseCompletionAcknowledged && Boolean(position?.isFinalCourseQuestion), completedLabel)}
@@ -468,7 +483,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                       Reset
                     </button>
                   )}
-                  <button className={`inline-flex h-9 items-center gap-2 rounded px-4 text-sm font-semibold disabled:cursor-wait disabled:bg-slate-700 disabled:text-slate-400 ${activeStageCompleted ? "border border-line text-slate-200 hover:border-brand-strong/50" : "bg-brand text-slate-950"}`} disabled={running} onClick={runQuery} type="button">
+                  <button className={`inline-flex h-9 items-center gap-2 rounded px-4 text-sm font-semibold disabled:cursor-wait disabled:bg-slate-700 disabled:text-slate-400 ${activeStageCompleted ? "border border-line text-slate-200 hover:border-brand-strong/50" : "bg-brand text-slate-950"}`} data-tour="run-query" disabled={running} onClick={runQuery} type="button">
                     <Play size={16} fill="currentColor" />
                     {running ? "Running..." : activeStageCompleted ? "Run Again" : "Run Query"}
                   </button>
@@ -500,7 +515,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
 
           {activeChallenge ? (
             <div className="flex min-h-0 flex-1 flex-col bg-editor">
-              <SqlEditor className="min-h-[180px] shrink-0 border-b border-line" style={{ height: editorHeight }} value={query} onChange={setQuery} onRun={runQuery} />
+              <SqlEditor className="min-h-[180px] shrink-0 border-b border-line" dataTour="sql-editor" style={{ height: editorHeight }} value={query} onChange={setQuery} onRun={runQuery} />
               <div
                 aria-label="Resize SQL editor and results"
                 className="h-2 shrink-0 cursor-row-resize border-y border-line bg-panel hover:bg-brand/20 focus-visible:ring-2 focus-visible:ring-brand"
@@ -517,7 +532,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               />
               <div className="min-h-[180px] flex-1 overflow-hidden" style={{ height: resultsHeight }}>
                 <div className="flex h-full min-h-0 flex-col bg-editor text-slate-200">
-                  <div className="flex shrink-0 items-center justify-between border-b border-line px-5 py-2">
+                  <div className="flex shrink-0 items-center justify-between border-b border-line px-5 py-2" data-tour="result-tabs">
                     <div className="flex gap-1 text-xs font-semibold uppercase tracking-wider">
                       <ResultTab active={resultTab === "results"} onClick={() => setResultTab("results")}>Results</ResultTab>
                       <ResultTab active={resultTab === "feedback"} onClick={() => setResultTab("feedback")}>Feedback</ResultTab>
@@ -584,6 +599,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
           <SqlConceptLessonPanel lesson={teachingConceptLesson} onComplete={() => completeTeachingConcept(teachingConceptLesson.id)} />
         </ConceptLessonOverlay>
       )}
+      <GuidedTour active={workspaceTourActive} finalLabel="Start solving" onClose={() => setWorkspaceTourActive(false)} steps={workspaceTourSteps} tourId={WORKSPACE_TOUR_ID} userId={user?.id} />
       {reviewConceptLesson && (
         <ConceptLessonOverlay>
           <SqlConceptLessonPanel lesson={reviewConceptLesson} onClose={() => setReviewConceptId(null)} replay />
