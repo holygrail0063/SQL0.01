@@ -50,7 +50,6 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progressMessage, setProgressMessage] = useState<string | null>(null);
-  const [sidebarTab, setSidebarTab] = useState<"task" | "database">("task");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [editorPercent, setEditorPercent] = useState(52);
@@ -319,6 +318,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const editorHeight = `${editorPercent}%`;
   const resultsHeight = `${100 - editorPercent}%`;
   const hasMultipleStages = stages.length > 1;
+  const shouldShowQuestionTitle = Boolean(activeStage?.title && activeStage.title !== lesson.title);
 
   return (
     <>
@@ -357,14 +357,14 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
       </header>
 
       <div
-        className="grid grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-cols-[var(--sidebar-width)_1fr]"
+        className="grid grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-cols-[var(--sidebar-width)_1fr] lg:grid-rows-[auto_minmax(0,1fr)]"
         style={{ "--sidebar-width": sidebarCollapsed ? "48px" : `${sidebarWidth}px` } as CSSProperties & Record<"--sidebar-width", string>}
       >
-        <aside className="relative min-h-0 border-b border-line bg-panel lg:border-b-0 lg:border-r">
+        <aside className="relative order-2 min-h-[260px] border-y border-line bg-panel lg:order-none lg:col-start-1 lg:row-span-2 lg:min-h-0 lg:border-b-0 lg:border-r lg:border-t-0">
           {sidebarCollapsed ? (
             <button
-              aria-label="Expand question and database panel"
-              className="flex h-full w-full items-start justify-center pt-4 text-slate-400 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand"
+              aria-label="Expand database schema panel"
+              className="flex h-full min-h-[220px] w-full items-start justify-center pt-4 text-slate-400 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand lg:min-h-0"
               onClick={() => setSidebarCollapsed(false)}
               type="button"
             >
@@ -372,14 +372,11 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
             </button>
           ) : (
             <div className="flex h-full min-h-0 flex-col">
-              <div className="flex items-center justify-between border-b border-line px-3 py-2">
-                <div className="grid flex-1 grid-cols-2 rounded-lg border border-line bg-ink p-1 text-xs">
-                  <button className={`rounded px-2 py-1.5 ${sidebarTab === "task" ? "bg-brand/15 text-brand" : "text-slate-400"}`} onClick={() => setSidebarTab("task")} type="button">Question</button>
-                  <button className={`rounded px-2 py-1.5 ${sidebarTab === "database" ? "bg-brand/15 text-brand" : "text-slate-400"}`} onClick={() => setSidebarTab("database")} type="button">Database</button>
-                </div>
+              <div className="flex items-center justify-between border-b border-line px-4 py-2">
+                <p className="font-mono text-xs uppercase tracking-wider text-brand">Database</p>
                 <button
-                  aria-label="Collapse question and database panel"
-                  className="ml-2 rounded border border-line p-2 text-slate-400 hover:border-brand/40 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand"
+                  aria-label="Collapse database schema panel"
+                  className="rounded border border-line p-2 text-slate-400 hover:border-brand/40 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand"
                   onClick={() => setSidebarCollapsed(true)}
                   type="button"
                 >
@@ -387,59 +384,10 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                 </button>
               </div>
               <div className="min-h-0 flex-1 overflow-auto">
-                {sidebarTab === "task" ? (
-                  <div className="space-y-4 p-4">
-                    <section>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-cyan">Question</p>
-                      <h2 className="mt-2 text-lg font-semibold text-slate-50">{activeStage.title}</h2>
-                      <div className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</div>
-                      <p className="mt-3 text-xs text-slate-500">{lesson.difficulty} • ~{lesson.estimatedMinutes} min</p>
-                    </section>
-                    {showLessonCoach && (
-                      <section className="rounded-lg border border-line bg-elevated p-3">
-                        <button className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-50" onClick={() => setShowTutor((value) => !value)} type="button">
-                          <span className="inline-flex items-center gap-2"><BookOpen size={16} /> Lesson Coach</span>
-                          <span className="text-cyan">{showTutor ? "Hide" : "Open"}</span>
-                        </button>
-                        {showTutor && (
-                          <p className="mt-3 text-sm leading-6 text-slate-300">
-                            {teachingConceptLesson?.coachPrompt ?? `You are working on ${activeStage.title}. Focus on this request: ${activeStage.instructions.split("\n")[0]} Run a query that returns the requested business output.`}
-                          </p>
-                        )}
-                      </section>
-                    )}
-                    {reviewConcepts.length > 0 && activeChallenge && (
-                      <section className="rounded-lg border border-line bg-elevated p-3">
-                        <p className="text-sm font-semibold text-slate-50">Review Concept</p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {reviewConcepts.map((concept) => (
-                            <button className="rounded border border-line px-3 py-1.5 text-xs text-slate-300 hover:border-brand/40 hover:text-brand" key={concept.id} onClick={() => setReviewConceptId(concept.id)} type="button">
-                              {concept.shortTitle}
-                            </button>
-                          ))}
-                        </div>
-                      </section>
-                    )}
-                    <section className="rounded-lg border border-line bg-elevated p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-50"><Lightbulb size={16} /> Hints</p>
-                        {canRevealMoreHints && (
-                          <button className="rounded border border-line px-3 py-1 text-xs text-slate-300 hover:border-brand-strong/50" onClick={() => setHintCount((value) => value + 1)} type="button">
-                            Show Hint {hintCount + 1}
-                          </button>
-                        )}
-                      </div>
-                      <div className="mt-3 space-y-2 text-sm leading-6 text-slate-300">
-                        {visibleHints.length ? visibleHints.map((hint, index) => <p key={hint}>Hint {index + 1}: {hint}</p>) : <p className="text-slate-500">{activeChallenge ? course.assistanceLevel === "minimal" ? "Expert mode keeps hints minimal. Reveal one only if you are blocked." : "Need direction? Reveal one hint at a time." : "No SQL hints needed for this lesson concept."}</p>}
-                      </div>
-                    </section>
-                  </div>
-                ) : (
-                  <SchemaExplorer className="h-full bg-panel p-4" schema={schema} />
-                )}
+                <SchemaExplorer className="h-full bg-panel p-4" schema={schema} />
               </div>
               <div
-                aria-label="Resize question and database panel"
+                aria-label="Resize database schema panel"
                 className="absolute bottom-0 right-[-3px] top-0 hidden w-1 cursor-col-resize bg-transparent hover:bg-brand/40 lg:block"
                 onPointerDown={(event) => startSidebarResize(event, setSidebarWidth)}
                 role="separator"
@@ -453,7 +401,47 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
           )}
         </aside>
 
-        <section className="flex min-h-[640px] min-w-0 flex-col overflow-hidden lg:min-h-0">
+        <section className="order-1 border-b border-line bg-elevated px-5 py-3 lg:col-start-2 lg:row-start-1">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0 max-w-4xl">
+              <p className="text-xs font-semibold uppercase tracking-wider text-brand">Question</p>
+              {shouldShowQuestionTitle && <h2 className="mt-1 text-lg font-semibold text-slate-50">{activeStage.title}</h2>}
+              <div className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</div>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              {showLessonCoach && (
+                <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" onClick={() => setShowTutor((value) => !value)} type="button">
+                  <BookOpen size={16} />
+                  Lesson Coach
+                  <span className="text-brand">{showTutor ? "Hide" : "Open"}</span>
+                </button>
+              )}
+              {reviewConcepts.length > 0 && activeChallenge && reviewConcepts.map((concept) => (
+                <button className="inline-flex h-9 items-center rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" key={concept.id} onClick={() => setReviewConceptId(concept.id)} type="button">
+                  Review {concept.shortTitle}
+                </button>
+              ))}
+              {canRevealMoreHints && (
+                <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" onClick={() => setHintCount((value) => value + 1)} type="button">
+                  <Lightbulb size={16} />
+                  Hint {hintCount + 1}
+                </button>
+              )}
+            </div>
+          </div>
+          {showTutor && (
+            <p className="mt-3 border-t border-line pt-3 text-sm leading-6 text-slate-300">
+              {teachingConceptLesson?.coachPrompt ?? `You are working on ${activeStage.title}. Focus on this request: ${activeStage.instructions.split("\n")[0]} Run a query that returns the requested business output.`}
+            </p>
+          )}
+          {visibleHints.length > 0 && (
+            <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3 text-sm leading-6 text-slate-300">
+              {visibleHints.map((hint, index) => <p key={hint}>Hint {index + 1}: {hint}</p>)}
+            </div>
+          )}
+        </section>
+
+        <section className="order-3 flex min-h-[640px] min-w-0 flex-col overflow-hidden lg:col-start-2 lg:row-start-2 lg:min-h-0">
           {error && <div className="border-b border-red-900/60 bg-red-950/40 px-6 py-3 text-sm text-red-100">{error}</div>}
           {progressMessage && <div className="border-b border-cyan/30 bg-cyan/10 px-6 py-3 text-sm text-cyan">{progressMessage}</div>}
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line bg-elevated px-5 py-2">
