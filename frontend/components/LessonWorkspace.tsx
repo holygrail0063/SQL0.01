@@ -59,6 +59,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const [teachingConceptId, setTeachingConceptId] = useState<string | null>(null);
   const [dismissedTeachingStageKey, setDismissedTeachingStageKey] = useState<string | null>(null);
   const [workspaceTourActive, setWorkspaceTourActive] = useState(false);
+  const [workspaceTourPending, setWorkspaceTourPending] = useState(false);
   const conceptOverlayOpen = Boolean(teachingConceptId || reviewConceptId);
 
   useEffect(() => {
@@ -196,15 +197,24 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   const activeStageForTour = stages[activeStageIndex];
 
   useEffect(() => {
-    if (!user || loading || !activeStageForTour?.challengeId) return;
-    if (consumePendingTour(user.id, WORKSPACE_TOUR_ID) || !isTourCompleted(user.id, WORKSPACE_TOUR_ID)) setWorkspaceTourActive(true);
-  }, [activeStageForTour?.challengeId, loading, user]);
+    if (!user || loading || !lessonBundle || !activeStageForTour?.challengeId) return;
+    const pendingManualTour = consumePendingTour(user.id, WORKSPACE_TOUR_ID);
+    const needsAutomaticTour = !isTourCompleted(user.id, WORKSPACE_TOUR_ID);
+    if (!pendingManualTour && !needsAutomaticTour) return;
+    setWorkspaceTourPending(true);
+  }, [activeStageForTour?.challengeId, lessonBundle, loading, user]);
+
+  useEffect(() => {
+    if (!workspaceTourPending || conceptOverlayOpen || workspaceTourActive) return;
+    setWorkspaceTourPending(false);
+    setWorkspaceTourActive(true);
+  }, [conceptOverlayOpen, workspaceTourActive, workspaceTourPending]);
 
   useEffect(() => {
     if (!user) return;
     function handleTourRequest(event: Event) {
       const detail = (event as CustomEvent<{ tourId?: TourId }>).detail;
-      if (detail?.tourId === WORKSPACE_TOUR_ID) setWorkspaceTourActive(true);
+      if (detail?.tourId === WORKSPACE_TOUR_ID) setWorkspaceTourPending(true);
     }
     window.addEventListener("queryright:start-tour", handleTourRequest);
     return () => window.removeEventListener("queryright:start-tour", handleTourRequest);
@@ -301,10 +311,9 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
   }
 
   function replayLesson() {
-    if (!primaryReplayConcept) return;
+    if (!primaryReplayConcept || workspaceTourActive) return;
     setTeachingConceptId(null);
-    setReviewConceptId(null);
-    window.setTimeout(() => setReviewConceptId(primaryReplayConcept.id), 0);
+    setReviewConceptId(primaryReplayConcept.id);
   }
 
   function moveToStage(index: number) {
@@ -420,9 +429,9 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
           )}
         </aside>
 
-        <section className="order-1 border-b border-line bg-elevated px-5 py-3 lg:col-start-2 lg:row-start-1" data-tour="workspace-question">
+        <section className="order-1 border-b border-line bg-elevated px-5 py-3 lg:col-start-2 lg:row-start-1">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-            <div className="min-w-0 max-w-4xl">
+            <div className="min-w-0 max-w-4xl rounded border border-line/70 bg-panel/45 p-3" data-tour="workspace-question">
               <p className="text-xs font-semibold uppercase tracking-wider text-brand">Question</p>
               {shouldShowQuestionTitle && <h2 className="mt-1 text-lg font-semibold text-slate-50">{activeStage.title}</h2>}
               <div className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">{activeStage.instructions}</div>
@@ -430,13 +439,13 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
             <div className="flex shrink-0 flex-wrap gap-2">
 
               {canReplayLesson && activeChallenge && (
-                <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" data-tour="replay-lesson" onClick={replayLesson} type="button">
+                <button className="inline-flex h-9 items-center gap-2 rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" data-tour="replay-lesson" disabled={workspaceTourActive} onClick={replayLesson} type="button">
                   <RefreshCcw size={16} />
                   {replayLabel}
                 </button>
               )}
               {reviewConcepts.length > 0 && activeChallenge && reviewConcepts.map((concept) => (
-                <button className="inline-flex h-9 items-center rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" key={concept.id} onClick={() => setReviewConceptId(concept.id)} type="button">
+                <button className="inline-flex h-9 items-center rounded border border-line px-3 text-sm font-semibold text-slate-300 hover:border-brand/40 hover:text-brand" key={concept.id} onClick={() => { if (!workspaceTourActive) setReviewConceptId(concept.id); }} type="button">
                   Review {concept.shortTitle}
                 </button>
               ))}
@@ -464,7 +473,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{activeChallenge ? "SQL Editor" : "Concept"}</p>
               <p className="mt-1 text-xs text-slate-500">{course.shortTitle} • {stageTitle(activeStage)} • {questionContextLabel}</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2" data-tour="lesson-navigation">
+            <div className="flex flex-wrap items-center gap-2">
               {activeChallenge && executionStatus(result, running, error, activeStageCompleted, courseCompleted && courseCompletionAcknowledged && Boolean(position?.isFinalCourseQuestion), completedLabel) && (
                 <span className={`text-xs ${statusTone(result, running, error, activeStageCompleted)}`}>
                   {executionStatus(result, running, error, activeStageCompleted, courseCompleted && courseCompletionAcknowledged && Boolean(position?.isFinalCourseQuestion), completedLabel)}
@@ -490,23 +499,28 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                 </>
               )}
               {shouldShowReturnToFrontier && (
-                <button aria-label={`Return to ${frontierQuestionLabel.toLowerCase()}`} className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={returnToFrontierStage} type="button">
+                <button aria-label={`Return to ${frontierQuestionLabel.toLowerCase()}`} className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" data-tour="next-navigation" onClick={returnToFrontierStage} type="button">
                   Return to {frontierQuestionLabel} →
                 </button>
               )}
+              {!shouldShowReturnToFrontier && activeChallenge && !progressionAction && (
+                <button className="inline-flex h-9 items-center rounded border border-line px-4 text-sm font-semibold text-slate-400 disabled:cursor-not-allowed disabled:opacity-70" data-tour="next-navigation" disabled type="button">
+                  Next Question →
+                </button>
+              )}
               {!shouldShowReturnToFrontier && progressionAction?.type === "next-question" && (
-                <button className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={continueToNextStage} type="button">
+                <button className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" data-tour="next-navigation" onClick={continueToNextStage} type="button">
                   Next Question →
                 </button>
               )}
               {!shouldShowReturnToFrontier && progressionAction?.type === "next-lesson" && progressionAction.href && (
-                <Link className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" href={progressionAction.href}>Next Lesson →</Link>
+                <Link className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" data-tour="next-navigation" href={progressionAction.href}>Next Lesson →</Link>
               )}
               {!shouldShowReturnToFrontier && progressionAction?.type === "next-module" && progressionAction.href && (
-                <Link className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" href={progressionAction.href}>Next Module →</Link>
+                <Link className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" data-tour="next-navigation" href={progressionAction.href}>Next Module →</Link>
               )}
               {!shouldShowReturnToFrontier && progressionAction?.type === "complete-course" && (
-                <button className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" onClick={completeCourse} type="button">
+                <button className="inline-flex h-9 items-center rounded bg-brand px-4 text-sm font-semibold text-slate-950" data-tour="next-navigation" onClick={completeCourse} type="button">
                   {completionLabel} →
                 </button>
               )}
@@ -532,8 +546,8 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
               />
               <div className="min-h-[180px] flex-1 overflow-hidden" style={{ height: resultsHeight }}>
                 <div className="flex h-full min-h-0 flex-col bg-editor text-slate-200">
-                  <div className="flex shrink-0 items-center justify-between border-b border-line px-5 py-2" data-tour="result-tabs">
-                    <div className="flex gap-1 text-xs font-semibold uppercase tracking-wider">
+                  <div className="flex shrink-0 items-center justify-between border-b border-line px-5 py-2">
+                    <div className="flex gap-1 text-xs font-semibold uppercase tracking-wider" data-tour="result-tabs">
                       <ResultTab active={resultTab === "results"} onClick={() => setResultTab("results")}>Results</ResultTab>
                       <ResultTab active={resultTab === "feedback"} onClick={() => setResultTab("feedback")}>Feedback</ResultTab>
                       <ResultTab active={resultTab === "breakdown"} disabled={!result?.success} onClick={() => setResultTab("breakdown")}>Query Breakdown</ResultTab>
@@ -542,7 +556,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                   </div>
                   <div className="min-h-0 flex-1 overflow-auto">
                     {resultTab === "results" && <ResultsTable result={result} />}
-                    {resultTab === "feedback" && <FeedbackPanel activeStage={activeStage} lessonPrompt={lesson.interpretationPrompt} query={query} reinforcement={reinforcement} result={result} reviewConcepts={reviewConcepts} onReviewConcept={setReviewConceptId} />}
+                    {resultTab === "feedback" && <FeedbackPanel activeStage={activeStage} lessonPrompt={lesson.interpretationPrompt} query={query} reinforcement={reinforcement} result={result} reviewConcepts={reviewConcepts} onReviewConcept={(conceptId) => { if (!workspaceTourActive) setReviewConceptId(conceptId); }} />}
                     {resultTab === "breakdown" && (
                       <ol className="space-y-2 p-5 text-sm leading-6 text-slate-300">
                         {explainQuery(query, result, activeStage, activeChallenge).map((line) => <li key={line}>{line}</li>)}
@@ -569,19 +583,19 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
                     </button>
                   )}
                   {shouldShowReturnToFrontier ? (
-                    <button aria-label={`Return to ${frontierQuestionLabel.toLowerCase()}`} className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={returnToFrontierStage} type="button">
+                    <button aria-label={`Return to ${frontierQuestionLabel.toLowerCase()}`} className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" data-tour="next-navigation" onClick={returnToFrontierStage} type="button">
                       Return to {frontierQuestionLabel} →
                     </button>
                   ) : progressionAction?.type === "next-question" ? (
-                    <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={continueToNextStage} type="button">
+                    <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" data-tour="next-navigation" onClick={continueToNextStage} type="button">
                       Next Question →
                     </button>
                   ) : progressionAction?.type === "next-lesson" && progressionAction.href ? (
-                    <Link className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href={progressionAction.href}>Next Lesson →</Link>
+                    <Link className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" data-tour="next-navigation" href={progressionAction.href}>Next Lesson →</Link>
                   ) : progressionAction?.type === "next-module" && progressionAction.href ? (
-                    <Link className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" href={progressionAction.href}>Next Module →</Link>
+                    <Link className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" data-tour="next-navigation" href={progressionAction.href}>Next Module →</Link>
                   ) : progressionAction?.type === "complete-course" ? (
-                    <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" onClick={completeCourse} type="button">
+                    <button className="rounded bg-brand px-4 py-2 text-sm font-semibold text-slate-950" data-tour="next-navigation" onClick={completeCourse} type="button">
                       {completionLabel} →
                     </button>
                   ) : progressionAction?.type === "course-completed" ? (
@@ -599,7 +613,7 @@ export function LessonWorkspace({ lessonId }: { lessonId: string }) {
           <SqlConceptLessonPanel lesson={teachingConceptLesson} onComplete={() => completeTeachingConcept(teachingConceptLesson.id)} />
         </ConceptLessonOverlay>
       )}
-      <GuidedTour active={workspaceTourActive} finalLabel="Start solving" onClose={() => setWorkspaceTourActive(false)} steps={workspaceTourSteps} tourId={WORKSPACE_TOUR_ID} userId={user?.id} />
+      <GuidedTour active={workspaceTourActive && !conceptOverlayOpen} finalLabel="Start solving" onClose={() => setWorkspaceTourActive(false)} steps={workspaceTourSteps} tourId={WORKSPACE_TOUR_ID} userId={user?.id} />
       {reviewConceptLesson && (
         <ConceptLessonOverlay>
           <SqlConceptLessonPanel lesson={reviewConceptLesson} onClose={() => setReviewConceptId(null)} replay />

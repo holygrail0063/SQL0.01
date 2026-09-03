@@ -11,6 +11,7 @@ type TooltipPosition = { top: number; left: number };
 type SpotlightFrame = Rect & { borderRadius: string; padding: number; shape: NonNullable<TourStep["shape"]> };
 
 const CARD_WIDTH = 320;
+const CARD_HEIGHT_ESTIMATE = 220;
 const GAP = 16;
 const PAD = 12;
 
@@ -128,7 +129,11 @@ export function GuidedTour({
     return () => document.removeEventListener("keydown", onKeyDown);
   });
 
-  const tooltip = useMemo(() => (rect && current ? tooltipPosition(rect, current.placement ?? "auto") : null), [current, rect]);
+  const tooltip = useMemo(() => {
+    if (!rect || !current) return null;
+    if (current.cardPlacement === "center") return centeredTooltip(rect);
+    return tooltipPosition(rect, current.placement ?? "auto");
+  }, [current, rect]);
 
   if (!active || !current) return null;
 
@@ -165,7 +170,7 @@ export function GuidedTour({
       <motion.div
         aria-label={`${current.title}. Step ${index + 1} of ${total}.`}
         aria-live="polite"
-        className="fixed inset-0 z-[80] pointer-events-none"
+        className="fixed inset-0 z-[80] pointer-events-auto"
         exit={{ opacity: 0 }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -293,6 +298,20 @@ function clampTooltip(position: TooltipPosition, width: number, vw: number, vh: 
   };
 }
 
-function centeredTooltip(): TooltipPosition {
-  return { top: Math.max(PAD, window.innerHeight / 2 - 120), left: Math.max(PAD, window.innerWidth / 2 - CARD_WIDTH / 2) };
+function centeredTooltip(target?: Rect): TooltipPosition {
+  const width = Math.min(CARD_WIDTH, window.innerWidth - PAD * 2);
+  const base = clampTooltip({ top: window.innerHeight / 2 - CARD_HEIGHT_ESTIMATE / 2, left: window.innerWidth / 2 - width / 2 }, width, window.innerWidth, window.innerHeight);
+  if (!target || !rectsOverlap({ ...base, width, height: CARD_HEIGHT_ESTIMATE }, target)) return base;
+
+  const options = [
+    { top: Math.max(PAD, target.top - CARD_HEIGHT_ESTIMATE - GAP), left: base.left },
+    { top: Math.min(window.innerHeight - CARD_HEIGHT_ESTIMATE - PAD, target.top + target.height + GAP), left: base.left },
+    { top: base.top, left: Math.max(PAD, target.left - width - GAP) },
+    { top: base.top, left: Math.min(window.innerWidth - width - PAD, target.left + target.width + GAP) },
+  ];
+  return options.find((option) => !rectsOverlap({ ...option, width, height: CARD_HEIGHT_ESTIMATE }, target)) ?? base;
+}
+
+function rectsOverlap(a: Rect, b: Rect) {
+  return a.left < b.left + b.width && a.left + a.width > b.left && a.top < b.top + b.height && a.top + a.height > b.top;
 }

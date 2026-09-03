@@ -1,6 +1,7 @@
 export type TourId = "queryright_app_tour_v1" | "queryright_workspace_tour_v1";
 export type TourPlacement = "top" | "bottom" | "left" | "right" | "auto";
 export type TourShape = "rect" | "circle";
+export type TourCardPlacement = "target" | "center";
 
 export type TourStep = {
   id: string;
@@ -11,6 +12,7 @@ export type TourStep = {
   route?: string;
   shape?: TourShape;
   spotlightPadding?: number;
+  cardPlacement?: TourCardPlacement;
 };
 
 export const APP_TOUR_ID: TourId = "queryright_app_tour_v1";
@@ -60,6 +62,7 @@ export const workspaceTourSteps: TourStep[] = [
     title: "Your task",
     description: "Start here. Read what the question is asking you to return before writing SQL.",
     placement: "bottom",
+    cardPlacement: "center",
   },
   {
     id: "schema",
@@ -67,6 +70,7 @@ export const workspaceTourSteps: TourStep[] = [
     title: "Meet SQLBank",
     description: "Explore the available tables and columns here before writing your query.",
     placement: "right",
+    cardPlacement: "center",
   },
   {
     id: "editor",
@@ -74,6 +78,7 @@ export const workspaceTourSteps: TourStep[] = [
     title: "Write your SQL",
     description: "Build your query here. You can edit and retry as many times as you need.",
     placement: "left",
+    cardPlacement: "center",
   },
   {
     id: "run",
@@ -81,6 +86,7 @@ export const workspaceTourSteps: TourStep[] = [
     title: "Run your query",
     description: "Execute your SQL and let QueryRight check whether it answers the task correctly.",
     placement: "left",
+    cardPlacement: "center",
   },
   {
     id: "results",
@@ -88,6 +94,7 @@ export const workspaceTourSteps: TourStep[] = [
     title: "Understand what happened",
     description: "Results shows the returned data. Feedback helps when something is wrong. Query Breakdown explains what your SQL did.",
     placement: "top",
+    cardPlacement: "center",
   },
   {
     id: "hints",
@@ -95,6 +102,7 @@ export const workspaceTourSteps: TourStep[] = [
     title: "Need a push?",
     description: "Reveal hints when you're stuck. Try solving the question yourself before opening them.",
     placement: "bottom",
+    cardPlacement: "center",
   },
   {
     id: "replay",
@@ -102,13 +110,15 @@ export const workspaceTourSteps: TourStep[] = [
     title: "Review the concept",
     description: "Forgot the syntax? Replay the lesson animation anytime without losing your query or progress.",
     placement: "bottom",
+    cardPlacement: "center",
   },
   {
     id: "navigation",
-    target: '[data-tour="lesson-navigation"]',
+    target: '[data-tour="next-navigation"]',
     title: "Keep moving",
-    description: "When you're done, continue to the next question. QueryRight saves your progress as you learn.",
+    description: "When you're done, use this button to continue. QueryRight saves your progress as you learn.",
     placement: "left",
+    cardPlacement: "center",
   },
 ];
 
