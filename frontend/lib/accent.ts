@@ -37,9 +37,14 @@ export function applyAccent(value: unknown) {
   if (typeof document === "undefined") return;
   const preset = getAccentPreset(value);
   const style = document.documentElement.style;
+  style.setProperty("--accent", preset.primaryRgb);
+  style.setProperty("--accent-hover", preset.strongRgb);
+  style.setProperty("--accent-soft", `${preset.primaryRgb} / 0.1`);
+  style.setProperty("--accent-border", `${preset.primaryRgb} / 0.35`);
   style.setProperty("--color-brand", preset.primaryRgb);
   style.setProperty("--color-brand-strong", preset.strongRgb);
   style.setProperty("--color-brand-foreground", preset.foregroundRgb);
+  style.setProperty("--color-cyan", preset.primaryRgb);
   document.documentElement.dataset.accent = preset.id;
 }
 

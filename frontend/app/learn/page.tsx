@@ -51,7 +51,7 @@ function LearnContent() {
     const mode = getLearningMode(profile?.sql_level);
     return (
       <main className="mx-auto max-w-3xl px-5 py-10">
-        <p className="font-mono text-sm text-cyan">Your SQL Path</p>
+        <p className="font-mono text-sm text-brand">Your SQL Path</p>
         <h1 className="mt-3 text-3xl font-semibold text-slate-50">{mode.label}</h1>
         <div className="mt-6 rounded-lg border border-line bg-panel p-6">
           <p className="font-mono text-xs uppercase tracking-wider text-slate-500">Coming Soon</p>
@@ -64,7 +64,7 @@ function LearnContent() {
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
-      <p className="font-mono text-sm text-cyan">Your SQL Path</p>
+      <p className="font-mono text-sm text-brand">Your SQL Path</p>
       <h1 className="mt-3 text-3xl font-semibold text-slate-50">{course.title}</h1>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{course.description}</p>
       <p className="mt-2 text-sm text-slate-500">{course.moduleCountLabel} • {course.questionCountLabel} • Self-paced</p>
@@ -80,12 +80,12 @@ function LearnContent() {
           <section className="rounded border border-line bg-panel p-5" key={module.id}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="font-mono text-xs uppercase tracking-wider text-cyan">Module {module.sequence}{optionalReview ? " • Optional Review" : ""}</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-brand">Module {module.sequence}{optionalReview ? " • Optional Review" : ""}</p>
                 <h2 className="mt-2 text-xl font-semibold text-slate-50">{module.title}</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{module.description}</p>
               </div>
               <div className="text-right text-sm">
-                <div className={status === "Completed" ? "text-success" : status === "In Progress" ? "text-cyan" : status === "Locked" ? "text-slate-500" : "text-slate-300"}>
+                <div className={status === "Completed" ? "text-success" : status === "In Progress" ? "text-brand" : status === "Locked" ? "text-slate-500" : "text-slate-300"}>
                   {status === "Locked" && <Lock className="mr-1 inline" size={14} />}
                   {status}
                 </div>
