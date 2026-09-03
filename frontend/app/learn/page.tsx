@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { api, Challenge } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { buildModuleProgress, getCourseForProfile, isModuleBeforeRecommendedStart, lessonUrl } from "@/lib/course";
+import { findChallengeTaskPosition, FREE_LEARNING_TASK_LIMIT } from "@/lib/course-access";
 import { getLearningMode } from "@/lib/curriculum";
 import { getProfile, getProgress, type Profile, type ProgressRow } from "@/lib/progress";
 
@@ -99,17 +100,29 @@ function LearnContent() {
               {module.lessons.map((lesson) => {
                 const challenge = challenges.find((candidate) => candidate.id === lesson.challengeId);
                 const completed = completedIds.has(lesson.challengeId);
-                return (
-                  <Link className="flex items-center justify-between gap-4 py-4 hover:text-slate-50" href={lessonUrl(lesson)} key={lesson.id}>
+                const taskPosition = findChallengeTaskPosition(course, lesson.challengeId);
+                const locked = Boolean(taskPosition && taskPosition.taskNumber > FREE_LEARNING_TASK_LIMIT);
+                const rowClass = `flex items-center justify-between gap-4 py-4 ${locked ? "text-slate-500" : "hover:text-slate-50"}`;
+                const content = (
+                  <>
                     <div className="flex items-center gap-3">
-                      {completed ? <CheckCircle2 className="text-success" size={18} /> : <Circle className="text-slate-400" size={18} />}
+                      {locked ? <Lock className="text-slate-500" size={18} /> : completed ? <CheckCircle2 className="text-success" size={18} /> : <Circle className="text-slate-400" size={18} />}
                       <div>
-                        <p className="font-medium text-slate-50">{lesson.title}</p>
+                        <p className={locked ? "font-medium text-slate-400" : "font-medium text-slate-50"}>{lesson.title}</p>
                         <p className="mt-1 text-sm text-slate-500">{lesson.difficulty} • {lesson.estimatedMinutes} min • {lesson.skills.slice(0, 3).join(", ")}</p>
                         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{challenge?.concept ?? lesson.concept}</p>
                       </div>
                     </div>
-                    <span className={completed ? "text-success" : "text-brand"}>{completed ? "Completed" : "Open SQL Editor"}</span>
+                    <span className={locked ? "text-slate-500" : completed ? "text-success" : "text-brand"}>{locked ? "Locked" : completed ? "Completed" : "Open SQL Editor"}</span>
+                  </>
+                );
+                return locked ? (
+                  <div aria-disabled="true" className={rowClass} key={lesson.id}>
+                    {content}
+                  </div>
+                ) : (
+                  <Link className={rowClass} href={lessonUrl(lesson)} key={lesson.id}>
+                    {content}
                   </Link>
                 );
               })}

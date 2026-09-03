@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "test": "node scripts/sqlbank-regression.mjs",
     "validate:curriculum": "node scripts/validate-curriculum.mjs",
-    "test:smoke": "node scripts/production-smoke.mjs"
+    "test:smoke": "node scripts/production-smoke.mjs",
+    "test:release": "node scripts/release-regression.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "4.7.0",
@@ -25,7 +26,7 @@
     "@types/react": "19.0.4",
     "@types/react-dom": "19.0.2",
     "autoprefixer": "10.4.20",
-    "postcss": "8.4.49",
+    "postcss": "8.5.28",
     "tailwindcss": "3.4.17",
     "typescript": "5.7.2"
   }

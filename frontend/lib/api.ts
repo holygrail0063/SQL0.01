@@ -43,6 +43,18 @@ export type QueryResult = {
   };
 };
 
+export class QueryRightApiError extends Error {
+  code?: string;
+  status: number;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = "QueryRightApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
 
 type ApiRequestInit = RequestInit & { auth?: boolean };
@@ -68,7 +80,16 @@ async function request<T>(path: string, options?: ApiRequestInit): Promise<T> {
     throw new Error(`Could not reach the QueryRight API${API_BASE ? ` at ${API_BASE}` : ""}.`);
   }
   if (!response.ok) {
-    throw new Error(`QueryRight API request failed at ${API_BASE}${path} with HTTP ${response.status}.`);
+    const payload = await response.json().catch(() => null) as { error?: unknown; message?: unknown; code?: unknown } | null;
+    const code = typeof payload?.code === "string" ? payload.code : undefined;
+    const message = code === "COURSE_LOCKED"
+      ? "This task is locked on the free plan."
+      : typeof payload?.error === "string"
+        ? payload.error
+        : typeof payload?.message === "string"
+          ? payload.message
+          : `QueryRight API request failed at ${API_BASE}${path} with HTTP ${response.status}.`;
+    throw new QueryRightApiError(message, response.status, code);
   }
 
   return response.json() as Promise<T>;
