@@ -82,13 +82,11 @@ async function request<T>(path: string, options?: ApiRequestInit): Promise<T> {
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { error?: unknown; message?: unknown; code?: unknown } | null;
     const code = typeof payload?.code === "string" ? payload.code : undefined;
-    const message = code === "COURSE_LOCKED"
-      ? "This task is locked on the free plan."
-      : typeof payload?.error === "string"
-        ? payload.error
-        : typeof payload?.message === "string"
-          ? payload.message
-          : `QueryRight API request failed at ${API_BASE}${path} with HTTP ${response.status}.`;
+    const message = typeof payload?.error === "string"
+      ? payload.error
+      : typeof payload?.message === "string"
+        ? payload.message
+        : `QueryRight API request failed at ${API_BASE}${path} with HTTP ${response.status}.`;
     throw new QueryRightApiError(message, response.status, code);
   }
 

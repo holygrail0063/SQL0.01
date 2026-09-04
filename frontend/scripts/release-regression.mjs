@@ -11,23 +11,23 @@ const sqlbank = modules.requireTs("lib/sqlbank-server.ts");
 
 const tests = [
   {
-    name: "free users can execute the first four Beginner learning tasks",
+    name: "Beginner users can execute representative questions from Q1 through Q100",
     run() {
       const beginner = course.allSqlCourses().find((item) => item.learningModeId === "completely-new");
-      const firstFour = access.firstAccessibleChallengeIds(beginner);
-      assert(JSON.stringify(firstFour) === JSON.stringify([1, 2, 3, 4]), `expected first four challenge ids [1,2,3,4], got ${JSON.stringify(firstFour)}`);
-      for (const challengeId of firstFour) {
+      const beginnerIds = access.beginnerChallengeIds(beginner);
+      assert(beginnerIds.length === 100, `expected 100 Beginner challenge ids, got ${beginnerIds.length}`);
+      for (const challengeId of [1, 4, 5, 25, 50, 100]) {
         const decision = access.canAccessLearningChallenge({ selected_role: null, sql_level: "completely-new" }, [], challengeId);
         assert(decision.allowed, `challenge ${challengeId} should be allowed`);
       }
     },
   },
   {
-    name: "direct challenge id manipulation cannot execute locked Beginner task 5",
+    name: "invalid challenge id is still rejected",
     run() {
-      const decision = access.canAccessLearningChallenge({ selected_role: null, sql_level: "completely-new" }, [], 5);
-      assert(!decision.allowed, "challenge 5 should be locked");
-      assert(decision.code === "COURSE_LOCKED", `expected COURSE_LOCKED, got ${decision.code}`);
+      const decision = access.canAccessLearningChallenge({ selected_role: null, sql_level: "completely-new" }, [], 9999);
+      assert(!decision.allowed, "invalid challenge should be rejected");
+      assert(decision.code === "COURSE_UNAVAILABLE", `expected COURSE_UNAVAILABLE, got ${decision.code}`);
     },
   },
   {

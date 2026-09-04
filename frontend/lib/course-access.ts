@@ -2,11 +2,9 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { allSqlCourses, getCourseForProfile, getLessonStages, type CourseDefinition } from "@/lib/course";
 import type { Profile, ProgressRow } from "@/lib/progress";
 
-export const FREE_LEARNING_TASK_LIMIT = 4;
-
 export type CourseAccessDecision =
   | { allowed: true; taskNumber: number; courseId: string; lessonId: string }
-  | { allowed: false; code: "COURSE_LOCKED"; message: string; taskNumber?: number; courseId?: string; lessonId?: string };
+  | { allowed: false; code: "COURSE_UNAVAILABLE"; message: string; taskNumber?: number; courseId?: string; lessonId?: string };
 
 type AccessProfile = Pick<Profile, "selected_role" | "sql_level"> | null;
 
@@ -27,7 +25,7 @@ export function canAccessLearningChallenge(profile: AccessProfile, _progressRows
   if (!course) {
     return {
       allowed: false,
-      code: "COURSE_LOCKED",
+      code: "COURSE_UNAVAILABLE",
       message: "This learning path is not available yet.",
     };
   }
@@ -36,25 +34,14 @@ export function canAccessLearningChallenge(profile: AccessProfile, _progressRows
   if (!position) {
     return {
       allowed: false,
-      code: "COURSE_LOCKED",
+      code: "COURSE_UNAVAILABLE",
       message: "This task is not part of your current learning path.",
       courseId: course.id,
     };
   }
 
-  if (position.taskNumber <= FREE_LEARNING_TASK_LIMIT) {
-    return {
-      allowed: true,
-      taskNumber: position.taskNumber,
-      courseId: course.id,
-      lessonId: position.lessonId,
-    };
-  }
-
   return {
-    allowed: false,
-    code: "COURSE_LOCKED",
-    message: "This task is locked on the free plan.",
+    allowed: true,
     taskNumber: position.taskNumber,
     courseId: course.id,
     lessonId: position.lessonId,
@@ -77,14 +64,12 @@ export function findChallengeTaskPosition(course: CourseDefinition, challengeId:
   return null;
 }
 
-export function firstAccessibleChallengeIds(course = allSqlCourses()[0], limit = FREE_LEARNING_TASK_LIMIT) {
+export function beginnerChallengeIds(course = allSqlCourses()[0]) {
   const ids: number[] = [];
   for (const module of course.modules) {
     for (const lesson of module.lessons) {
       for (const stage of getLessonStages(lesson)) {
-        if (!stage.challengeId) continue;
-        ids.push(stage.challengeId);
-        if (ids.length === limit) return ids;
+        if (stage.challengeId) ids.push(stage.challengeId);
       }
     }
   }
